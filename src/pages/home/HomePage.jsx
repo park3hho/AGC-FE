@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 
-import ListItem from '@/components/common/ListItem'
+import MenuTile from '@/components/MenuTile'
 import { MENU } from '@/constants/menuConst'
+import styles from './HomePage.module.css'
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -9,16 +10,9 @@ export default function HomePage() {
   return (
     <main className="page-flat">
       <h1>무엇을 해볼까요?</h1>
-      <div>
+      <div className={styles.grid}>
         {MENU.map((m) => (
-          <ListItem
-            key={m.key}
-            title={m.label}
-            sub={m.desc}
-            right={m.ready ? '›' : '준비 중'}
-            disabled={!m.ready}
-            onClick={() => navigate(m.path)}
-          />
+          <MenuTile key={m.key} icon={m.icon} label={m.label} onClick={() => navigate(m.path)} />
         ))}
       </div>
     </main>

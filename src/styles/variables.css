@@ -2,6 +2,7 @@
   /* 색상 — 브랜드 색상 확정 전 임시값 (DESIGN.md §8) */
   --color-primary: #3182f6;
   --color-primary-pressed: #1b64da;
+  --color-primary-bg: #e8f3ff;
   --color-danger: #f04452;
   --color-text: #191f28;
   --color-text-sub: #4e5968;
