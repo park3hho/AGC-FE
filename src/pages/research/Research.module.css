@@ -53,6 +53,19 @@
   gap: var(--space-3);
 }
 
+.linked {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--color-bg-sub);
+}
+
+.linkedTitle {
+  font-weight: 600;
+}
+
 .readonly {
   background: var(--color-bg-sub);
   color: var(--color-text-sub);

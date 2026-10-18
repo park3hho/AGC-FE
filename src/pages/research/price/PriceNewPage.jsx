@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { createPriceResearch, getNextResearchCode } from '@/api/priceResearch'
 import { getProducts } from '@/api/product'
 import PageHeader from '@/components/common/PageHeader'
+import Thumb from '@/components/Thumb'
 import { todayKst } from '@/utils/date'
 import styles from '../Research.module.css'
 
@@ -31,6 +32,8 @@ export default function PriceNewPage() {
   useEffect(() => {
     if (form.researchedAt) getNextResearchCode(form.researchedAt).then(setNextCode)
   }, [form.researchedAt])
+
+  const product = products.find((p) => p.code === form.productCode)
 
   const set = (key) => (e) => {
     setForm({ ...form, [key]: e.target.value })
@@ -81,6 +84,18 @@ export default function PriceNewPage() {
           ))}
         </select>
       </div>
+
+      {product && (
+        <div className={styles.linked}>
+          <Thumb src={product.photoUrl} />
+          <div>
+            <div className={styles.linkedTitle}>{product.titleKo || product.titleCn}</div>
+            <div className={styles.hint}>
+              {product.photoUrl ? '제품 사진이 연결됐어요' : '이 제품엔 아직 사진이 없어요'}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={styles.grid2}>
         <div className="form-group">

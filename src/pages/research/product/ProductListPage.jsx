@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { getProducts } from '@/api/product'
 import ListItem from '@/components/common/ListItem'
 import PageHeader from '@/components/common/PageHeader'
+import Thumb from '@/components/Thumb'
 import styles from '../Research.module.css'
 
 export default function ProductListPage() {
@@ -31,6 +32,7 @@ export default function ProductListPage() {
         {(items || []).map((p) => (
           <ListItem
             key={p.code}
+            left={<Thumb src={p.photoUrl} />}
             title={p.titleKo || '-'}
             sub={p.titleCn || '-'}
             right={

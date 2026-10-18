@@ -5,16 +5,17 @@ import { getPriceResearches } from '@/api/priceResearch'
 import { getProducts } from '@/api/product'
 import ListItem from '@/components/common/ListItem'
 import PageHeader from '@/components/common/PageHeader'
+import Thumb from '@/components/Thumb'
 import styles from '../Research.module.css'
 
 export default function PriceListPage() {
   const navigate = useNavigate()
   const [items, setItems] = useState(null)
-  const [titles, setTitles] = useState({})
+  const [productMap, setProductMap] = useState({})
 
   useEffect(() => {
     Promise.all([getPriceResearches(), getProducts()]).then(([researches, products]) => {
-      setTitles(Object.fromEntries(products.map((p) => [p.code, p.titleKo || p.titleCn])))
+      setProductMap(Object.fromEntries(products.map((p) => [p.code, p])))
       setItems(researches)
     })
   }, [])
@@ -35,10 +36,12 @@ export default function PriceListPage() {
         {items && items.length === 0 && <p className={styles.empty}>아직 조사가 없어요</p>}
         {(items || []).map((r) => {
           const minCny = Math.min(...r.options.map((o) => o.priceCny))
+          const product = productMap[r.productCode]
           return (
             <ListItem
               key={r.code}
-              title={titles[r.productCode] || r.productCode}
+              left={<Thumb src={product?.photoUrl} />}
+              title={product?.titleKo || product?.titleCn || r.productCode}
               sub={`${r.productCode} · 옵션 ${r.options.length}종류 · ¥${minCny}~`}
               right={
                 <>

@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 
 import { createProduct, getNextProductCode } from '@/api/product'
 import PageHeader from '@/components/common/PageHeader'
+import PhotoInput from '@/components/PhotoInput'
 import { todayKst } from '@/utils/date'
 import styles from '../Research.module.css'
 
 export default function ProductNewPage() {
   const navigate = useNavigate()
   const [nextCode, setNextCode] = useState('')
+  const [photoFile, setPhotoFile] = useState(null)
   const [titleCn, setTitleCn] = useState('')
   const [titleKo, setTitleKo] = useState('')
   const [error, setError] = useState('')
@@ -23,7 +25,7 @@ export default function ProductNewPage() {
     if (!titleCn.trim() && !titleKo.trim()) return setError('제목을 하나 이상 적어주세요')
 
     setSaving(true)
-    await createProduct({ titleCn: titleCn.trim(), titleKo: titleKo.trim() })
+    await createProduct({ titleCn: titleCn.trim(), titleKo: titleKo.trim(), photoFile })
     navigate('/research/products', { replace: true })
   }
 
@@ -31,19 +33,18 @@ export default function ProductNewPage() {
     <form className="page-flat" onSubmit={submit}>
       <PageHeader title="어떤 제품인가요?" back />
 
-      <div className={styles.grid2}>
-        <div className="form-group">
-          <label className="form-label" htmlFor="code">
-            제품 코드
-          </label>
-          <input id="code" className={`form-input ${styles.readonly}`} value={nextCode} readOnly />
-        </div>
-        <div className="form-group">
-          <label className="form-label" htmlFor="addedAt">
-            제품 코드 추가일
-          </label>
-          <input id="addedAt" className={`form-input ${styles.readonly}`} value={todayKst()} readOnly />
-        </div>
+      <div className="form-group">
+        <label className="form-label" htmlFor="code">
+          제품 코드
+        </label>
+        <input id="code" className={`form-input ${styles.readonly}`} value={nextCode} readOnly />
+      </div>
+
+      <div className="form-group">
+        <label className="form-label" htmlFor="photo">
+          제품 사진
+        </label>
+        <PhotoInput id="photo" file={photoFile} onChange={setPhotoFile} />
       </div>
 
       <div className="form-group">
@@ -76,6 +77,13 @@ export default function ProductNewPage() {
           }}
           placeholder="접이식 캠핑 의자 초경량"
         />
+      </div>
+
+      <div className="form-group">
+        <label className="form-label" htmlFor="addedAt">
+          제품 코드 추가일
+        </label>
+        <input id="addedAt" className={`form-input ${styles.readonly}`} value={todayKst()} readOnly />
       </div>
 
       {error && <p className="form-error">{error}</p>}

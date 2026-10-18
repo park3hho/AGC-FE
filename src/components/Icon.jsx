@@ -13,6 +13,13 @@ const PATHS = {
     </>
   ),
   yuan: <path d="M6 4l6 8 6-8M12 12v8M8 13h8M8 17h8" />,
+  photo: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="3" />
+      <circle cx="9" cy="10" r="2" />
+      <path d="M21 16l-5-5-9 9" />
+    </>
+  ),
 }
 
 export default function Icon({
