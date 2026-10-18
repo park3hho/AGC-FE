@@ -45,6 +45,7 @@ export default function PriceListPage() {
             <ListItem
               key={r.code}
               left={<Thumb src={product?.photoUrl} />}
+              onClick={() => navigate(`/research/prices/${r.id}`)}
               title={product?.titleKo || product?.titleCn || r.productCode}
               sub={`${r.productCode} · 옵션 ${r.optionCount}종류 · ¥${minCny}~`}
               right={

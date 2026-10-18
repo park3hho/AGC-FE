@@ -1,7 +1,7 @@
-import { request } from '@/api/client'
+import { fileUrl, request } from '@/api/client'
 
 // BE 응답(snake_case) → 화면에서 쓰는 모양(camelCase). 스펙: docs/api-contract.md
-const toResearchSummary = (s) => ({
+export const toResearchSummary = (s) => ({
   id: s.id,
   code: s.code,
   productCode: s.product.code,
@@ -20,6 +20,25 @@ const toResearchSummary = (s) => ({
 export const getPriceResearches = async () => {
   const data = await request('/price-surveys?size=100', { errorMsg: '조사 목록을 불러오지 못했어요' })
   return data.items.map(toResearchSummary)
+}
+
+// 가격 조사 상세 (옵션 포함)
+export const getPriceResearch = async (id) => {
+  const data = await request(`/price-surveys/${id}`, { errorMsg: '조사를 불러오지 못했어요' })
+  const s = data.price_survey
+  return {
+    ...toResearchSummary(s),
+    productId: s.product.id,
+    productTitle: s.product.title_ko || s.product.code,
+    photoUrl: fileUrl(s.photo_url),
+    options: s.options.map((o) => ({
+      id: o.id,
+      option1: o.option1,
+      option2: o.option2 || '',
+      priceCny: o.price_cny, // 문자열 "39.90"
+      photoUrl: fileUrl(o.photo_url),
+    })),
+  }
 }
 
 // 다음 조사 코드번호 미리보기 (조사일 기준) — 실제 코드는 등록 응답의 code

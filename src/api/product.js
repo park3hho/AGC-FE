@@ -1,4 +1,5 @@
 import { fileUrl, request, upload } from '@/api/client'
+import { toResearchSummary } from '@/api/priceResearch'
 import { toKstDate } from '@/utils/date'
 
 // BE 응답(snake_case) → 화면에서 쓰는 모양(camelCase). 스펙: docs/api-contract.md
@@ -17,6 +18,12 @@ const toProduct = (p) => ({
 export const getProducts = async () => {
   const data = await request('/products?size=100', { errorMsg: '제품 목록을 불러오지 못했어요' })
   return data.items.map(toProduct)
+}
+
+// 제품 상세 + 그 제품의 가격 조사 요약 (조사일 최근 순)
+export const getProduct = async (id) => {
+  const data = await request(`/products/${id}`, { errorMsg: '제품을 불러오지 못했어요' })
+  return { product: toProduct(data.product), surveys: data.price_surveys.map(toResearchSummary) }
 }
 
 // 다음 제품 코드 미리보기 — 실제 코드는 등록 응답의 code

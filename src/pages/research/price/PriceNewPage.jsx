@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { createPriceResearch, getNextResearchCode } from '@/api/priceResearch'
 import { getProducts } from '@/api/product'
@@ -12,9 +12,10 @@ const EMPTY_OPTION = { option1: '', option2: '', priceCny: '' }
 
 export default function PriceNewPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [products, setProducts] = useState([])
   const [form, setForm] = useState({
-    productCode: '',
+    productCode: searchParams.get('product') || '', // 제품 상세에서 넘어오면 미리 선택
     researchedAt: todayKst(),
     taobaoUrl: '',
     coupangMinPrice: '',

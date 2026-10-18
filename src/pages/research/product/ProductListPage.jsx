@@ -37,6 +37,7 @@ export default function ProductListPage() {
           <ListItem
             key={p.code}
             left={<Thumb src={p.photoUrl} />}
+            onClick={() => navigate(`/research/products/${p.id}`)}
             title={p.titleKo || '-'}
             sub={p.titleCn || '-'}
             right={

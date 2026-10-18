@@ -1,0 +1,59 @@
+/* 제품 · 가격조사 상세 공통 */
+
+.hero {
+  width: 160px;
+  height: 160px;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.row dt {
+  flex-shrink: 0;
+  color: var(--color-text-sub);
+}
+
+.row dd {
+  margin: 0;
+  min-width: 0;
+  text-align: right;
+  word-break: break-all;
+}
+
+.optionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.optionTable th {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+  font-weight: 400;
+  text-align: left;
+}
+
+.optionTable td {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.optionTable .price {
+  text-align: right;
+}
+
+.optionCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
