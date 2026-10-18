@@ -25,3 +25,8 @@
 .form-input-error {
   border-color: var(--color-danger);
 }
+
+.form-error {
+  font-size: var(--font-sm);
+  color: var(--color-danger);
+}
