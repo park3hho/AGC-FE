@@ -1,19 +1,26 @@
-import { fail, mockDb, publicUser, respond } from '@/api/mockUsers'
+import { request } from '@/api/client'
 
-// 목업 — BE 연결 시 request('/users') 등으로 바꾼다. 관리자(user_manage)만 호출한다.
+// 관리자(user_manage) 전용. 스펙: docs/api-contract.md
 
-export const getUsers = () => respond(mockDb.users.map(publicUser))
-
-export const createUser = ({ username, name, password, role }) => {
-  if (mockDb.users.some((u) => u.username === username)) return fail('이미 있는 아이디예요')
-  const user = { id: mockDb.nextId++, username, name, password, role, active: true }
-  mockDb.users.push(user)
-  return respond(publicUser(user))
+export const getUsers = async () => {
+  const data = await request('/users', { errorMsg: '사용자 목록을 불러오지 못했어요' })
+  return data.items
 }
 
-export const setUserActive = (id, active) => {
-  const user = mockDb.users.find((u) => u.id === id)
-  if (!user) return fail('사용자를 찾지 못했어요')
-  user.active = active
-  return respond(publicUser(user))
+export const createUser = async ({ username, name, password, role }) => {
+  const data = await request('/users', {
+    method: 'POST',
+    body: { username, name, password, role },
+    errorMsg: '사용자를 추가하지 못했어요',
+  })
+  return data.user
+}
+
+export const setUserActive = async (id, active) => {
+  const data = await request(`/users/${id}`, {
+    method: 'PATCH',
+    body: { active },
+    errorMsg: '사용자 상태를 바꾸지 못했어요',
+  })
+  return data.user
 }

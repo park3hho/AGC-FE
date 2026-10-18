@@ -32,8 +32,13 @@ export default function AccountNewPage() {
     if (usages.length === 0) return setError('용도를 하나 이상 골라주세요')
 
     setSaving(true)
-    await createCompanyAccount({ ...form, loginId: form.loginId.trim(), usages })
-    navigate('/accounts', { replace: true })
+    try {
+      await createCompanyAccount({ ...form, loginId: form.loginId.trim(), usages })
+      navigate('/accounts', { replace: true })
+    } catch (err) {
+      setError(err.message)
+      setSaving(false)
+    }
   }
 
   return (

@@ -35,7 +35,17 @@ function AccountCard({
 }) {
   const [password, setPassword] = useState('') // 보기 누를 때만 받아온다
 
-  const toggle = async () => setPassword(password ? '' : await revealPassword(account.id))
+  const [error, setError] = useState('')
+
+  const toggle = async () => {
+    if (password) return setPassword('')
+    try {
+      setPassword(await revealPassword(account.id))
+      setError('')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
 
   return (
     <div className={styles.card}>
@@ -53,6 +63,7 @@ function AccountCard({
         </button>
         <CopyButton getText={() => password || revealPassword(account.id)} />
       </div>
+      {error && <p className="form-error">{error}</p>}
       <div className={styles.tags}>
         {account.usages.map((u) => (
           <span key={u} className={styles.tag}>
@@ -69,9 +80,12 @@ export default function AccountListPage() {
   const { user } = useAuth()
   const [items, setItems] = useState(null)
   const [usage, setUsage] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    getCompanyAccounts().then(setItems)
+    getCompanyAccounts()
+      .then(setItems)
+      .catch((err) => setError(err.message))
   }, [])
 
   const visible = (items || []).filter((a) => !usage || a.usages.includes(usage))
@@ -100,6 +114,7 @@ export default function AccountListPage() {
       </select>
 
       <div>
+        {error && <p className="form-error">{error}</p>}
         {items && visible.length === 0 && <p className={styles.empty}>이 용도의 계정이 없어요</p>}
         {visible.map((a) => (
           <AccountCard key={a.id} account={a} />

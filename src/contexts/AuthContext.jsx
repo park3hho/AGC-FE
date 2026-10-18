@@ -25,8 +25,11 @@ export function AuthProvider({
   }, [])
 
   const logout = useCallback(async () => {
-    await logoutApi()
-    setUser(null)
+    try {
+      await logoutApi()
+    } finally {
+      setUser(null)
+    }
   }, [])
 
   const value = useMemo(() => ({ user, checking, login, logout }), [user, checking, login, logout])

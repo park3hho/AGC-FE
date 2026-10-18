@@ -1,24 +1,29 @@
-// 목업 — BE 연결 시 request() 호출로 바꾼다.
-// 목록 응답에는 비밀번호를 담지 않는다. 비밀번호는 revealPassword() 로 한 건씩만 받는다
-// (BE 는 암호화 저장 + 열람 기록). 가짜 값만 둔다. 실제 계정을 넣지 않는다.
-let accounts = [
-  { id: 3, platform: '네이버 스마트스토어', loginId: 'agc_store', password: 'example-pw-1', usages: ['판매', '정산'] },
-  { id: 2, platform: '타오바오', loginId: 'agc_buyer01', password: 'example-pw-2', usages: ['소싱'] },
-  { id: 1, platform: '쿠팡', loginId: 'agc_coupang', password: 'example-pw-3', usages: ['판매', '관리자'] },
-]
-let nextId = 4
+import { request } from '@/api/client'
 
-const respond = (data) =>
-  new Promise((resolve) => setTimeout(() => resolve(structuredClone(data)), 100))
+// 목록에는 비밀번호가 없다. 비밀번호는 revealPassword() 로 한 건씩만 받는다 (BE 가 열람 기록을 남김).
+// 스펙: docs/api-contract.md
+const toAccount = (a) => ({
+  id: a.id,
+  platform: a.platform,
+  loginId: a.login_id,
+  usages: a.usages,
+})
 
-const withoutPassword = ({ password, ...rest }) => rest // eslint-disable-line no-unused-vars
+export const getCompanyAccounts = async () => {
+  const data = await request('/company-accounts', { errorMsg: '회사 계정을 불러오지 못했어요' })
+  return data.items.map(toAccount)
+}
 
-export const getCompanyAccounts = () => respond(accounts.map(withoutPassword))
+export const revealPassword = async (id) => {
+  const data = await request(`/company-accounts/${id}/password`, { errorMsg: '비밀번호를 불러오지 못했어요' })
+  return data.password
+}
 
-export const revealPassword = (id) => respond(accounts.find((a) => a.id === id)?.password ?? '')
-
-export const createCompanyAccount = (data) => {
-  const item = { id: nextId++, ...data }
-  accounts = [item, ...accounts]
-  return respond(withoutPassword(item))
+export const createCompanyAccount = async ({ platform, loginId, password, usages }) => {
+  const data = await request('/company-accounts', {
+    method: 'POST',
+    body: { platform, login_id: loginId, password, usages },
+    errorMsg: '계정을 저장하지 못했어요',
+  })
+  return toAccount(data.account)
 }

@@ -10,10 +10,9 @@ function toMessage(detail, fallback) {
   return fallback
 }
 
-async function handleResponse(res, errorMsg) {
+async function handleResponse(res, errorMsg, authRedirect = true) {
   if (res.status === 401) {
-    localStorage.removeItem('user')
-    if (!redirecting && window.location.pathname !== '/login') {
+    if (authRedirect && !redirecting && window.location.pathname !== '/login') {
       redirecting = true
       window.location.href = '/login'
     }
@@ -27,12 +26,24 @@ async function handleResponse(res, errorMsg) {
   return data
 }
 
-export async function request(path, { method = 'GET', body, errorMsg } = {}) {
+// BE 에 올린 파일(/files/...)은 API 주소를 앞에 붙여야 열린다 — 외부 http(s) 주소는 그대로
+export const fileUrl = (path) => (path?.startsWith('/files/') ? `${BASE_URL}${path}` : path || '')
+
+// 파일 업로드 (multipart) — Content-Type 은 브라우저가 boundary 와 함께 정한다
+export async function upload(path, file, { field = 'file', errorMsg } = {}) {
+  const form = new FormData()
+  form.append(field, file)
+  const res = await fetch(`${BASE_URL}${path}`, { method: 'POST', credentials: 'include', body: form })
+  return handleResponse(res, errorMsg)
+}
+
+// authRedirect: false — 401 이어도 로그인 화면으로 보내지 않는다 (/auth/check 처럼 로그인 여부 자체를 묻는 호출)
+export async function request(path, { method = 'GET', body, errorMsg, authRedirect = true } = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     credentials: 'include',
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   })
-  return handleResponse(res, errorMsg)
+  return handleResponse(res, errorMsg, authRedirect)
 }

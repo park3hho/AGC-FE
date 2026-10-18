@@ -11,14 +11,22 @@ export default function UserListPage() {
   const navigate = useNavigate()
   const { user: me } = useAuth()
   const [users, setUsers] = useState(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    getUsers().then(setUsers)
+    getUsers()
+      .then(setUsers)
+      .catch((err) => setError(err.message))
   }, [])
 
   const toggle = async (u) => {
-    const updated = await setUserActive(u.id, !u.active)
-    setUsers(users.map((x) => (x.id === u.id ? updated : x)))
+    try {
+      const updated = await setUserActive(u.id, !u.active)
+      setUsers(users.map((x) => (x.id === u.id ? updated : x)))
+      setError('')
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   return (
@@ -34,6 +42,7 @@ export default function UserListPage() {
       />
 
       <div>
+        {error && <p className="form-error">{error}</p>}
         {(users || []).map((u) => (
           <div key={u.id} className={styles.row}>
             <div className={styles.body}>

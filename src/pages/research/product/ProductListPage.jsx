@@ -10,9 +10,12 @@ import styles from '../Research.module.css'
 export default function ProductListPage() {
   const navigate = useNavigate()
   const [items, setItems] = useState(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    getProducts().then(setItems)
+    getProducts()
+      .then(setItems)
+      .catch((err) => setError(err.message))
   }, [])
 
   return (
@@ -28,6 +31,7 @@ export default function ProductListPage() {
       />
 
       <div className={styles.list}>
+        {error && <p className="form-error">{error}</p>}
         {items && items.length === 0 && <p className={styles.empty}>아직 제품이 없어요</p>}
         {(items || []).map((p) => (
           <ListItem

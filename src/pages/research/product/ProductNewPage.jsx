@@ -17,16 +17,24 @@ export default function ProductNewPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    getNextProductCode().then(setNextCode)
+    getNextProductCode()
+      .then(setNextCode)
+      .catch((err) => setError(err.message))
   }, [])
 
   const submit = async (e) => {
     e.preventDefault()
-    if (!titleCn.trim() && !titleKo.trim()) return setError('제목을 하나 이상 적어주세요')
+    // BE 는 중국어 제목이 필수 (docs/api-contract.md POST /products)
+    if (!titleCn.trim()) return setError('중국어 제목을 적어주세요')
 
     setSaving(true)
-    await createProduct({ titleCn: titleCn.trim(), titleKo: titleKo.trim(), photoFile })
-    navigate('/research/products', { replace: true })
+    try {
+      await createProduct({ titleCn: titleCn.trim(), titleKo: titleKo.trim(), photoFile })
+      navigate('/research/products', { replace: true })
+    } catch (err) {
+      setError(err.message)
+      setSaving(false)
+    }
   }
 
   return (

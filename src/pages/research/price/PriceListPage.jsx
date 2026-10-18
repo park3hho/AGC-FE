@@ -12,12 +12,15 @@ export default function PriceListPage() {
   const navigate = useNavigate()
   const [items, setItems] = useState(null)
   const [productMap, setProductMap] = useState({})
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    Promise.all([getPriceResearches(), getProducts()]).then(([researches, products]) => {
-      setProductMap(Object.fromEntries(products.map((p) => [p.code, p])))
-      setItems(researches)
-    })
+    Promise.all([getPriceResearches(), getProducts()])
+      .then(([researches, products]) => {
+        setProductMap(Object.fromEntries(products.map((p) => [p.code, p])))
+        setItems(researches)
+      })
+      .catch((err) => setError(err.message))
   }, [])
 
   return (
@@ -33,16 +36,17 @@ export default function PriceListPage() {
       />
 
       <div className={styles.list}>
+        {error && <p className="form-error">{error}</p>}
         {items && items.length === 0 && <p className={styles.empty}>아직 조사가 없어요</p>}
         {(items || []).map((r) => {
-          const minCny = Math.min(...r.options.map((o) => o.priceCny))
+          const minCny = Number(r.minPriceCny) // BE 가 옵션 중 최저가를 계산해 준다
           const product = productMap[r.productCode]
           return (
             <ListItem
               key={r.code}
               left={<Thumb src={product?.photoUrl} />}
               title={product?.titleKo || product?.titleCn || r.productCode}
-              sub={`${r.productCode} · 옵션 ${r.options.length}종류 · ¥${minCny}~`}
+              sub={`${r.productCode} · 옵션 ${r.optionCount}종류 · ¥${minCny}~`}
               right={
                 <>
                   <span className={styles.code}>{r.code}</span>

@@ -17,8 +17,10 @@ export default function PriceNewPage() {
     productCode: '',
     researchedAt: todayKst(),
     taobaoUrl: '',
-    lowestPrice: '',
-    lowestUrl: '',
+    coupangMinPrice: '',
+    coupangUrl: '',
+    naverMinPrice: '',
+    naverUrl: '',
   })
   const [options, setOptions] = useState([EMPTY_OPTION])
   const [nextCode, setNextCode] = useState('')
@@ -26,11 +28,16 @@ export default function PriceNewPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    getProducts().then(setProducts)
+    getProducts()
+      .then(setProducts)
+      .catch((err) => setError(err.message))
   }, [])
 
   useEffect(() => {
-    if (form.researchedAt) getNextResearchCode(form.researchedAt).then(setNextCode)
+    if (!form.researchedAt) return setNextCode('')
+    getNextResearchCode(form.researchedAt)
+      .then(setNextCode)
+      .catch(() => setNextCode(''))
   }, [form.researchedAt])
 
   const product = products.find((p) => p.code === form.productCode)
@@ -49,22 +56,34 @@ export default function PriceNewPage() {
     e.preventDefault()
     if (!form.productCode) return setError('어떤 제품인지 골라주세요')
     if (!form.researchedAt) return setError('조사일을 알려주세요')
+    if (!form.taobaoUrl.trim()) return setError('구매할 타오바오 링크를 넣어주세요')
     if (options.length === 0) return setError('옵션을 하나 이상 넣어주세요')
+    if (options.some((o) => !o.option1.trim())) return setError('옵션마다 옵션1을 넣어주세요')
     if (options.some((o) => !(Number(o.priceCny) > 0))) return setError('옵션마다 가격(위안)을 넣어주세요')
 
+    const won = (v) => (v.trim() === '' ? null : Number(v.replaceAll(',', '')))
     setSaving(true)
-    await createPriceResearch({
-      ...form,
-      taobaoUrl: form.taobaoUrl.trim(),
-      lowestPrice: Number(form.lowestPrice) || null,
-      lowestUrl: form.lowestUrl.trim(),
-      options: options.map((o) => ({
-        option1: o.option1.trim(),
-        option2: o.option2.trim(),
-        priceCny: Number(o.priceCny),
-      })),
-    })
-    navigate('/research/prices', { replace: true })
+    try {
+      await createPriceResearch({
+        productCode: form.productCode,
+        researchedAt: form.researchedAt,
+        photoPath: product?.photoPath, // 연결된 제품 사진
+        taobaoUrl: form.taobaoUrl.trim(),
+        coupangMinPrice: won(form.coupangMinPrice),
+        coupangUrl: form.coupangUrl.trim(),
+        naverMinPrice: won(form.naverMinPrice),
+        naverUrl: form.naverUrl.trim(),
+        options: options.map((o) => ({
+          option1: o.option1.trim(),
+          option2: o.option2.trim(),
+          priceCny: o.priceCny.trim(),
+        })),
+      })
+      navigate('/research/prices', { replace: true })
+    } catch (err) {
+      setError(err.message)
+      setSaving(false)
+    }
   }
 
   return (
@@ -154,16 +173,30 @@ export default function PriceNewPage() {
         </div>
         <div className={styles.grid2}>
           <div className="form-group">
-            <label className="form-label" htmlFor="lowestPrice">
-              최저가 (원)
+            <label className="form-label" htmlFor="coupangMinPrice">
+              쿠팡 최저가 (원)
             </label>
-            <input id="lowestPrice" className="form-input" inputMode="numeric" value={form.lowestPrice} onChange={set('lowestPrice')} placeholder="39900" />
+            <input id="coupangMinPrice" className="form-input" inputMode="numeric" value={form.coupangMinPrice} onChange={set('coupangMinPrice')} placeholder="39900" />
           </div>
           <div className="form-group">
-            <label className="form-label" htmlFor="lowestUrl">
-              링크
+            <label className="form-label" htmlFor="coupangUrl">
+              쿠팡 링크
             </label>
-            <input id="lowestUrl" className="form-input" type="url" value={form.lowestUrl} onChange={set('lowestUrl')} placeholder="https://..." />
+            <input id="coupangUrl" className="form-input" type="url" value={form.coupangUrl} onChange={set('coupangUrl')} placeholder="https://www.coupang.com/..." />
+          </div>
+        </div>
+        <div className={styles.grid2}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="naverMinPrice">
+              네이버 최저가 (원)
+            </label>
+            <input id="naverMinPrice" className="form-input" inputMode="numeric" value={form.naverMinPrice} onChange={set('naverMinPrice')} placeholder="39900" />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="naverUrl">
+              네이버 링크
+            </label>
+            <input id="naverUrl" className="form-input" type="url" value={form.naverUrl} onChange={set('naverUrl')} placeholder="https://smartstore.naver.com/..." />
           </div>
         </div>
       </section>
