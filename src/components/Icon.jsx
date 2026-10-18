@@ -13,6 +13,18 @@ const PATHS = {
     </>
   ),
   yuan: <path d="M6 4l6 8 6-8M12 12v8M8 13h8M8 17h8" />,
+  key: (
+    <>
+      <circle cx="8" cy="15" r="4" />
+      <path d="M11 12l9-9M17 6l3 3M15 8l2 2" />
+    </>
+  ),
+  users: (
+    <>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.5a3.5 3.5 0 010 7M18 14c1.8.6 3 2.7 3 6" />
+    </>
+  ),
   photo: (
     <>
       <rect x="3" y="4" width="18" height="16" rx="3" />

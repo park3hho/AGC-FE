@@ -30,6 +30,16 @@
   color: var(--color-primary);
 }
 
+.warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.neutral {
+  background: var(--color-bg-sub);
+  color: var(--color-text-sub);
+}
+
 .success {
   background: var(--color-success-bg);
   color: var(--color-success);
