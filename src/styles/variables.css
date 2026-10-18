@@ -1,0 +1,28 @@
+:root {
+  /* 색상 — 브랜드 색상 확정 전 임시값 (DESIGN.md §8) */
+  --color-primary: #3182f6;
+  --color-primary-pressed: #1b64da;
+  --color-danger: #f04452;
+  --color-text: #191f28;
+  --color-text-sub: #4e5968;
+  --color-border: #e5e8eb;
+  --color-bg: #ffffff;
+  --color-bg-sub: #f2f4f6;
+
+  /* 타이포 */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+  --font-sm: 14px;
+  --font-md: 16px;
+  --font-lg: 20px;
+  --font-xl: 26px;
+
+  /* 간격 (8px 그리드) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+
+  --radius: 12px;
+  --touch-min: 44px;
+}
