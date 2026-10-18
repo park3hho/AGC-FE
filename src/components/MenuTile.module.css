@@ -23,8 +23,16 @@
   width: var(--touch-min);
   height: var(--touch-min);
   border-radius: var(--radius);
+}
+
+.primary {
   background: var(--color-primary-bg);
   color: var(--color-primary);
+}
+
+.success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .label {

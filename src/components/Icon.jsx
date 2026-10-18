@@ -6,6 +6,13 @@ const PATHS = {
       <path d="M21 21l-6-6" />
     </>
   ),
+  package: (
+    <>
+      <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3" />
+      <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />
+    </>
+  ),
+  yuan: <path d="M6 4l6 8 6-8M12 12v8M8 13h8M8 17h8" />,
 }
 
 export default function Icon({

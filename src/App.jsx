@@ -4,7 +4,10 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 // 라우트 단위 코드 스플리팅 (DESIGN.md §2)
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const HomePage = lazy(() => import('@/pages/home/HomePage'))
-const ResearchPage = lazy(() => import('@/pages/research/ResearchPage'))
+const ProductListPage = lazy(() => import('@/pages/research/product/ProductListPage'))
+const ProductNewPage = lazy(() => import('@/pages/research/product/ProductNewPage'))
+const PriceListPage = lazy(() => import('@/pages/research/price/PriceListPage'))
+const PriceNewPage = lazy(() => import('@/pages/research/price/PriceNewPage'))
 
 export default function App() {
   return (
@@ -12,7 +15,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/research" element={<ResearchPage />} />
+        <Route path="/research/products" element={<ProductListPage />} />
+        <Route path="/research/products/new" element={<ProductNewPage />} />
+        <Route path="/research/prices" element={<PriceListPage />} />
+        <Route path="/research/prices/new" element={<PriceNewPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
