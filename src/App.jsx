@@ -13,6 +13,8 @@ const PriceListPage = lazy(() => import('@/pages/research/price/PriceListPage'))
 const PriceNewPage = lazy(() => import('@/pages/research/price/PriceNewPage'))
 const ProductDetailPage = lazy(() => import('@/pages/research/product/ProductDetailPage'))
 const PriceDetailPage = lazy(() => import('@/pages/research/price/PriceDetailPage'))
+const PricingListPage = lazy(() => import('@/pages/pricing/PricingListPage'))
+const PricingPage = lazy(() => import('@/pages/pricing/PricingPage'))
 const AccountListPage = lazy(() => import('@/pages/accounts/AccountListPage'))
 const AccountNewPage = lazy(() => import('@/pages/accounts/AccountNewPage'))
 const UserListPage = lazy(() => import('@/pages/admin/users/UserListPage'))
@@ -35,6 +37,8 @@ export default function App() {
           <Route path="/research/prices" element={<PriceListPage />} />
           <Route path="/research/prices/new" element={<PriceNewPage />} />
           <Route path="/research/prices/:id" element={<PriceDetailPage />} />
+          <Route path="/pricing" element={<PricingListPage />} />
+          <Route path="/pricing/:productId" element={<PricingPage />} />
         </Route>
 
         <Route element={<RequireAuth feature={FEATURE.ACCOUNT_VIEW} />}>

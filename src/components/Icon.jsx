@@ -13,6 +13,12 @@ const PATHS = {
     </>
   ),
   yuan: <path d="M6 4l6 8 6-8M12 12v8M8 13h8M8 17h8" />,
+  tag: (
+    <>
+      <path d="M3 12V4a1 1 0 011-1h8l9 9-9 9-9-9z" />
+      <circle cx="7.5" cy="7.5" r="1.5" />
+    </>
+  ),
   key: (
     <>
       <circle cx="8" cy="15" r="4" />

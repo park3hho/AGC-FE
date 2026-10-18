@@ -59,6 +59,13 @@ export default function ProductDetailPage() {
         </div>
       </dl>
 
+      <button
+        className="btn-secondary btn-md btn-full"
+        onClick={() => navigate(`/pricing/${product.id}`)}
+      >
+        가격 책정
+      </button>
+
       <section className={styles.section}>
         <div className={styles.sectionHead}>
           <span>가격조사 {surveys.length}건</span>
