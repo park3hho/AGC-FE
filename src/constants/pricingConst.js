@@ -8,14 +8,32 @@ export const PLATFORMS = [
 // 마진율이 이 값(%) 이상이면 초록색으로 강조 — 임시 기준, 사용자 확정 전
 export const GOOD_MARGIN_PCT = 20
 
+// 마진율이 이 값(%) 미만이면 주의색 — 임시 기준, 사용자 확정 전
+export const LOW_MARGIN_PCT = 8
+
+// 마진 막대가 꽉 차는 마진율(%)
+export const MARGIN_BAR_MAX_PCT = 25
+
+// 네이버 스마트스토어 옵션가(추가금) 한도 — 대표가(판매가) 대비 최대 +%
+//   대표가 10,000원 이상: −50% ~ +50% / 그 미만: −50% ~ +100%
+//   근거: 스마트스토어 옵션가 범위 안내 (2026-10-20 확인). 대표가 = 최저 옵션가라 아래쪽 한도는 걸리지 않는다
+export const NAVER_ADDON_LIMITS = [
+  { minBase: 10000, maxPct: 50 },
+  { minBase: 0, maxPct: 100 },
+]
+
 // 판매가 단위 (원) — 입력 step, "차익으로 맞추기" 올림 단위
 export const SALE_PRICE_UNIT = 100
 
-// 일괄 적용 방식
+// 일괄 적용 방식 — unit: 입력칸 단위, initial: 방식을 바꿀 때 넣어 주는 값
 export const BULK_MODES = [
-  { key: 'sale', label: '판매가' },
-  { key: 'profit', label: '차익' },
+  { key: 'profit', label: '목표 차익', unit: '원', initial: '3000' },
+  { key: 'margin', label: '목표 마진', unit: '%', initial: '10' },
+  { key: 'sale', label: '판매가', unit: '원', initial: '' },
 ]
+
+// 일괄 적용 대상 — 'all' = 모든 판매처
+export const BULK_TARGET_ALL = 'all'
 
 // 환율 출처 — BE core/pricing_config.FxSource 와 같아야 한다
 export const FX_SOURCE_LABEL = {

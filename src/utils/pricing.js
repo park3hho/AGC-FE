@@ -6,7 +6,7 @@
 //   마진율     = 차익 / salePrice
 // option: { priceCny, shippingCny } — shippingCny 가 null 이면(용량을 못 읽음) 계산하지 않는다
 // settings: { fxRate, fxMarkupPct, platformFeeRate, paymentFeeRate } — 문자열·숫자 모두 받음
-import { SALE_PRICE_UNIT } from '@/constants/pricingConst'
+import { NAVER_ADDON_LIMITS, SALE_PRICE_UNIT } from '@/constants/pricingConst'
 
 // 빈 값('' · null · undefined)은 NaN — 0 으로 착각하지 않게
 export const toNum = (v) => (v === '' || v == null ? NaN : Number(v))
@@ -72,6 +72,37 @@ export const salePriceForProfit = (option, targetProfit, settings) => {
   // 부동소수 오차로 19900.0000001 → 20000 이 되지 않게 아주 작은 값을 빼고 올림
   const price = Math.ceil(raw / SALE_PRICE_UNIT - 1e-9) * SALE_PRICE_UNIT
   return price > 0 ? price : null
+}
+
+// "목표 마진으로 맞추기" 역산 — 차익/판매가 = 목표 마진율이 되는 판매가 (SALE_PRICE_UNIT 단위 올림)
+// salePrice = ceil(원가+배송 / (1 − 수수료율 − 목표마진율) / 단위) × 단위
+// 수수료율 + 목표마진율 ≥ 100% 이거나 설정·배송비가 모자라면 null
+export const salePriceForMargin = (option, targetMarginPct, settings) => {
+  if (!isSettingsReady(settings)) return null
+  const margin = toNum(targetMarginPct)
+  if (!Number.isFinite(margin)) return null
+  const cost = costWithShipping(option, settings)
+  if (cost == null) return null
+  const denom = 1 - totalFeeRate(settings) / 100 - margin / 100
+  if (!(denom > 0)) return null
+  const price = Math.ceil(cost / denom / SALE_PRICE_UNIT - 1e-9) * SALE_PRICE_UNIT
+  return price > 0 ? price : null
+}
+
+// 네이버 옵션 추가금 한도 (원) — 대표가 기준 (NAVER_ADDON_LIMITS)
+export const naverAddonCap = (basePrice) => {
+  const rule = NAVER_ADDON_LIMITS.find((r) => basePrice >= r.minBase)
+  return rule ? Math.floor((basePrice * rule.maxPct) / 100) : null
+}
+
+export const naverAddonCapPct = (basePrice) =>
+  NAVER_ADDON_LIMITS.find((r) => basePrice >= r.minBase)?.maxPct ?? null
+
+// 숫자 입력칸 — 화면에는 "36,200", 상태에는 숫자만 "36200"
+export const digitsOnly = (v) => String(v ?? '').replace(/[^0-9]/g, '')
+export const withCommas = (v) => {
+  const d = digitsOnly(v)
+  return d === '' ? '' : Number(d).toLocaleString('ko-KR')
 }
 
 // 요약 — results: calcOption 결과 배열 (null 은 판매가 없음 → 뺀다)
