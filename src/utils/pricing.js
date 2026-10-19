@@ -6,7 +6,7 @@
 //   마진율     = 차익 / salePrice
 // option: { priceCny, shippingCny } — shippingCny 가 null 이면(용량을 못 읽음) 계산하지 않는다
 // settings: { fxRate, fxMarkupPct, platformFeeRate, paymentFeeRate } — 문자열·숫자 모두 받음
-import { NAVER_ADDON_LIMITS, SALE_PRICE_UNIT } from '@/constants/pricingConst'
+import { NAVER_ADDON_LIMITS, PLATFORMS, SALE_PRICE_UNIT } from '@/constants/pricingConst'
 
 // 빈 값('' · null · undefined)은 NaN — 0 으로 착각하지 않게
 export const toNum = (v) => (v === '' || v == null ? NaN : Number(v))
@@ -130,3 +130,11 @@ export const formatFx = (v) => trimDecimal(v)
 
 // 무게 표시 — 6380 (g) → "6.38kg"
 export const formatKgFromG = (g) => (g == null ? '-' : `${Number((g / 1000).toFixed(2))}kg`)
+
+// 제품의 가격 책정 상태 (constants/pricingConst.PRICING_STATUS 키)
+export const pricingStatusOf = (pricedPlatforms, hasSurvey) => {
+  const done = PLATFORMS.filter((p) => pricedPlatforms.includes(p.key)).length
+  if (done === PLATFORMS.length) return 'done'
+  if (!hasSurvey) return 'nosurvey'
+  return done > 0 ? 'partial' : 'pending'
+}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { getCompanyAccounts, revealPassword } from '@/api/companyAccount'
 import PageHeader from '@/components/common/PageHeader'
+import Section from '@/components/common/Section'
 import { USAGES } from '@/constants/accountConst'
 import { FEATURE, hasFeature } from '@/constants/permissions'
 import { useAuth } from '@/hooks/useAuth'
@@ -104,22 +105,24 @@ export default function AccountListPage() {
         }
       />
 
-      <select className={styles.filter} value={usage} onChange={(e) => setUsage(e.target.value)}>
-        <option value="">전체 용도</option>
-        {USAGES.map((u) => (
-          <option key={u} value={u}>
-            {u}
-          </option>
-        ))}
-      </select>
+      <Section name="필터" id="filters" title={false} plain>
+        <select className={styles.filter} value={usage} onChange={(e) => setUsage(e.target.value)}>
+          <option value="">전체 용도</option>
+          {USAGES.map((u) => (
+            <option key={u} value={u}>
+              {u}
+            </option>
+          ))}
+        </select>
+      </Section>
 
-      <div>
+      <Section name="계정 목록" id="list" title={false} plain>
         {error && <p className="form-error">{error}</p>}
         {items && visible.length === 0 && <p className={styles.empty}>이 용도의 계정이 없어요</p>}
         {visible.map((a) => (
           <AccountCard key={a.id} account={a} />
         ))}
-      </div>
+      </Section>
     </main>
   )
 }

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 
 import { getPriceResearch } from '@/api/priceResearch'
 import PageHeader from '@/components/common/PageHeader'
+import Section from '@/components/common/Section'
 import Thumb from '@/components/Thumb'
 import styles from '../Research.module.css'
 import detail from '../Detail.module.css'
@@ -43,34 +44,34 @@ export default function PriceDetailPage() {
 
   return (
     <main className="page-flat">
-      <PageHeader title={item.code} back />
+      <PageHeader title={item.code} sub="가격조사" back />
 
-      <Link to={`/research/products/${item.productId}`} className={styles.linked}>
-        <Thumb src={item.photoUrl} />
-        <div>
-          <div className={styles.linkedTitle}>{item.productTitle}</div>
-          <div className={styles.hint}>{item.productCode}</div>
-        </div>
-      </Link>
+      <Section name="연결된 제품" id="product" title={false} plain>
+        <Link to={`/research/products/${item.productId}`} className={styles.linked}>
+          <Thumb src={item.photoUrl} />
+          <div>
+            <div className={styles.linkedTitle}>{item.productTitle}</div>
+            <div className={styles.hint}>{item.productCode}</div>
+          </div>
+        </Link>
+      </Section>
 
-      <dl className={detail.rows}>
-        <div className={detail.row}>
-          <dt>조사일</dt>
-          <dd>{item.researchedAt}</dd>
-        </div>
-        <div className={detail.row}>
-          <dt>타오바오</dt>
-          <dd>
-            <ExternalLink href={item.taobaoUrl} />
-          </dd>
-        </div>
-      </dl>
+      <Section name="기본 정보" id="info">
+        <dl className={detail.rows}>
+          <div className={detail.row}>
+            <dt>조사일</dt>
+            <dd>{item.researchedAt}</dd>
+          </div>
+          <div className={detail.row}>
+            <dt>타오바오</dt>
+            <dd>
+              <ExternalLink href={item.taobaoUrl} />
+            </dd>
+          </div>
+        </dl>
+      </Section>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHead}>
-          <span>옵션</span>
-          <span className={styles.code}>총 {item.options.length}종류</span>
-        </div>
+      <Section name="옵션" id="options" sub={`총 ${item.options.length}종류`}>
         <table className={detail.optionTable}>
           <thead>
             <tr>
@@ -94,12 +95,9 @@ export default function PriceDetailPage() {
             ))}
           </tbody>
         </table>
-      </section>
+      </Section>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHead}>
-          <span>쿠팡·네이버 최저가</span>
-        </div>
+      <Section name="국내 최저가" id="domestic" title="쿠팡·네이버 최저가">
         <dl className={detail.rows}>
           <div className={detail.row}>
             <dt>쿠팡</dt>
@@ -114,7 +112,7 @@ export default function PriceDetailPage() {
             </dd>
           </div>
         </dl>
-      </section>
+      </Section>
     </main>
   )
 }

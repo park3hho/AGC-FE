@@ -39,6 +39,25 @@ const PATHS = {
     </>
   ),
   exchange: <path d="M4 8h13l-3-3M20 16H7l3 3" />,
+  home: <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" />,
+  more: (
+    <>
+      <circle cx="5" cy="12" r="1" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+    </>
+  ),
+  layout: <path d="M4 4h16v16H4zM4 9h16M9 9v11" />,
+  bag: <path d="M6 3L3 7v13a1 1 0 001 1h16a1 1 0 001-1V7l-3-4zM3 7h18M16 11a4 4 0 01-8 0" />,
+  sections: (
+    <>
+      <rect x="3" y="3" width="18" height="7" rx="2" strokeDasharray="3 2" />
+      <rect x="3" y="14" width="18" height="7" rx="2" strokeDasharray="3 2" />
+    </>
+  ),
+  arrowRight: <path d="M5 12h14M13 6l6 6-6 6" />,
+  arrowLeft: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  plus: <path d="M12 5v14M5 12h14" />,
   photo: (
     <>
       <rect x="3" y="4" width="18" height="16" rx="3" />

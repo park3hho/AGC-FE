@@ -13,6 +13,8 @@
   --color-border: #e5e8eb;
   --color-bg: #ffffff;
   --color-bg-sub: #f2f4f6;
+  --color-bg-app: #f7f8fa; /* 앱 틀 바탕 — 섹션 패널(흰색) 뒤 */
+  --color-text-weak: #8b95a1; /* 열 제목·날짜 같은 3순위 글자 */
 
   /* 타이포 */
   --font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
@@ -30,4 +32,10 @@
 
   --radius: 12px;
   --touch-min: 44px;
+
+  /* 앱 틀 (DESIGN.md §4.5) */
+  --sidebar-w: 232px;
+  --topbar-h: 56px;
+  --tabbar-h: 64px;
+  --content-max: 1180px;
 }

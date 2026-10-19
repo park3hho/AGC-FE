@@ -1,12 +1,14 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
+import AppLayout from '@/components/AppLayout'
 import RequireAuth from '@/components/RequireAuth'
 import { FEATURE } from '@/constants/permissions'
 
 // 라우트 단위 코드 스플리팅 (DESIGN.md §2)
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const HomePage = lazy(() => import('@/pages/home/HomePage'))
+const MorePage = lazy(() => import('@/pages/more/MorePage'))
 const ProductListPage = lazy(() => import('@/pages/research/product/ProductListPage'))
 const ProductNewPage = lazy(() => import('@/pages/research/product/ProductNewPage'))
 const PriceListPage = lazy(() => import('@/pages/research/price/PriceListPage'))
@@ -28,33 +30,36 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
 
+        {/* 로그인 후 화면은 모두 공통 틀(AppLayout) 안 — DESIGN.md §4.5 */}
         <Route element={<RequireAuth />}>
-          <Route path="/" element={<HomePage />} />
-        </Route>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/more" element={<MorePage />} />
+            <Route element={<RequireAuth feature={FEATURE.RESEARCH} />}>
+              <Route path="/research/products" element={<ProductListPage />} />
+              <Route path="/research/products/new" element={<ProductNewPage />} />
+              <Route path="/research/products/:id" element={<ProductDetailPage />} />
+              <Route path="/research/prices" element={<PriceListPage />} />
+              <Route path="/research/prices/new" element={<PriceNewPage />} />
+              <Route path="/research/prices/:id" element={<PriceDetailPage />} />
+              <Route path="/pricing" element={<PricingListPage />} />
+              <Route path="/pricing/:productId" element={<PricingPage />} />
+              <Route path="/shipping" element={<ShippingFeePage />} />
+              <Route path="/exchange-rate" element={<ExchangeRatePage />} />
+            </Route>
 
-        <Route element={<RequireAuth feature={FEATURE.RESEARCH} />}>
-          <Route path="/research/products" element={<ProductListPage />} />
-          <Route path="/research/products/new" element={<ProductNewPage />} />
-          <Route path="/research/products/:id" element={<ProductDetailPage />} />
-          <Route path="/research/prices" element={<PriceListPage />} />
-          <Route path="/research/prices/new" element={<PriceNewPage />} />
-          <Route path="/research/prices/:id" element={<PriceDetailPage />} />
-          <Route path="/pricing" element={<PricingListPage />} />
-          <Route path="/pricing/:productId" element={<PricingPage />} />
-          <Route path="/shipping" element={<ShippingFeePage />} />
-          <Route path="/exchange-rate" element={<ExchangeRatePage />} />
-        </Route>
+            <Route element={<RequireAuth feature={FEATURE.ACCOUNT_VIEW} />}>
+              <Route path="/accounts" element={<AccountListPage />} />
+            </Route>
+            <Route element={<RequireAuth feature={FEATURE.ACCOUNT_EDIT} />}>
+              <Route path="/accounts/new" element={<AccountNewPage />} />
+            </Route>
 
-        <Route element={<RequireAuth feature={FEATURE.ACCOUNT_VIEW} />}>
-          <Route path="/accounts" element={<AccountListPage />} />
-        </Route>
-        <Route element={<RequireAuth feature={FEATURE.ACCOUNT_EDIT} />}>
-          <Route path="/accounts/new" element={<AccountNewPage />} />
-        </Route>
-
-        <Route element={<RequireAuth feature={FEATURE.USER_MANAGE} />}>
-          <Route path="/admin/users" element={<UserListPage />} />
-          <Route path="/admin/users/new" element={<UserNewPage />} />
+            <Route element={<RequireAuth feature={FEATURE.USER_MANAGE} />}>
+              <Route path="/admin/users" element={<UserListPage />} />
+              <Route path="/admin/users/new" element={<UserNewPage />} />
+            </Route>
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

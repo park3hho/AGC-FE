@@ -1,0 +1,247 @@
+/* 제품 상세 — 위: 사진 | 기본 정보 + 판매가 요약 */
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* 제품 상세 › 사진 */
+.hero {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.hero img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background: var(--color-bg-sub);
+}
+
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.thumb {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.thumb img,
+.noPhoto {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: var(--color-bg-sub);
+}
+
+.thumbOn img {
+  border-color: var(--color-primary);
+}
+
+.thumb > span:last-child {
+  overflow: hidden;
+  color: var(--color-text-sub);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noPhoto {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--color-border);
+  background: none;
+  color: var(--color-text-weak);
+  font-size: 11px;
+  cursor: default;
+}
+
+/* 제품 상세 › 기본 정보 */
+.rows {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  row-gap: var(--space-3);
+  font-size: var(--font-sm);
+}
+
+.rows dt {
+  color: var(--color-text-sub);
+}
+
+.rows dd {
+  margin: 0;
+  word-break: break-all;
+}
+
+.rows a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* 제품 상세 › 판매가 요약 */
+.platforms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.platform {
+  padding: var(--space-3) var(--space-4);
+  border-radius: 10px;
+  background: var(--color-bg-app);
+}
+
+.platformHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.sale {
+  margin: var(--space-2) 0 2px;
+  font-size: var(--font-lg);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  color: var(--color-text-sub);
+  font-size: 13px;
+}
+
+.pos {
+  color: var(--color-success);
+}
+
+.neg {
+  color: var(--color-danger);
+}
+
+/* 제품 상세 › 옵션 */
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.table th {
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-app);
+  color: var(--color-text-weak);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.r {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.optionCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.margin {
+  color: var(--color-text-weak);
+}
+
+/* 제품 상세 › 가격조사 */
+.surveys {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--space-5);
+}
+
+.surveys > button:last-child {
+  border-bottom: 0;
+}
+
+/* 크게 보기 */
+.viewer {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: min(92vw, 640px);
+  margin: 0;
+  cursor: zoom-out;
+}
+
+.viewer img {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+
+.viewer figcaption {
+  color: #fff;
+  font-size: var(--font-sm);
+}
+
+@media (max-width: 900px) {
+  .top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .surveys {
+    padding: 0 var(--space-4);
+  }
+
+  .platforms {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,70 @@
+.section {
+  position: relative; /* 섹션 이름표(::before) 기준 */
+  min-width: 0;
+}
+
+.panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+
+.plain {
+  background: none;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 52px;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.plain .head {
+  padding: 0 0 var(--space-2);
+  border-bottom: 0;
+  min-height: 0;
+}
+
+.title {
+  font-size: var(--font-md);
+  font-weight: 700;
+}
+
+.sub {
+  color: var(--color-text-sub);
+  font-size: var(--font-sm);
+}
+
+.action {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+}
+
+.plain .body {
+  padding: 0;
+}
+
+.flush {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .head {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .body {
+    padding: var(--space-4);
+  }
+}

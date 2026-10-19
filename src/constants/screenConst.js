@@ -1,0 +1,50 @@
+import { matchPath } from 'react-router-dom'
+
+// 화면 이름 · 빵가루 — 경로 → { name, group, parent } (DESIGN.md §4.5)
+// name 은 섹션 부르는 법 '화면 이름 › 섹션 이름' 의 앞부분이다. 새 화면을 만들면 여기에 먼저 추가한다.
+// 더 구체적인 경로(/new)를 :id 보다 먼저 둔다.
+export const SCREENS = [
+  { path: '/', name: '홈' },
+  { path: '/more', name: '더보기' },
+  { path: '/research/products', name: '제품조사', group: '소싱' },
+  {
+    path: '/research/products/new',
+    name: '제품 추가',
+    group: '소싱',
+    parent: '/research/products',
+  },
+  {
+    path: '/research/products/:id',
+    name: '제품 상세',
+    group: '소싱',
+    parent: '/research/products',
+  },
+  { path: '/research/prices', name: '가격조사', group: '소싱' },
+  {
+    path: '/research/prices/new',
+    name: '가격조사 추가',
+    group: '소싱',
+    parent: '/research/prices',
+  },
+  {
+    path: '/research/prices/:id',
+    name: '가격조사 상세',
+    group: '소싱',
+    parent: '/research/prices',
+  },
+  { path: '/pricing', name: '가격 책정', group: '판매' },
+  { path: '/pricing/:productId', name: '가격 책정 (제품)', group: '판매', parent: '/pricing' },
+  { path: '/shipping', name: '배송비', group: '설정' },
+  { path: '/exchange-rate', name: '환율', group: '설정' },
+  { path: '/accounts', name: '회사 계정', group: '설정' },
+  { path: '/accounts/new', name: '회사 계정 추가', group: '설정', parent: '/accounts' },
+  { path: '/admin/users', name: '사용자 관리', group: '설정' },
+  { path: '/admin/users/new', name: '사용자 추가', group: '설정', parent: '/admin/users' },
+]
+
+const UNKNOWN = { path: '', name: '' }
+
+export const findScreen = (pathname) =>
+  SCREENS.find((s) => matchPath({ path: s.path, end: true }, pathname)) || UNKNOWN
+
+export const screenByPath = (path) => SCREENS.find((s) => s.path === path) || UNKNOWN

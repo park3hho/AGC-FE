@@ -1,18 +1,29 @@
+/* 화면 본문 — 앱 틀(AppLayout) 안에서 가운데 정렬, 최대 너비 하나만 (DESIGN.md §4.2) */
 .page-flat {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  width: 100%;
+  max-width: var(--content-max);
   min-height: 100%;
-  padding: var(--space-5) var(--space-4);
+  margin: 0 auto;
+  padding: var(--space-5) 32px;
 }
 
 .page-flat h1 {
   font-size: var(--font-xl);
 }
 
+@media (max-width: 768px) {
+  .page-flat {
+    padding: var(--space-4);
+  }
+}
+
 .overlay {
   position: fixed;
   inset: 0;
+  z-index: 100;
   background: rgba(0, 0, 0, 0.4);
   animation: fade-in 0.15s;
 }
@@ -32,4 +43,33 @@
   bottom: 0;
   padding: var(--space-3) 0;
   background: var(--color-bg);
+}
+
+@media (max-width: 768px) {
+  .sticky-cta {
+    bottom: var(--tabbar-h);
+  }
+}
+
+/* 섹션 이름 보기 (DESIGN.md §4.6) — 위쪽 바 버튼이 body 에 .show-sections 를 붙인다 */
+body.show-sections [data-section] {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 2px;
+}
+
+body.show-sections [data-section]::before {
+  content: attr(data-section);
+  position: absolute;
+  top: -11px;
+  left: 10px;
+  z-index: 30;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  pointer-events: none;
 }

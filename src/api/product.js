@@ -1,6 +1,7 @@
 import { fileUrl, request, upload } from '@/api/client'
 import { getPriceResearch, toResearchSummary } from '@/api/priceResearch'
 import { toKstDate } from '@/utils/date'
+import { pricingStatusOf } from '@/utils/pricing'
 
 // BE 응답(snake_case) → 화면에서 쓰는 모양(camelCase). 스펙: docs/api-contract.md
 const toProduct = (p) => ({
@@ -12,6 +13,18 @@ const toProduct = (p) => ({
   photoUrl: fileUrl(p.photo_url), // 화면에 띄울 주소
   addedAt: toKstDate(p.created_at), // 제품 코드 추가일
   surveyCount: p.survey_count ?? 0,
+  // 목록에서만 오는 값 (상세 응답엔 없음)
+  latestSurvey: p.latest_survey
+    ? {
+        id: p.latest_survey.id,
+        code: p.latest_survey.code,
+        surveyDate: p.latest_survey.survey_date,
+        optionCount: p.latest_survey.option_count,
+        minPriceCny: p.latest_survey.min_price_cny, // 문자열 "39.90" · 옵션이 없으면 null
+      }
+    : null,
+  pricedPlatforms: p.priced_platforms || [], // 판매가를 저장한 판매처 키
+  pricingStatus: pricingStatusOf(p.priced_platforms || [], !!p.latest_survey || p.survey_count > 0),
 })
 
 // TODO: 제품이 100개를 넘으면 화면에 페이지 넘김을 붙인다 (BE 는 page/size 지원)

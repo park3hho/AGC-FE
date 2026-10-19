@@ -1,0 +1,27 @@
+.list {
+  padding: 0 var(--space-4) var(--space-2);
+}
+
+.group {
+  padding: var(--space-4) 0 var(--space-1);
+  color: var(--color-text-weak);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--color-bg-sub);
+  color: var(--color-text-sub);
+}
+
+.me {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}

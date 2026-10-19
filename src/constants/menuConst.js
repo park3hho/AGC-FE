@@ -1,11 +1,83 @@
 import { FEATURE } from '@/constants/permissions'
 
+// 메뉴 묶음 — 업무 순서 (DESIGN.md §4.5)
+export const MENU_GROUPS = [
+  { key: 'sourcing', label: '소싱' },
+  { key: 'sales', label: '판매' },
+  { key: 'settings', label: '설정' },
+]
+
+// 왼쪽 메뉴 · 아래 탭 · 더보기를 모두 이 목록 하나로 그린다
+//   tab: 모바일 아래 탭에 바로 보임 (나머지는 '더보기')
+//   soon: 아직 없는 기능 — 메뉴에 '준비 중'으로만 보이고 누를 수 없음
 export const MENU = [
-  { key: 'product', label: '제품조사', icon: 'package', tone: 'primary', path: '/research/products', feature: FEATURE.RESEARCH },
-  { key: 'price', label: '가격조사', icon: 'yuan', tone: 'success', path: '/research/prices', feature: FEATURE.RESEARCH },
-  { key: 'pricing', label: '가격 책정', icon: 'tag', tone: 'warning', path: '/pricing', feature: FEATURE.RESEARCH },
-  { key: 'shipping', label: '배송비', icon: 'truck', tone: 'primary', path: '/shipping', feature: FEATURE.RESEARCH },
-  { key: 'fx', label: '환율 설정', icon: 'exchange', tone: 'success', path: '/exchange-rate', feature: FEATURE.RESEARCH },
-  { key: 'account', label: '회사 계정', icon: 'key', tone: 'warning', path: '/accounts', feature: FEATURE.ACCOUNT_VIEW },
-  { key: 'users', label: '사용자 관리', icon: 'users', tone: 'neutral', path: '/admin/users', feature: FEATURE.USER_MANAGE },
+  {
+    key: 'product',
+    group: 'sourcing',
+    label: '제품조사',
+    tabLabel: '제품',
+    icon: 'package',
+    tone: 'primary',
+    path: '/research/products',
+    feature: FEATURE.RESEARCH,
+    tab: true,
+  },
+  {
+    key: 'price',
+    group: 'sourcing',
+    label: '가격조사',
+    icon: 'yuan',
+    tone: 'success',
+    path: '/research/prices',
+    feature: FEATURE.RESEARCH,
+    tab: true,
+  },
+  {
+    key: 'pricing',
+    group: 'sales',
+    label: '가격 책정',
+    icon: 'tag',
+    tone: 'warning',
+    path: '/pricing',
+    feature: FEATURE.RESEARCH,
+    tab: true,
+  },
+  { key: 'listing', group: 'sales', label: '상품 등록', icon: 'layout', soon: true },
+  { key: 'orders', group: 'sales', label: '주문', icon: 'bag', soon: true },
+  {
+    key: 'shipping',
+    group: 'settings',
+    label: '배송비',
+    icon: 'truck',
+    tone: 'primary',
+    path: '/shipping',
+    feature: FEATURE.RESEARCH,
+  },
+  {
+    key: 'fx',
+    group: 'settings',
+    label: '환율',
+    icon: 'exchange',
+    tone: 'success',
+    path: '/exchange-rate',
+    feature: FEATURE.RESEARCH,
+  },
+  {
+    key: 'account',
+    group: 'settings',
+    label: '회사 계정',
+    icon: 'key',
+    tone: 'warning',
+    path: '/accounts',
+    feature: FEATURE.ACCOUNT_VIEW,
+  },
+  {
+    key: 'users',
+    group: 'settings',
+    label: '사용자 관리',
+    icon: 'users',
+    tone: 'neutral',
+    path: '/admin/users',
+    feature: FEATURE.USER_MANAGE,
+  },
 ]

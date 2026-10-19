@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { createUser } from '@/api/user'
 import PageHeader from '@/components/common/PageHeader'
+import Section from '@/components/common/Section'
 import { ROLE, ROLE_LABEL } from '@/constants/permissions'
 
 export default function UserNewPage() {
@@ -35,39 +36,61 @@ export default function UserNewPage() {
     <form className="page-flat" onSubmit={submit}>
       <PageHeader title="누구를 추가할까요?" back />
 
-      <div className="form-group">
-        <label className="form-label" htmlFor="name">
-          이름
-        </label>
-        <input id="name" className="form-input" value={form.name} onChange={set('name')} placeholder="홍길동" />
-      </div>
+      <Section name="입력" id="form" title={false}>
+        <div className="form-group">
+          <label className="form-label" htmlFor="name">
+            이름
+          </label>
+          <input
+            id="name"
+            className="form-input"
+            value={form.name}
+            onChange={set('name')}
+            placeholder="홍길동"
+          />
+        </div>
 
-      <div className="form-group">
-        <label className="form-label" htmlFor="username">
-          아이디
-        </label>
-        <input id="username" className="form-input" autoComplete="off" value={form.username} onChange={set('username')} placeholder="staff02" />
-      </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="username">
+            아이디
+          </label>
+          <input
+            id="username"
+            className="form-input"
+            autoComplete="off"
+            value={form.username}
+            onChange={set('username')}
+            placeholder="staff02"
+          />
+        </div>
 
-      <div className="form-group">
-        <label className="form-label" htmlFor="password">
-          임시 비밀번호 (8자 이상)
-        </label>
-        <input id="password" className="form-input" type="password" autoComplete="new-password" value={form.password} onChange={set('password')} />
-      </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="password">
+            임시 비밀번호 (8자 이상)
+          </label>
+          <input
+            id="password"
+            className="form-input"
+            type="password"
+            autoComplete="new-password"
+            value={form.password}
+            onChange={set('password')}
+          />
+        </div>
 
-      <div className="form-group">
-        <label className="form-label" htmlFor="role">
-          역할
-        </label>
-        <select id="role" className="form-input" value={form.role} onChange={set('role')}>
-          {Object.values(ROLE).map((r) => (
-            <option key={r} value={r}>
-              {ROLE_LABEL[r]}
-            </option>
-          ))}
-        </select>
-      </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="role">
+            역할
+          </label>
+          <select id="role" className="form-input" value={form.role} onChange={set('role')}>
+            {Object.values(ROLE).map((r) => (
+              <option key={r} value={r}>
+                {ROLE_LABEL[r]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </Section>
 
       {error && <p className="form-error">{error}</p>}
 

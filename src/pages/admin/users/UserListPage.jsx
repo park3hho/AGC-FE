@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { getUsers, setUserActive } from '@/api/user'
 import PageHeader from '@/components/common/PageHeader'
+import Section from '@/components/common/Section'
 import { ROLE_LABEL } from '@/constants/permissions'
 import { useAuth } from '@/hooks/useAuth'
 import styles from './Users.module.css'
@@ -41,7 +42,7 @@ export default function UserListPage() {
         }
       />
 
-      <div>
+      <Section name="사용자 목록" id="list" sub={users && `${users.length}명`}>
         {error && <p className="form-error">{error}</p>}
         {(users || []).map((u) => (
           <div key={u.id} className={styles.row}>
@@ -51,7 +52,9 @@ export default function UserListPage() {
               </div>
               <div className={styles.sub}>{ROLE_LABEL[u.role]}</div>
             </div>
-            <span className={u.active ? styles.active : styles.inactive}>{u.active ? '사용 중' : '멈춤'}</span>
+            <span className={u.active ? styles.active : styles.inactive}>
+              {u.active ? '사용 중' : '멈춤'}
+            </span>
             {u.id !== me.id && (
               <button className="btn-secondary btn-sm" onClick={() => toggle(u)}>
                 {u.active ? '멈추기' : '다시 쓰기'}
@@ -59,7 +62,7 @@ export default function UserListPage() {
             )}
           </div>
         ))}
-      </div>
+      </Section>
     </main>
   )
 }

@@ -1,0 +1,22 @@
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+  font-size: var(--font-sm);
+}
+
+.ctrl {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+@media (max-width: 768px) {
+  .pager {
+    padding: var(--space-3) var(--space-4);
+  }
+}

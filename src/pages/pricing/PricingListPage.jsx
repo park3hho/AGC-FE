@@ -1,42 +1,20 @@
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { getProducts } from '@/api/product'
-import ListItem from '@/components/common/ListItem'
+import ProductBrowser from '@/components/ProductBrowser'
 import PageHeader from '@/components/common/PageHeader'
-import Thumb from '@/components/Thumb'
-import research from '@/pages/research/Research.module.css'
 
-// 가격 책정 › 제품 고르기
+// 가격 책정 › 제품 고르기 — 섹션: 검색·필터 · 제품 목록. 처음엔 아직 안 정한 제품만 보여준다
 export default function PricingListPage() {
   const navigate = useNavigate()
-  const [items, setItems] = useState(null)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    getProducts()
-      .then(setItems)
-      .catch((err) => setError(err.message))
-  }, [])
 
   return (
     <main className="page-flat">
-      <PageHeader title="가격 책정" back />
-
-      <div className={research.list}>
-        {error && <p className="form-error">{error}</p>}
-        {items && items.length === 0 && <p className={research.empty}>아직 제품이 없어요</p>}
-        {(items || []).map((p) => (
-          <ListItem
-            key={p.id}
-            left={<Thumb src={p.photoUrl} />}
-            onClick={() => navigate(`/pricing/${p.id}`)}
-            title={p.titleKo || p.titleCn || '-'}
-            sub={p.surveyCount ? `가격조사 ${p.surveyCount}건` : '가격조사 없음'}
-            right={<span className={research.code}>{p.code}</span>}
-          />
-        ))}
-      </div>
+      <PageHeader title="가격 책정" sub="쿠팡·네이버 판매가를 정할 제품을 골라요" />
+      <ProductBrowser
+        defaultStatus="todo"
+        emptyText="아직 제품이 없어요"
+        onOpen={(p) => navigate(`/pricing/${p.id}`)}
+      />
     </main>
   )
 }

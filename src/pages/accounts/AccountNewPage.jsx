@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { createCompanyAccount } from '@/api/companyAccount'
 import PageHeader from '@/components/common/PageHeader'
+import Section from '@/components/common/Section'
 import { PLATFORMS, USAGES } from '@/constants/accountConst'
 import styles from './Accounts.module.css'
 
@@ -45,57 +46,78 @@ export default function AccountNewPage() {
     <form className="page-flat" onSubmit={submit}>
       <PageHeader title="어떤 계정인가요?" back />
 
-      <div className="form-group">
-        <label className="form-label" htmlFor="platform">
-          플랫폼
-        </label>
-        <select id="platform" className="form-input" value={form.platform} onChange={set('platform')}>
-          <option value="">플랫폼을 골라주세요</option>
-          {PLATFORMS.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label className="form-label" htmlFor="loginId">
-          ID
-        </label>
-        <input id="loginId" className="form-input" autoComplete="off" value={form.loginId} onChange={set('loginId')} />
-      </div>
-
-      <div className="form-group">
-        <label className="form-label" htmlFor="password">
-          PW
-        </label>
-        <div className={styles.pwRow}>
-          <input
-            id="password"
+      <Section name="입력" id="form" title={false}>
+        <div className="form-group">
+          <label className="form-label" htmlFor="platform">
+            플랫폼
+          </label>
+          <select
+            id="platform"
             className="form-input"
-            type={showPw ? 'text' : 'password'}
-            autoComplete="new-password"
-            value={form.password}
-            onChange={set('password')}
-          />
-          <button type="button" className="btn-secondary btn-md" onClick={() => setShowPw(!showPw)}>
-            {showPw ? '가리기' : '보기'}
-          </button>
+            value={form.platform}
+            onChange={set('platform')}
+          >
+            <option value="">플랫폼을 골라주세요</option>
+            {PLATFORMS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
         </div>
-      </div>
 
-      <div className="form-group">
-        <span className="form-label">용도 (여러 개 가능)</span>
-        <div className={styles.usages}>
-          {USAGES.map((u) => (
-            <label key={u} className={styles.usage}>
-              <input type="checkbox" checked={usages.includes(u)} onChange={() => toggleUsage(u)} />
-              {u}
-            </label>
-          ))}
+        <div className="form-group">
+          <label className="form-label" htmlFor="loginId">
+            ID
+          </label>
+          <input
+            id="loginId"
+            className="form-input"
+            autoComplete="off"
+            value={form.loginId}
+            onChange={set('loginId')}
+          />
         </div>
-      </div>
+
+        <div className="form-group">
+          <label className="form-label" htmlFor="password">
+            PW
+          </label>
+          <div className={styles.pwRow}>
+            <input
+              id="password"
+              className="form-input"
+              type={showPw ? 'text' : 'password'}
+              autoComplete="new-password"
+              value={form.password}
+              onChange={set('password')}
+            />
+            <button
+              type="button"
+              className="btn-secondary btn-md"
+              onClick={() => setShowPw(!showPw)}
+            >
+              {showPw ? '가리기' : '보기'}
+            </button>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <span className="form-label">용도 (여러 개 가능)</span>
+          <div className={styles.usages}>
+            {USAGES.map((u) => (
+              <label key={u} className={styles.usage}>
+                <input
+                  type="checkbox"
+                  checked={usages.includes(u)}
+                  onChange={() => toggleUsage(u)}
+                />
+                {u}
+              </label>
+            ))}
+          </div>
+        </div>
+      </Section>
 
       {error && <p className="form-error">{error}</p>}
 

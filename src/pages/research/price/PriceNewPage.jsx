@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { createPriceResearch, getNextResearchCode } from '@/api/priceResearch'
 import { getProducts } from '@/api/product'
 import PageHeader from '@/components/common/PageHeader'
+import Section from '@/components/common/Section'
 import Thumb from '@/components/Thumb'
 import { todayKst } from '@/utils/date'
 import styles from '../Research.module.css'
@@ -60,7 +61,8 @@ export default function PriceNewPage() {
     if (!form.taobaoUrl.trim()) return setError('구매할 타오바오 링크를 넣어주세요')
     if (options.length === 0) return setError('옵션을 하나 이상 넣어주세요')
     if (options.some((o) => !o.option1.trim())) return setError('옵션마다 옵션1을 넣어주세요')
-    if (options.some((o) => !(Number(o.priceCny) > 0))) return setError('옵션마다 가격(위안)을 넣어주세요')
+    if (options.some((o) => !(Number(o.priceCny) > 0)))
+      return setError('옵션마다 가격(위안)을 넣어주세요')
 
     const won = (v) => (v.trim() === '' ? null : Number(v.replaceAll(',', '')))
     setSaving(true)
@@ -91,61 +93,82 @@ export default function PriceNewPage() {
     <form className="page-flat" onSubmit={submit}>
       <PageHeader title="가격을 조사해요" back />
 
-      <div className="form-group">
-        <label className="form-label" htmlFor="productCode">
-          제품 코드
-        </label>
-        <select id="productCode" className="form-input" value={form.productCode} onChange={set('productCode')}>
-          <option value="">제품을 골라주세요</option>
-          {products.map((p) => (
-            <option key={p.code} value={p.code}>
-              {p.code} · {p.titleKo || p.titleCn}
-            </option>
-          ))}
-        </select>
-      </div>
+      <Section name="기본 정보" id="info">
+        <div className="form-group">
+          <label className="form-label" htmlFor="productCode">
+            제품 코드
+          </label>
+          <select
+            id="productCode"
+            className="form-input"
+            value={form.productCode}
+            onChange={set('productCode')}
+          >
+            <option value="">제품을 골라주세요</option>
+            {products.map((p) => (
+              <option key={p.code} value={p.code}>
+                {p.code} · {p.titleKo || p.titleCn}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {product && (
-        <div className={styles.linked}>
-          <Thumb src={product.photoUrl} />
-          <div>
-            <div className={styles.linkedTitle}>{product.titleKo || product.titleCn}</div>
-            <div className={styles.hint}>
-              {product.photoUrl ? '제품 사진이 연결됐어요' : '이 제품엔 아직 사진이 없어요'}
+        {product && (
+          <div className={styles.linked}>
+            <Thumb src={product.photoUrl} />
+            <div>
+              <div className={styles.linkedTitle}>{product.titleKo || product.titleCn}</div>
+              <div className={styles.hint}>
+                {product.photoUrl ? '제품 사진이 연결됐어요' : '이 제품엔 아직 사진이 없어요'}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className={styles.grid2}>
-        <div className="form-group">
-          <label className="form-label" htmlFor="researchedAt">
-            조사일
-          </label>
-          <input id="researchedAt" className="form-input" type="date" value={form.researchedAt} onChange={set('researchedAt')} />
+        <div className={styles.grid2}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="researchedAt">
+              조사일
+            </label>
+            <input
+              id="researchedAt"
+              className="form-input"
+              type="date"
+              value={form.researchedAt}
+              onChange={set('researchedAt')}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="code">
+              조사 코드번호
+            </label>
+            <input
+              id="code"
+              className={`form-input ${styles.readonly}`}
+              value={nextCode}
+              readOnly
+            />
+          </div>
         </div>
-        <div className="form-group">
-          <label className="form-label" htmlFor="code">
-            조사 코드번호
-          </label>
-          <input id="code" className={`form-input ${styles.readonly}`} value={nextCode} readOnly />
-        </div>
-      </div>
+      </Section>
 
-      <section className={styles.section}>
+      <Section name="타오바오 링크" id="taobao" title={false}>
         <div className="form-group">
           <label className="form-label" htmlFor="taobaoUrl">
             구매할 타오바오 링크 (공식몰 위주)
           </label>
-          <input id="taobaoUrl" className="form-input" type="url" value={form.taobaoUrl} onChange={set('taobaoUrl')} placeholder="https://item.taobao.com/..." />
+          <input
+            id="taobaoUrl"
+            className="form-input"
+            type="url"
+            value={form.taobaoUrl}
+            onChange={set('taobaoUrl')}
+            placeholder="https://item.taobao.com/..."
+          />
         </div>
-      </section>
+      </Section>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHead}>
-          <span>옵션</span>
-          <span className={styles.code}>총 {options.length}종류</span>
-        </div>
+      <Section name="옵션" id="options" sub={`총 ${options.length}종류`}>
         <div className={styles.optionRow}>
           <span className={styles.hint}>옵션1</span>
           <span className={styles.hint}>옵션2</span>
@@ -154,36 +177,74 @@ export default function PriceNewPage() {
         </div>
         {options.map((o, i) => (
           <div key={i} className={styles.optionRow}>
-            <input className="form-input" aria-label={`옵션${i + 1} 옵션1`} value={o.option1} onChange={setOption(i, 'option1')} placeholder="블랙" />
-            <input className="form-input" aria-label={`옵션${i + 1} 옵션2`} value={o.option2} onChange={setOption(i, 'option2')} placeholder="L" />
-            <input className="form-input" aria-label={`옵션${i + 1} 가격`} inputMode="decimal" value={o.priceCny} onChange={setOption(i, 'priceCny')} placeholder="58" />
-            <button type="button" className="btn-ghost btn-md" aria-label={`옵션${i + 1} 삭제`} onClick={() => setOptions(options.filter((_, j) => j !== i))}>
+            <input
+              className="form-input"
+              aria-label={`옵션${i + 1} 옵션1`}
+              value={o.option1}
+              onChange={setOption(i, 'option1')}
+              placeholder="블랙"
+            />
+            <input
+              className="form-input"
+              aria-label={`옵션${i + 1} 옵션2`}
+              value={o.option2}
+              onChange={setOption(i, 'option2')}
+              placeholder="L"
+            />
+            <input
+              className="form-input"
+              aria-label={`옵션${i + 1} 가격`}
+              inputMode="decimal"
+              value={o.priceCny}
+              onChange={setOption(i, 'priceCny')}
+              placeholder="58"
+            />
+            <button
+              type="button"
+              className="btn-ghost btn-md"
+              aria-label={`옵션${i + 1} 삭제`}
+              onClick={() => setOptions(options.filter((_, j) => j !== i))}
+            >
               ✕
             </button>
           </div>
         ))}
-        <button type="button" className="btn-secondary btn-md btn-full" onClick={() => setOptions([...options, EMPTY_OPTION])}>
+        <button
+          type="button"
+          className="btn-secondary btn-md btn-full"
+          onClick={() => setOptions([...options, EMPTY_OPTION])}
+        >
           옵션 추가
         </button>
-      </section>
+      </Section>
 
-      <section className={styles.section}>
-        <div className={styles.sectionHead}>
-          <span>쿠팡·네이버 최저가</span>
-          <span className={styles.hint}>없어도 돼요</span>
-        </div>
+      <Section name="국내 최저가" id="domestic" title="쿠팡·네이버 최저가" sub="없어도 돼요">
         <div className={styles.grid2}>
           <div className="form-group">
             <label className="form-label" htmlFor="coupangMinPrice">
               쿠팡 최저가 (원)
             </label>
-            <input id="coupangMinPrice" className="form-input" inputMode="numeric" value={form.coupangMinPrice} onChange={set('coupangMinPrice')} placeholder="39900" />
+            <input
+              id="coupangMinPrice"
+              className="form-input"
+              inputMode="numeric"
+              value={form.coupangMinPrice}
+              onChange={set('coupangMinPrice')}
+              placeholder="39900"
+            />
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="coupangUrl">
               쿠팡 링크
             </label>
-            <input id="coupangUrl" className="form-input" type="url" value={form.coupangUrl} onChange={set('coupangUrl')} placeholder="https://www.coupang.com/..." />
+            <input
+              id="coupangUrl"
+              className="form-input"
+              type="url"
+              value={form.coupangUrl}
+              onChange={set('coupangUrl')}
+              placeholder="https://www.coupang.com/..."
+            />
           </div>
         </div>
         <div className={styles.grid2}>
@@ -191,16 +252,30 @@ export default function PriceNewPage() {
             <label className="form-label" htmlFor="naverMinPrice">
               네이버 최저가 (원)
             </label>
-            <input id="naverMinPrice" className="form-input" inputMode="numeric" value={form.naverMinPrice} onChange={set('naverMinPrice')} placeholder="39900" />
+            <input
+              id="naverMinPrice"
+              className="form-input"
+              inputMode="numeric"
+              value={form.naverMinPrice}
+              onChange={set('naverMinPrice')}
+              placeholder="39900"
+            />
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="naverUrl">
               네이버 링크
             </label>
-            <input id="naverUrl" className="form-input" type="url" value={form.naverUrl} onChange={set('naverUrl')} placeholder="https://smartstore.naver.com/..." />
+            <input
+              id="naverUrl"
+              className="form-input"
+              type="url"
+              value={form.naverUrl}
+              onChange={set('naverUrl')}
+              placeholder="https://smartstore.naver.com/..."
+            />
           </div>
         </div>
-      </section>
+      </Section>
 
       {error && <p className="form-error">{error}</p>}
 
