@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { getProduct } from '@/api/product'
+import { getProduct, getProductPhotos } from '@/api/product'
 import ListItem from '@/components/common/ListItem'
 import PageHeader from '@/components/common/PageHeader'
 import Thumb from '@/components/Thumb'
@@ -13,10 +13,15 @@ export default function ProductDetailPage() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
+  const [photos, setPhotos] = useState(null) // [{ url, label }] — 대표 + 옵션별 사진
+  const [opened, setOpened] = useState(null) // 크게 보는 사진
 
   useEffect(() => {
     getProduct(id)
-      .then(setData)
+      .then((d) => {
+        setData(d)
+        return getProductPhotos(d.product, d.surveys).then(setPhotos)
+      })
       .catch((err) => setError(err.message))
   }, [id])
 
@@ -36,7 +41,32 @@ export default function ProductDetailPage() {
     <main className="page-flat">
       <PageHeader title={product.titleKo || product.titleCn} back />
 
-      <Thumb src={product.photoUrl} size={160} />
+      <section className={detail.photos}>
+        <div className={styles.sectionHead}>
+          <span>사진 {photos ? `${photos.length}장` : ''}</span>
+        </div>
+        {!photos && <Thumb src={product.photoUrl} size={160} />}
+        {photos && photos.length === 0 && <Thumb size={160} />}
+        {photos && photos.length > 0 && (
+          <div className={detail.photoGrid}>
+            {photos.map((p) => (
+              <button key={p.url} className={detail.photoItem} onClick={() => setOpened(p)}>
+                <img src={p.url} alt={p.label} loading="lazy" />
+                <span className={detail.photoLabel}>{p.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {opened && (
+        <div className="overlay" onClick={() => setOpened(null)}>
+          <figure className={detail.photoViewer}>
+            <img src={opened.url} alt={opened.label} />
+            <figcaption>{opened.label}</figcaption>
+          </figure>
+        </div>
+      )}
 
       <dl className={detail.rows}>
         <div className={detail.row}>

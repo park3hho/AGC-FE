@@ -1,5 +1,5 @@
 import { fileUrl, request, upload } from '@/api/client'
-import { toResearchSummary } from '@/api/priceResearch'
+import { getPriceResearch, toResearchSummary } from '@/api/priceResearch'
 import { toKstDate } from '@/utils/date'
 
 // BE 응답(snake_case) → 화면에서 쓰는 모양(camelCase). 스펙: docs/api-contract.md
@@ -24,6 +24,27 @@ export const getProducts = async () => {
 export const getProduct = async (id) => {
   const data = await request(`/products/${id}`, { errorMsg: '제품을 불러오지 못했어요' })
   return { product: toProduct(data.product), surveys: data.price_surveys.map(toResearchSummary) }
+}
+
+// 제품에 모인 사진 전부 — 대표 사진 + 가격 조사들의 옵션(맛)별 사진. 같은 파일은 한 번만.
+// 반환: [{ url, label }] (label: '대표' 또는 '옵션1 · 옵션2')
+// 조사 하나를 못 불러와도 나머지 사진은 보여준다.
+export const getProductPhotos = async (product, surveys) => {
+  const details = await Promise.all(surveys.map((s) => getPriceResearch(s.id).catch(() => null)))
+  const photos = []
+  const seen = new Set()
+  const add = (url, label) => {
+    if (!url || seen.has(url)) return
+    seen.add(url)
+    photos.push({ url, label })
+  }
+  add(product.photoUrl, '대표')
+  details.forEach((d) => {
+    if (!d) return
+    add(d.photoUrl, '대표')
+    d.options.forEach((o) => add(o.photoUrl, [o.option1, o.option2].filter(Boolean).join(' · ')))
+  })
+  return photos
 }
 
 // 다음 제품 코드 미리보기 — 실제 코드는 등록 응답의 code
