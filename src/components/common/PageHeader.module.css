@@ -41,12 +41,22 @@
   gap: var(--space-2);
 }
 
-@media (max-width: 480px) {
+/* 좁은 화면 — 제목이 줄어들지 않게 버튼을 아랫줄로 */
+@media (max-width: 600px) {
   .header {
     flex-wrap: wrap;
   }
 
+  .text {
+    flex: 1 1 220px;
+  }
+
   .title {
     font-size: var(--font-lg);
+    white-space: normal;
+  }
+
+  .action {
+    flex-shrink: 1;
   }
 }
