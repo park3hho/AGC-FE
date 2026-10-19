@@ -12,6 +12,20 @@
   min-width: 0;
 }
 
+/* 현재 환율 줄 */
+.fxBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--font-sm);
+}
+
+.fxMeta {
+  color: var(--color-text-sub);
+}
+
 .noSurvey {
   display: flex;
   flex-direction: column;
@@ -94,7 +108,7 @@
   overflow-wrap: anywhere;
 }
 
-/* 설정 2×2 */
+/* 수수료 2칸 */
 .settings {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -194,6 +208,12 @@
   margin-top: 2px;
   font-size: 12px;
   color: var(--color-text-sub);
+}
+
+.optionWarn {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--color-warning);
 }
 
 .rowRight {

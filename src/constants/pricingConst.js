@@ -16,3 +16,9 @@ export const BULK_MODES = [
   { key: 'sale', label: '판매가' },
   { key: 'profit', label: '차익' },
 ]
+
+// 환율 출처 — BE core/pricing_config.FxSource 와 같아야 한다
+export const FX_SOURCE_LABEL = {
+  manual: '직접 입력',
+  default: '기본값',
+}

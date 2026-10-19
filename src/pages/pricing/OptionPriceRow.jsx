@@ -1,11 +1,11 @@
 import Thumb from '@/components/Thumb'
 import { GOOD_MARGIN_PCT, SALE_PRICE_UNIT } from '@/constants/pricingConst'
-import { formatPct, formatWon } from '@/utils/pricing'
+import { formatCny, formatPct, formatWon } from '@/utils/pricing'
 import styles from './Pricing.module.css'
 
 // 옵션 1행 — 왼쪽 옵션명·원가, 오른쪽 판매가 입력·차익
 export default function OptionPriceRow({
-  option, // { id, option1, option2, priceCny, photoUrl }: 기준 조사 옵션
+  option, // ShippingOption: 기준 조사 옵션 (priceCny · shippingCny · billableKg)
   value, // string: 판매가 입력값
   cost, // number?: 원가 + 배송비 (설정이 모자라면 null)
   result, // { profit, marginPct }?: calcOption 결과 (판매가 없으면 null)
@@ -26,9 +26,20 @@ export default function OptionPriceRow({
         <div className={styles.rowText}>
           <div className={styles.optionName}>{name}</div>
           <div className={styles.optionSub}>
-            ¥{option.priceCny}
+            {formatCny(option.priceCny)}
+            {option.shippingCny != null
+              ? ` + 배송 ${formatCny(option.shippingCny)} (${option.billableKg}kg)`
+              : ''}
             {cost != null && ` · 원가+배송 ${formatWon(cost)}`}
           </div>
+          {option.shippingCny == null && (
+            <div className={styles.optionWarn}>
+              용량을 못 읽어 배송비를 계산할 수 없어요 (옵션 이름에 245ml×24 처럼)
+            </div>
+          )}
+          {option.overLimit && (
+            <div className={styles.optionWarn}>30kg 초과 — 집운 소형으로 못 보내요</div>
+          )}
         </div>
       </div>
 

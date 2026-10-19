@@ -17,11 +17,10 @@ import OptionPriceRow from './OptionPriceRow'
 import styles from './Pricing.module.css'
 
 // 서버 Pricing → 입력칸 값 (전부 문자열)
+// 환율·배송비는 여기서 입력하지 않는다 — 환율은 환율 설정, 배송비는 옵션 용량으로 자동 계산
 const toForm = (pricing, options) => {
   const byId = Object.fromEntries(pricing.optionPrices.map((o) => [o.optionId, o.salePrice]))
   return {
-    fxRate: trimDecimal(pricing.fxRate),
-    shippingFee: pricing.shippingFee == null ? '' : String(pricing.shippingFee),
     platformFeeRate: trimDecimal(pricing.platformFeeRate),
     paymentFeeRate: trimDecimal(pricing.paymentFeeRate),
     prices: Object.fromEntries(
@@ -32,10 +31,8 @@ const toForm = (pricing, options) => {
 
 const sameForm = (a, b) => JSON.stringify(a) === JSON.stringify(b)
 
-// 설정 입력칸 정의 — 2×2 그리드 순서
+// 설정 입력칸 정의 — 2칸 그리드 순서
 const SETTING_FIELDS = [
-  { key: 'fxRate', label: '환율 (원/위안)', inputMode: 'decimal' },
-  { key: 'shippingFee', label: '배송비 (원)', inputMode: 'numeric' },
   { key: 'platformFeeRate', label: '플랫폼 수수료 (%)', inputMode: 'decimal' },
   { key: 'paymentFeeRate', label: '결제 수수료 (%)', inputMode: 'decimal' },
 ]
@@ -44,7 +41,8 @@ export default function PlatformPricingSection({
   productId, // number|string: 제품 id
   platform, // { key, label, priceMode }: PLATFORMS 항목
   survey, // { id, code, surveyDate }: 기준 조사 (최신)
-  options, // Array<{ id, option1, option2, priceCny, photoUrl }>: 기준 조사 옵션
+  options, // Array<ShippingOption>: 기준 조사 옵션 (priceCny · shippingCny 포함)
+  fx, // { cnyKrw, date, source }: 현재 환율 — 원가·배송비 계산에 씀
   initialPricing, // Pricing: GET 응답의 이 판매처 설정
 }) {
   const [pricing, setPricing] = useState(initialPricing) // 마지막으로 서버에서 받은 값
@@ -60,18 +58,13 @@ export default function PlatformPricingSection({
   const stale = pricing.saved && pricing.surveyId !== survey.id // 저장 뒤 새 조사가 생김
   const needsSave = dirty || !pricing.saved || stale
 
-  // 계산에 쓰는 설정 — 실결제 가산율은 화면에 없고 서버 값 그대로
-  const settings = { ...form, fxMarkupPct: pricing.fxMarkupPct }
+  // 계산에 쓰는 설정 — 환율은 현재 환율, 실결제 가산율은 화면에 없고 서버 값 그대로
+  const settings = { ...form, fxRate: fx.cnyKrw, fxMarkupPct: pricing.fxMarkupPct }
   const feeRate = totalFeeRate(settings)
 
   // 입력 검증
   const inPct = (v) => toNum(v) >= 0 && toNum(v) <= 100
-  const shipping = toNum(form.shippingFee)
   const fieldErrors = {}
-  if (!(toNum(form.fxRate) > 0)) fieldErrors.fxRate = '환율을 입력하세요'
-  if (!(shipping >= 0 && Number.isInteger(shipping))) {
-    fieldErrors.shippingFee = '배송비를 원 단위로 입력하세요'
-  }
   if (form.platformFeeRate === '') fieldErrors.platformFeeRate = '수수료를 입력하세요'
   else if (!inPct(form.platformFeeRate)) fieldErrors.platformFeeRate = '0~100 사이로 입력하세요'
   if (form.paymentFeeRate !== '' && !inPct(form.paymentFeeRate)) {
@@ -86,8 +79,8 @@ export default function PlatformPricingSection({
   // 옵션별 계산
   const rows = options.map((o) => ({
     option: o,
-    cost: costWithShipping(o.priceCny, settings),
-    result: calcOption(o.priceCny, form.prices[o.id], settings),
+    cost: costWithShipping(o, settings),
+    result: calcOption(o, form.prices[o.id], settings),
   }))
   const summary = summarize(rows.map((r) => r.result))
 
@@ -114,14 +107,24 @@ export default function PlatformPricingSection({
     // 차익 모드 — 옵션마다 역산
     if (feeTooHigh) return setBulkError('수수료가 100% 이상이라 계산할 수 없어요')
     if (Object.keys(fieldErrors).length) return setBulkError('위 설정을 먼저 채워 주세요')
+    // 배송비를 모르는 옵션(용량을 못 읽음)은 건너뛰고 알려 준다
     const next = {}
+    const skipped = []
     for (const o of options) {
-      const price = salePriceForProfit(o.priceCny, bulkAmount, settings)
+      if (o.shippingCny == null) {
+        skipped.push(o)
+        continue
+      }
+      const price = salePriceForProfit(o, bulkAmount, settings)
       if (price == null) return setBulkError('이 차익으로는 판매가를 계산할 수 없어요')
       next[o.id] = String(price)
     }
-    setForm((f) => ({ ...f, prices: next }))
-    setBulkError('')
+    setForm((f) => ({ ...f, prices: { ...f.prices, ...next } }))
+    setBulkError(
+      skipped.length
+        ? `용량을 못 읽은 옵션 ${skipped.length}개는 배송비를 몰라 그대로 뒀어요`
+        : '',
+    )
   }
 
   const save = async () => {
@@ -131,9 +134,8 @@ export default function PlatformPricingSection({
     try {
       const saved = await savePricing(productId, platform.key, {
         surveyId: survey.id,
-        fxRate: form.fxRate,
+        fxRate: fx.cnyKrw, // 저장 시점 환율 기록
         fxMarkupPct: pricing.fxMarkupPct ?? '0',
-        shippingFee: form.shippingFee,
         platformFeeRate: form.platformFeeRate,
         paymentFeeRate: form.paymentFeeRate === '' ? '0' : form.paymentFeeRate,
         optionPrices: options
@@ -197,7 +199,7 @@ export default function PlatformPricingSection({
         </div>
       </div>
 
-      {/* c) 설정 2×2 */}
+      {/* c) 수수료 2칸 — 환율·배송비는 자동 */}
       <div className={styles.settings}>
         {SETTING_FIELDS.map((f) => (
           <label key={f.key} className={styles.field}>

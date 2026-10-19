@@ -31,6 +31,14 @@ const PATHS = {
       <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.5a3.5 3.5 0 010 7M18 14c1.8.6 3 2.7 3 6" />
     </>
   ),
+  truck: (
+    <>
+      <path d="M3 6h11v10H3zM14 10h4l3 3v3h-7" />
+      <circle cx="7" cy="18" r="2" />
+      <circle cx="17" cy="18" r="2" />
+    </>
+  ),
+  exchange: <path d="M4 8h13l-3-3M20 16H7l3 3" />,
   photo: (
     <>
       <rect x="3" y="4" width="18" height="16" rx="3" />
