@@ -89,14 +89,58 @@ export const salePriceForMargin = (option, targetMarginPct, settings) => {
   return price > 0 ? price : null
 }
 
-// 네이버 옵션 추가금 한도 (원) — 대표가 기준 (NAVER_ADDON_LIMITS)
-export const naverAddonCap = (basePrice) => {
+// 네이버 옵션 추가금 허용 범위 (원) — 대표가 기준 (NAVER_ADDON_LIMITS). min 은 0 이하(차감)
+export const naverAddonRange = (basePrice) => {
   const rule = NAVER_ADDON_LIMITS.find((r) => basePrice >= r.minBase)
-  return rule ? Math.floor((basePrice * rule.maxPct) / 100) : null
+  if (!rule) return null
+  return {
+    min: Math.ceil((basePrice * rule.minPct) / 100),
+    max: Math.floor((basePrice * rule.maxPct) / 100),
+    minPct: rule.minPct,
+    maxPct: rule.maxPct,
+  }
 }
 
-export const naverAddonCapPct = (basePrice) =>
-  NAVER_ADDON_LIMITS.find((r) => basePrice >= r.minBase)?.maxPct ?? null
+// 네이버 대표가 · 추가금 계획
+// items: [{ id, sale }] — 판매가가 있는 옵션만. chosenId: 직접 고른 대표 옵션 (없거나 판매가가 없으면 자동)
+// 자동 = 모든 옵션이 한도 안에 들어오는 가장 싼 옵션, 그런 게 없으면 가장 싼 옵션
+// 반환: { baseId, base, auto, range, byId: { [id]: { amount, isBase, over } }, overIds, recommendedId } · 옵션이 없으면 null
+export const naverAddonPlan = (items, chosenId) => {
+  if (!items.length) return null
+  const fits = (base) => {
+    const r = naverAddonRange(base.sale)
+    return items.every((i) => i.sale - base.sale >= r.min && i.sale - base.sale <= r.max)
+  }
+  const sorted = [...items].sort((a, b) => a.sale - b.sale)
+  const chosen = chosenId == null ? null : items.find((i) => i.id === chosenId) || null
+  const recommended = sorted.find(fits) || null
+  const base = chosen || recommended || sorted[0]
+  const range = naverAddonRange(base.sale)
+  const byId = {}
+  const overIds = []
+  for (const i of items) {
+    const amount = i.sale - base.sale
+    const over = amount < range.min || amount > range.max
+    byId[i.id] = { amount, isBase: i.id === base.id, over }
+    if (over) overIds.push(i.id)
+  }
+  return {
+    baseId: base.id,
+    base: base.sale,
+    auto: !chosen,
+    range,
+    byId,
+    overIds,
+    recommendedId: recommended ? recommended.id : null,
+  }
+}
+
+// 추가금 표시 — 3500 → "+3,500", -3800 → "−3,800", 0 → "0"
+export const formatAddon = (n) => {
+  if (!n) return '0'
+  const s = Math.abs(n).toLocaleString('ko-KR')
+  return n > 0 ? `+${s}` : `−${s}`
+}
 
 // 숫자 입력칸 — 화면에는 "36,200", 상태에는 숫자만 "36200"
 export const digitsOnly = (v) => String(v ?? '').replace(/[^0-9]/g, '')

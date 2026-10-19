@@ -15,9 +15,9 @@ import {
   costWithShipping,
   formatFx,
   formatPct,
+  formatAddon,
   formatWon,
-  naverAddonCap,
-  naverAddonCapPct,
+  naverAddonPlan,
   salePriceForMargin,
   salePriceForProfit,
   summarize,
@@ -30,11 +30,13 @@ import PricingOptionRow from './PricingOptionRow'
 import styles from './Pricing.module.css'
 
 // 서버 Pricing → 입력값 (전부 문자열). 환율·배송비는 여기서 입력하지 않는다 (환율 설정 · 옵션 용량으로 자동)
+// baseOptionId: 대표 옵션 (네이버 추가금 0원) — null = 자동
 const toForm = (pricing, options) => {
   const byId = Object.fromEntries(pricing.optionPrices.map((o) => [o.optionId, o.salePrice]))
   return {
     platformFeeRate: trimDecimal(pricing.platformFeeRate),
     paymentFeeRate: trimDecimal(pricing.paymentFeeRate),
+    baseOptionId: pricing.baseOptionId ?? null,
     prices: Object.fromEntries(
       options.map((o) => [o.id, byId[o.id] == null ? '' : String(byId[o.id])]),
     ),
@@ -66,7 +68,8 @@ const platformState = (platform, form, saved, options, survey, fx) => {
   )
   const changedPrices = options.filter((o) => form.prices[o.id] !== baseline.prices[o.id])
   const changedFees = FEE_FIELDS.filter((f) => form[f.key] !== baseline[f.key])
-  const changeCount = changedPrices.length + changedFees.length
+  const changedBase = form.baseOptionId !== baseline.baseOptionId ? 1 : 0
+  const changeCount = changedPrices.length + changedFees.length + changedBase
   const stale = saved.saved && saved.surveyId !== survey.id // 저장 뒤 새 조사가 생김
 
   return {
@@ -85,23 +88,12 @@ const platformState = (platform, form, saved, options, survey, fx) => {
   }
 }
 
-// 네이버 — 판매가 있는 옵션 중 최저가 = 대표가, 나머지는 추가금 (한도: NAVER_ADDON_LIMITS)
+// 네이버 — 대표 옵션 가격 = 대표가, 나머지는 ±추가금 (한도: NAVER_ADDON_LIMITS, utils/pricing.naverAddonPlan)
 const naverAddons = (form, options) => {
-  const filled = options.map((o) => toNum(form.prices[o.id])).filter((n) => n >= 1)
-  if (!filled.length) return { base: null, cap: null, capPct: null, byId: {}, over: [] }
-  const base = Math.min(...filled)
-  const cap = naverAddonCap(base)
-  const byId = {}
-  const over = []
-  for (const o of options) {
-    const sale = toNum(form.prices[o.id])
-    if (!(sale >= 1)) continue
-    const amount = sale - base
-    const isOver = cap != null && amount > cap
-    byId[o.id] = { amount, isBase: amount === 0, over: isOver }
-    if (isOver) over.push(o)
-  }
-  return { base, cap, capPct: naverAddonCapPct(base), byId, over }
+  const items = options
+    .map((o) => ({ id: o.id, sale: toNum(form.prices[o.id]) }))
+    .filter((i) => i.sale >= 1)
+  return naverAddonPlan(items, form.baseOptionId)
 }
 
 const EMPTY_MSG = { text: '', error: false }
@@ -174,6 +166,7 @@ export default function PricingPage() {
     : {}
   const naverKey = platforms.find((p) => p.priceMode === 'base_addon')?.key
   const naver = naverKey && survey ? naverAddons(forms[naverKey], options) : null
+  const optionById = Object.fromEntries(options.map((o) => [o.id, o]))
 
   const toSave = Object.values(states).filter((s) => s.needsSave)
   const totalChanges = Object.values(states).reduce((n, s) => n + s.changeCount, 0)
@@ -189,6 +182,15 @@ export default function PricingPage() {
     }))
   const setFee = (platformKey, field, value) =>
     setForms((f) => ({ ...f, [platformKey]: { ...f[platformKey], [field]: value } }))
+  // 대표 옵션 고르기 — 이미 직접 고른 대표를 다시 누르면 자동(null)으로
+  const setBase = (platformKey, optionId) =>
+    setForms((f) => ({
+      ...f,
+      [platformKey]: {
+        ...f[platformKey],
+        baseOptionId: f[platformKey].baseOptionId === optionId ? null : optionId,
+      },
+    }))
 
   const applyBulk = () => {
     if (bulk.amount === '') return setBulkMsg({ text: '값을 입력하세요', error: true })
@@ -243,6 +245,11 @@ export default function PricingPage() {
       for (const s of toSave) {
         const key = s.platform.key
         const form = forms[key]
+        // 대표 옵션은 판매가가 있을 때만 보낸다 (없으면 자동)
+        const baseOk =
+          s.platform.priceMode === 'base_addon' &&
+          form.baseOptionId != null &&
+          form.prices[form.baseOptionId] !== ''
         const res = await savePricing(product.id, key, {
           surveyId: survey.id,
           fxRate: fx.cnyKrw, // 저장 시점 환율 기록
@@ -252,6 +259,7 @@ export default function PricingPage() {
           optionPrices: options
             .filter((o) => form.prices[o.id] !== '')
             .map((o) => ({ optionId: o.id, salePrice: Math.round(toNum(form.prices[o.id])) })),
+          baseOptionId: baseOk ? form.baseOptionId : null,
         })
         setSaved((prev) => ({ ...prev, [key]: res }))
         setForms((prev) => ({ ...prev, [key]: toForm(res, options) }))
@@ -425,11 +433,15 @@ export default function PricingPage() {
                     platform: p,
                     value: forms[p.key].prices[o.id],
                     result: states[p.key].results[o.id],
-                    addon: p.key === naverKey ? naver.byId[o.id] : undefined,
+                    addon:
+                      p.key === naverKey && naver
+                        ? naver.byId[o.id] && { ...naver.byId[o.id], auto: naver.auto }
+                        : undefined,
                     invalid: invalidPrice(forms[p.key].prices[o.id]),
                     changed: states[p.key].changedIds.has(o.id),
                   }))}
                   onChange={(platformKey, v) => setPrice(platformKey, o.id, v)}
+                  onSetBase={(platformKey) => setBase(platformKey, o.id)}
                 />
               ))}
             </div>
@@ -442,18 +454,49 @@ export default function PricingPage() {
                 </p>
               ))}
 
-            {naver && naver.over.length > 0 && (
+            {naver && naver.overIds.length > 0 && (
               <div className={styles.warnBox}>
-                <b>네이버 등록 불가 {naver.over.length}건</b> · 대표가 {formatWon(naver.base)} 기준
-                옵션 추가금은 최대 +{formatWon(naver.cap)}({naver.capPct}%)까지예요.{' '}
-                {naver.over.map(optionName).join(', ')} 옵션이 한도를 넘어요.
+                <b>네이버 등록 불가 {naver.overIds.length}건</b> · 대표가{' '}
+                {formatWon(naver.base)}({optionName(optionById[naver.baseId])}) 기준 추가금은{' '}
+                {formatAddon(naver.range.min)} ~ {formatAddon(naver.range.max)}원 ({naver.range.minPct}% ~
+                +{naver.range.maxPct}%)까지예요.{' '}
+                {naver.overIds.map((id) => optionName(optionById[id])).join(', ')} 옵션이 한도를
+                넘어요.
+                {naver.recommendedId != null && naver.recommendedId !== naver.baseId ? (
+                  <span className={styles.warnFix}>
+                    {optionName(optionById[naver.recommendedId])}을 대표로 하면 모두 한도 안이에요.
+                    <button
+                      type="button"
+                      className="btn-secondary btn-sm"
+                      onClick={() =>
+                        setForms((f) => ({
+                          ...f,
+                          [naverKey]: { ...f[naverKey], baseOptionId: naver.recommendedId },
+                        }))
+                      }
+                    >
+                      대표로 지정
+                    </button>
+                  </span>
+                ) : (
+                  naver.recommendedId == null && (
+                    <span className={styles.warnFix}>
+                      어느 옵션을 대표로 해도 한도를 넘어요. 가격차가 큰 옵션은 따로 등록하세요.
+                    </span>
+                  )
+                )}
               </div>
             )}
 
             <p className={styles.footHint}>
-              쿠팡은 옵션마다 판매가를 따로 등록하고, 네이버는 최저 옵션가
-              {naver?.base != null ? ` ${formatWon(naver.base)}` : ''}을 대표가로, 나머지는
-              추가금으로 등록해요.
+              쿠팡은 옵션마다 판매가를 따로 등록해요. 네이버는 대표 옵션
+              {naver
+                ? ` ${optionName(optionById[naver.baseId])}(${formatWon(naver.base)}, ${
+                    naver.auto ? '자동 선택' : '직접 지정'
+                  })`
+                : ''}
+              을 대표가로, 나머지는 ±추가금으로 등록해요. 네이버 칸의 추가금 표시를 누르면 그 옵션이
+              대표가 돼요.
             </p>
           </Section>
 

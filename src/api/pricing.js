@@ -18,6 +18,7 @@ const toPricing = (p) => ({
     optionId: o.option_id,
     salePrice: o.sale_price ?? null, // 정수 (원) · 없으면 null
   })),
+  baseOptionId: p.base_option_id ?? null, // 대표 옵션 (네이버 추가금 0원) · null = 자동
   updatedAt: p.updated_at ?? null,
 })
 
@@ -61,6 +62,7 @@ export const savePricing = async (productId, platform, body) => {
         option_id: o.optionId,
         sale_price: Number(o.salePrice),
       })),
+      base_option_id: body.baseOptionId ?? null, // 판매가가 있는 옵션만 · null = 자동
     },
     errorMsg: '가격을 저장하지 못했어요',
   })

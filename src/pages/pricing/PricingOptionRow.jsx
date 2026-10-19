@@ -1,6 +1,13 @@
 import Thumb from '@/components/Thumb'
 import { GOOD_MARGIN_PCT, LOW_MARGIN_PCT, MARGIN_BAR_MAX_PCT } from '@/constants/pricingConst'
-import { digitsOnly, formatCny, formatPct, formatWon, withCommas } from '@/utils/pricing'
+import {
+  digitsOnly,
+  formatAddon,
+  formatCny,
+  formatPct,
+  formatWon,
+  withCommas,
+} from '@/utils/pricing'
 import styles from './Pricing.module.css'
 
 const toneOf = (result) => {
@@ -17,11 +24,20 @@ function PriceCell({
   platformLabel, // string: 판매처 이름
   value, // string: 판매가 (숫자만)
   result, // { profit, marginPct }?: 계산 결과
-  addon, // { amount, isBase, over }?: 네이버 추가금 — 쿠팡은 undefined
+  addon, // { amount, isBase, over, auto }?: 네이버 추가금 — 쿠팡은 undefined
   invalid, // boolean?: 판매가 입력 오류
   changed, // boolean?: 저장된 값과 다름
   onChange, // function(string): 판매가 바뀜 (숫자만)
+  onSetBase, // function?: 이 옵션을 대표로 (대표를 다시 누르면 자동)
 }) {
+  let addonTitle
+  if (addon?.isBase) {
+    addonTitle = addon.auto ? '자동으로 고른 대표 옵션' : '직접 고른 대표 옵션 — 누르면 자동으로'
+  } else if (addon) {
+    addonTitle = addon.over
+      ? '네이버 추가금 한도를 넘어요 — 누르면 이 옵션을 대표로'
+      : '누르면 이 옵션을 대표로'
+  }
   const tone = toneOf(result)
   const barPct = result ? Math.max(0, Math.min(100, (result.marginPct / MARGIN_BAR_MAX_PCT) * 100)) : 0
 
@@ -40,14 +56,18 @@ function PriceCell({
           onChange={(e) => onChange(digitsOnly(e.target.value))}
         />
         {addon && (
-          <span
+          <button
+            type="button"
             className={`${styles.badge} ${addon.isBase ? styles.badgeBase : ''} ${
               addon.over ? styles.badgeBad : ''
             }`}
-            title={addon.over ? '네이버 옵션 추가금 한도를 넘어요' : undefined}
+            title={addonTitle}
+            aria-label={`${name} ${addonTitle}`}
+            onClick={onSetBase}
+            disabled={addon.isBase && addon.auto}
           >
-            {addon.isBase ? '대표가' : `+${addon.amount.toLocaleString('ko-KR')}`}
-          </span>
+            {addon.isBase ? (addon.auto ? '대표(자동)' : '대표') : formatAddon(addon.amount)}
+          </button>
         )}
       </div>
       <div className={`${styles.meta} ${tone}`}>
@@ -68,6 +88,7 @@ export default function PricingOptionRow({
   cost, // number?: 원가 + 배송비 (원)
   cells, // Array<{ platform, value, result, addon, invalid, changed }>: 판매처별 칸
   onChange, // function(platformKey, value): 판매가 바뀜
+  onSetBase, // function(platformKey): 이 옵션을 대표로 (네이버)
 }) {
   const name = option.option2 ? `${option.option1} / ${option.option2}` : option.option1
 
@@ -101,6 +122,7 @@ export default function PricingOptionRow({
           invalid={c.invalid}
           changed={c.changed}
           onChange={(v) => onChange(c.platform.key, v)}
+          onSetBase={c.addon ? () => onSetBase(c.platform.key) : undefined}
         />
       ))}
     </div>
