@@ -73,3 +73,14 @@ body.show-sections [data-section]::before {
   white-space: nowrap;
   pointer-events: none;
 }
+
+/* 공통 틀(맨 위·맨 왼쪽에 붙은 영역)은 이름표가 화면 밖으로 잘리지 않게 안쪽에 */
+body.show-sections [data-section^='공통']::before {
+  top: 4px;
+  left: auto;
+  right: 8px;
+}
+
+body.show-sections [data-section^='공통'] {
+  outline-offset: -2px;
+}

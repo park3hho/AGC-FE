@@ -359,7 +359,7 @@ export default function PricingPage() {
             />
           </Section>
 
-          <Section name="옵션별 판매가" id="prices" title={false} plain>
+          <Section name="옵션별 판매가" id="prices" title={false}>
             <div className={styles.table} style={{ '--cols': platforms.length }}>
               {/* 머리 — 판매처별 수수료 · 요약 */}
               <div className={`${styles.grid} ${styles.head}`}>
