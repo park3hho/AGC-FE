@@ -11,13 +11,21 @@ export default function Section({
   action, // ReactNode?: 머리 오른쪽 (버튼 등)
   plain, // boolean?: 패널(흰 바탕 + 테두리) 없이
   flush, // boolean?: 본문 안쪽 여백 없이 (표 · 목록이 가장자리까지)
+  fill, // boolean?: 화면의 남은 높이를 채우고, 넘치면 이 섹션 본문만 스크롤 (DESIGN.md §4.4 — 한 화면에 하나)
+  footer, // ReactNode?: 본문 아래 고정 (페이지 넘김 등) — 스크롤되지 않는다
+  bodyRef, // ref?: 본문 요소 — useFitRows 로 한 페이지 행 수를 잴 때
   className, // string?: 바깥 클래스 추가
   children,
 }) {
   const screen = useScreen()
   const label = screen.name ? `${screen.name} › ${name}` : name
   const heading = title === true ? name : title
-  const cls = [styles.section, plain ? styles.plain : styles.panel, className].filter(Boolean)
+  const cls = [
+    styles.section,
+    plain ? styles.plain : styles.panel,
+    fill && styles.fill,
+    className,
+  ].filter(Boolean)
 
   return (
     <section id={id} data-section={label} className={cls.join(' ')}>
@@ -28,7 +36,10 @@ export default function Section({
           {action && <div className={styles.action}>{action}</div>}
         </div>
       )}
-      <div className={flush ? styles.flush : styles.body}>{children}</div>
+      <div ref={bodyRef} className={flush ? styles.flush : styles.body}>
+        {children}
+      </div>
+      {footer}
     </section>
   )
 }

@@ -5,12 +5,20 @@ export default function Pager({
   page, // number: 지금 페이지 (1부터)
   pageCount, // number: 전체 페이지 수
   total, // number?: 전체 건수 (왼쪽에 표시)
+  unit = '개', // string?: 건수 단위 ('건', '명' …)
   onChange, // function(page): 페이지 바꿈
 }) {
-  if (pageCount <= 1) return total != null ? <div className={styles.pager}>{total}개</div> : null
+  if (pageCount <= 1) {
+    return total != null ? (
+      <div className={styles.pager}>
+        {total}
+        {unit}
+      </div>
+    ) : null
+  }
   return (
     <div className={styles.pager}>
-      <span>{total != null && `${total}개`}</span>
+      <span>{total != null && `${total}${unit}`}</span>
       <span className={styles.ctrl}>
         <button
           type="button"

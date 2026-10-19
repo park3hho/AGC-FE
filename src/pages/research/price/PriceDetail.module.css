@@ -1,0 +1,44 @@
+/* 가격조사 상세 — 화면 맞춤 (DESIGN.md §4.4) */
+
+.linkedText {
+  min-width: 0;
+}
+
+/* 기본 정보 · 국내 최저가 나란히 */
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+/* 옵션 표 — 행 높이를 일정하게 (사진 없는 행도 사진 있는 행과 같게). 본문 여백 없이(flush) 표 양 끝만 띄운다 */
+.options td {
+  height: 49px;
+}
+
+.options th:first-child,
+.options td:first-child {
+  padding-left: var(--space-5);
+}
+
+.options th:last-child,
+.options td:last-child {
+  padding-right: var(--space-5);
+}
+
+/* 모바일 — 섹션 탭으로 하나씩. 나란히 줄을 풀어 섹션이 바로 남은 높이를 받게 */
+@media (max-width: 768px) {
+  .options th:first-child,
+  .options td:first-child {
+    padding-left: var(--space-4);
+  }
+
+  .options th:last-child,
+  .options td:last-child {
+    padding-right: var(--space-4);
+  }
+
+  .pair {
+    display: contents;
+  }
+}

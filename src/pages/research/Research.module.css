@@ -110,3 +110,48 @@ a.linked {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 72px var(--touch-min);
   }
 }
+
+/* ── 화면 맞춤 (DESIGN.md §4.4) — 입력 화면 공통 ── */
+
+/* 읽기 전용 값(코드 · 날짜)을 입력칸 대신 한 줄로 */
+.metaLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  color: var(--color-text-sub);
+  font-size: var(--font-sm);
+}
+
+.metaLine b {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.metaNote {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+/* 사진 | 입력칸 나란히 — 좁으면 위아래 */
+.formSplit {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3) var(--space-5);
+  align-items: start;
+}
+
+.formFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* 좁은 화면에서도 두 칸 유지 (날짜 · 코드처럼 짧은 값) */
+.grid2Keep {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+

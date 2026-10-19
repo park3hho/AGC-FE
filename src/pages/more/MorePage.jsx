@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 
 import Icon from '@/components/Icon'
-import ListItem from '@/components/common/ListItem'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import { MENU, MENU_GROUPS } from '@/constants/menuConst'
@@ -10,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth'
 import styles from './MorePage.module.css'
 
 // 더보기 (모바일 아래 탭) — 섹션: 메뉴 · 내 계정
+// 한 화면에 다 들어가게 메뉴는 묶음별 타일 격자로 (DESIGN.md §4.4 — 스크롤 대신 줄이기)
 export default function MorePage() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
@@ -24,35 +24,36 @@ export default function MorePage() {
     <main className="page-flat">
       <PageHeader title="더보기" />
 
-      <Section name="메뉴" id="menu" title={false} flush>
-        <div className={styles.list}>
-          {MENU_GROUPS.map((g) => {
-            const list = items.filter((m) => m.group === g.key)
-            if (!list.length) return null
-            return (
-              <div key={g.key}>
-                <div className={styles.group}>{g.label}</div>
+      <Section name="메뉴" id="menu" title={false} fill>
+        {MENU_GROUPS.map((g) => {
+          const list = items.filter((m) => m.group === g.key)
+          if (!list.length) return null
+          return (
+            <div key={g.key} className={styles.group}>
+              <div className={styles.groupLabel}>{g.label}</div>
+              <div className={styles.grid}>
                 {list.map((m) => (
-                  <ListItem
+                  <button
                     key={m.key}
-                    left={
-                      <span className={styles.icon}>
-                        <Icon name={m.icon} size={20} />
-                      </span>
-                    }
-                    title={m.label}
-                    right={m.soon ? '준비 중' : <Icon name="arrowRight" size={16} />}
+                    type="button"
+                    className={styles.tile}
                     disabled={m.soon}
                     onClick={() => navigate(m.path)}
-                  />
+                  >
+                    <span className={styles.icon}>
+                      <Icon name={m.icon} size={20} />
+                    </span>
+                    <span className={styles.label}>{m.label}</span>
+                    {m.soon && <small className={styles.soon}>준비 중</small>}
+                  </button>
                 ))}
               </div>
-            )
-          })}
-        </div>
+            </div>
+          )
+        })}
       </Section>
 
-      <Section name="내 계정" id="me" title={false}>
+      <Section name="내 계정" id="me" title={false} plain>
         <div className={styles.me}>
           <span>
             <b>{user.name}</b> · {ROLE_LABEL[user.role]}

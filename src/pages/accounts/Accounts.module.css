@@ -1,3 +1,18 @@
+/* 패널(Section flush) 안 계정 목록 */
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--space-5);
+}
+
+.list > .card:last-child {
+  border-bottom: 0;
+}
+
+.msg {
+  padding: var(--space-4) var(--space-5) 0;
+}
+
 .filter {
   min-height: var(--touch-min);
   padding: 0 var(--space-3);
@@ -6,12 +21,19 @@
   background: var(--color-bg);
 }
 
+/* 데스크탑: 한 줄 — 플랫폼 | ID | PW | 용도 */
 .card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4) 0;
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 0.9fr);
+  align-items: center;
+  column-gap: var(--space-4);
+  row-gap: var(--space-1);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--color-border);
+}
+
+.cardError {
+  grid-column: 1 / -1;
 }
 
 .platform {
@@ -55,9 +77,25 @@
 }
 
 .empty {
-  padding: var(--space-5) 0;
+  padding: var(--space-5);
   color: var(--color-text-sub);
   text-align: center;
+}
+
+/* 모바일: 세로로 쌓기 */
+@media (max-width: 768px) {
+  .list {
+    padding: 0 var(--space-4);
+  }
+
+  .msg {
+    padding: var(--space-4) var(--space-4) 0;
+  }
+
+  .card {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-2);
+  }
 }
 
 .usages {

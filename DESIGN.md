@@ -175,6 +175,34 @@ variables.css → base.css → layout.css → buttons.css → forms.css → (도
 - 모바일(≤ 480px): 한 화면 = 한 섹션 (섹션이 여럿이면 `SectionTabs` 로 전환). 섹션 안 세로 스크롤은 위 3번일 때만, 주요 버튼은 하단 고정.
 - **완료 전 확인**: 데스크탑 1280×800 · 모바일 375×667 에서 페이지 스크롤바가 없는지, 스크롤이 있다면 섹션 하나 안에서만 생기는지.
 
+**만드는 법 (공통 장치)**
+
+| 장치 | 하는 일 |
+|---|---|
+| 앱 틀 (`AppLayout`) | 창 높이(`100dvh`)에 고정. 문서(`html`)는 스크롤되지 않는다. 화면은 위쪽 바 아래 남은 높이를 쓴다 |
+| `.page-flat` | 화면 본문. 높이 고정, 자식은 줄어들지 않는다. `overflow-y: auto` 는 **비상용** — 창이 너무 낮아 fill 섹션 최소 높이(`--fill-min`)도 안 나올 때만. 정상 크기에서 이 스크롤이 생기면 버그 |
+| `<Section fill>` | 남은 높이를 채우고 본문만 스크롤 (머리·`footer` 는 고정). 한 화면에 하나 |
+| `<Section footer={…}>` | 본문 아래 고정 자리 — `Pager` 를 여기에 |
+| `useFitRows(bodyRef)` | fill 섹션 본문 높이에 들어가는 행 수 = 한 페이지 크기. 행에 `data-fit-row`(또는 목록 틀에 `data-fit-list`), 표 머리에 `data-fit-head` |
+| `.fit-row` / `.fit-col` | fill 섹션을 감싼 가로·세로 틀 (남은 높이를 넘겨줌). 열 너비는 화면 CSS 에서 |
+| `SectionTabs` + `useSectionTabs(list)` | 모바일에서 섹션을 탭으로 하나씩. `tabs.hide(id)` 를 섹션 `className` 에, 데스크탑에서는 아무것도 안 함 |
+| `.sticky-cta` | 저장 등 주요 버튼 줄 — 본문 맨 아래 고정 (fill 섹션 밖) |
+| `Pager` `unit` | 건수 단위 ('개' 기본, '건' · '명' · '구간') |
+
+- 모바일 탭 글자는 짧게 줄여도 된다 (예: 제품 상세 사진·정보·판매가·옵션·조사). 부르는 이름은 섹션 `name` 그대로.
+- 가격 책정(제품) › 옵션별 판매가는 일괄 적용·대표 옵션을 한눈에 비교해야 해서 페이지로 나누지 않고 섹션 안에서 스크롤한다 (3번).
+
+목록 예:
+```jsx
+const bodyRef = useRef(null)
+const size = useFitRows(bodyRef, { fallback: 65 })
+const rows = items.slice((page - 1) * size, page * size)
+<Section name="제품 목록" id="list" flush fill bodyRef={bodyRef}
+  footer={<Pager page={page} pageCount={Math.ceil(items.length / size)} onChange={setPage} />}>
+  <table><thead data-fit-head>…</thead><tbody>{rows.map((r) => <tr data-fit-row … />)}</tbody></table>
+</Section>
+```
+
 ### 4.5 앱 틀 (AppLayout) — 2026-10-20
 로그인 후 모든 화면은 같은 틀 안에 들어간다. 화면마다 틀을 다시 만들지 않는다.
 

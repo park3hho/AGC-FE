@@ -1,0 +1,57 @@
+/* 가격조사 추가 — 화면 맞춤 2단 (DESIGN.md §4.4) */
+
+/* 이 화면 입력칸은 낮게 (기본 56px → 44px 터치 최소) — 한 화면에 들어가게 */
+.page :global(.form-input) {
+  min-height: var(--touch-min);
+  height: var(--touch-min);
+}
+
+.page :global(.form-group) {
+  gap: var(--space-1);
+}
+
+.layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+}
+
+.col {
+  min-height: 0;
+}
+
+.linked {
+  padding: var(--space-2) var(--space-3);
+}
+
+.linkedText {
+  min-width: 0;
+}
+
+/* 국내 최저가 — 최저가 · 링크 두 칸씩 */
+.domestic {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+}
+
+/* 모바일 — 섹션 탭으로 하나씩 */
+@media (max-width: 768px) {
+  .layout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .col {
+    display: contents;
+  }
+
+  .domestic {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

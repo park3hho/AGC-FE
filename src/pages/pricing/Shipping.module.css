@@ -39,10 +39,21 @@
   font-size: var(--font-sm);
 }
 
-/* 무게 구간별 요금표 — 무게 · 용량 · 위안 · 원화 */
+/* 무게 구간별 요금표 — 무게 · 용량 · 위안 · 원화 (패널 안, 페이지 넘김) */
 .table {
   display: flex;
   flex-direction: column;
+  padding: 0 var(--space-5);
+}
+
+.table > :last-child {
+  border-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .table {
+    padding: 0 var(--space-4);
+  }
 }
 
 .tableRow {

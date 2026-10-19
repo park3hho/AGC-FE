@@ -59,6 +59,25 @@
   min-width: 0;
 }
 
+/* fill — 남은 높이를 채우고 본문만 스크롤 (머리 · footer 는 고정). DESIGN.md §4.4 */
+.fill {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: var(--fill-min);
+}
+
+.fill > .head {
+  flex-shrink: 0;
+}
+
+.fill > .body,
+.fill > .flush {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 @media (max-width: 768px) {
   .head {
     padding: var(--space-3) var(--space-4);

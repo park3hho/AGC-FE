@@ -46,7 +46,7 @@ export default function AccountNewPage() {
     <form className="page-flat" onSubmit={submit}>
       <PageHeader title="어떤 계정인가요?" back />
 
-      <Section name="입력" id="form" title={false}>
+      <Section name="입력" id="form" title={false} fill>
         <div className="form-group">
           <label className="form-label" htmlFor="platform">
             플랫폼

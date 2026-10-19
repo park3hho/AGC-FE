@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { getExchangeRate } from '@/api/exchangeRate'
@@ -10,9 +10,11 @@ import Thumb from '@/components/Thumb'
 import ListItem from '@/components/common/ListItem'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
+import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
 import { FEATURE, hasFeature } from '@/constants/permissions'
 import { PRICING_STATUS } from '@/constants/pricingConst'
 import { useAuth } from '@/hooks/useAuth'
+import { useFitRows } from '@/hooks/useFitRows'
 import { todayKst } from '@/utils/date'
 import { formatCny, formatFx } from '@/utils/pricing'
 import styles from './HomePage.module.css'
@@ -20,13 +22,75 @@ import styles from './HomePage.module.css'
 const yesterdayKst = () =>
   new Date(Date.now() - 86400000).toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' })
 
+// 모바일 섹션 탭 — 한 화면 = 한 섹션 (DESIGN.md §4.4). 할 일을 먼저
+const TABS = [
+  { id: 'todo', name: '할 일' },
+  { id: 'stats', name: '현황 숫자' },
+  { id: 'flow', name: '진행 단계' },
+  { id: 'recent', name: '최근 제품' },
+]
+
+// 홈 › 최근 제품 — 남은 높이에 들어가는 개수만 (스크롤 대신 줄이기, 나머지는 '전체 보기')
+// useFitRows 가 처음부터 섹션을 지켜볼 수 있게, 데이터가 오고 나서 그리는 이 컴포넌트 안에 둔다
+function RecentProducts({
+  products, // Array<Product>: 최근 추가 순
+  className, // string?: 모바일 탭으로 가릴 때
+  onAll, // function: 전체 보기
+  onOpen, // function(product): 행 클릭
+}) {
+  const ref = useRef(null)
+  const fit = useFitRows(ref, { fallback: 65 })
+
+  return (
+    <Section
+      name="최근 제품"
+      id="recent"
+      flush
+      fill
+      bodyRef={ref}
+      className={className}
+      action={
+        <button className="btn-text" onClick={onAll}>
+          전체 보기
+        </button>
+      }
+    >
+      {products.length === 0 && <p className={styles.empty}>아직 제품이 없어요</p>}
+      <div className={styles.recent} data-fit-list>
+        {products.slice(0, fit).map((p) => (
+          <ListItem
+            key={p.id}
+            left={<Thumb src={p.photoUrl} size={44} />}
+            title={p.titleKo || p.titleCn || '-'}
+            sub={[
+              p.code,
+              p.latestSurvey && `옵션 ${p.latestSurvey.optionCount}`,
+              p.latestSurvey?.minPriceCny && `${formatCny(p.latestSurvey.minPriceCny)}~`,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+            right={
+              <Badge tone={PRICING_STATUS[p.pricingStatus].tone}>
+                {PRICING_STATUS[p.pricingStatus].label}
+              </Badge>
+            }
+            onClick={() => onOpen(p)}
+          />
+        ))}
+      </div>
+    </Section>
+  )
+}
+
 // 홈 — 섹션: 현황 숫자 · 진행 단계 · 최근 제품 · 할 일 (DESIGN.md §4.6)
+// 데스크탑: 한 화면에 전부 (최근 제품 개수를 높이에 맞춤) · 모바일: 섹션 탭으로 하나씩
 export default function HomePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const canResearch = hasFeature(user, FEATURE.RESEARCH)
   const [data, setData] = useState(null) // { products, surveyCount, fx }
   const [error, setError] = useState('')
+  const tabs = useSectionTabs(TABS)
 
   useEffect(() => {
     if (!canResearch) return
@@ -126,8 +190,9 @@ export default function HomePage() {
   return (
     <main className="page-flat">
       {header}
+      <SectionTabs {...tabs} />
 
-      <Section name="현황 숫자" id="stats" title={false} plain>
+      <Section name="현황 숫자" id="stats" title={false} plain className={tabs.hide('stats')}>
         <div className={styles.stats}>
           <div className={styles.stat}>
             <div className={styles.statLabel}>조사한 제품</div>
@@ -170,7 +235,7 @@ export default function HomePage() {
         </div>
       </Section>
 
-      <Section name="진행 단계" id="flow" title={false} flush>
+      <Section name="진행 단계" id="flow" title={false} flush className={tabs.hide('flow')}>
         <div className={styles.flow}>
           {steps.map((s) => (
             <button
@@ -188,43 +253,27 @@ export default function HomePage() {
         </div>
       </Section>
 
-      <div className={styles.columns}>
-        <Section
-          name="최근 제품"
-          id="recent"
-          flush
-          action={
-            <button className="btn-text" onClick={() => navigate('/research/products')}>
-              전체 보기
-            </button>
-          }
-        >
-          {products.length === 0 && <p className={styles.empty}>아직 제품이 없어요</p>}
-          <div className={styles.recent}>
-            {products.slice(0, 5).map((p) => (
-              <ListItem
-                key={p.id}
-                left={<Thumb src={p.photoUrl} size={44} />}
-                title={p.titleKo || p.titleCn || '-'}
-                sub={[
-                  p.code,
-                  p.latestSurvey && `옵션 ${p.latestSurvey.optionCount}`,
-                  p.latestSurvey?.minPriceCny && `${formatCny(p.latestSurvey.minPriceCny)}~`,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-                right={
-                  <Badge tone={PRICING_STATUS[p.pricingStatus].tone}>
-                    {PRICING_STATUS[p.pricingStatus].label}
-                  </Badge>
-                }
-                onClick={() => navigate(`/research/products/${p.id}`)}
-              />
-            ))}
-          </div>
-        </Section>
+      {/* 최근 제품 · 할 일 — 남은 높이를 나눠 쓴다. 모바일에서 다른 탭을 보면 통째로 숨김 */}
+      <div
+        className={`fit-row ${styles.columns} ${
+          tabs.mobile && !['recent', 'todo'].includes(tabs.value) ? 'mobile-hidden' : ''
+        }`}
+      >
+        <RecentProducts
+          products={products}
+          className={tabs.hide('recent')}
+          onAll={() => navigate('/research/products')}
+          onOpen={(p) => navigate(`/research/products/${p.id}`)}
+        />
 
-        <Section name="할 일" id="todo" sub={todos.length ? `${todos.length}건` : ''} flush>
+        <Section
+          name="할 일"
+          id="todo"
+          sub={todos.length ? `${todos.length}건` : ''}
+          flush
+          fill
+          className={tabs.hide('todo')}
+        >
           {todos.length === 0 && <p className={styles.empty}>지금 할 일이 없어요</p>}
           {todos.map((t) => (
             <div key={t.key} className={styles.todo}>

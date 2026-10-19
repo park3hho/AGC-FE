@@ -6,6 +6,7 @@ import { getProducts } from '@/api/product'
 import Icon from '@/components/Icon'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
+import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
 import { useScreen } from '@/hooks/useScreen'
 import Thumb from '@/components/Thumb'
 import { BULK_MODES, BULK_TARGET_ALL, FX_SOURCE_LABEL, PLATFORMS } from '@/constants/pricingConst'
@@ -98,11 +99,21 @@ const naverAddons = (form, options) => {
 
 const EMPTY_MSG = { text: '', error: false }
 
+// 모바일에서는 한 번에 한 섹션 (DESIGN.md §4.4) — 제품·환율은 한 탭에 묶는다
+const MOBILE_TABS = [
+  { id: 'prices', name: '옵션별 판매가' },
+  { id: 'bulk', name: '한 번에 맞추기' },
+  { id: 'product', name: '제품·환율' },
+]
+
 // 가격 책정 › 제품 1개 — 쿠팡·네이버를 옵션별로 나란히 놓고 한 번에 저장
+// 화면 맞춤 (§4.4): 옵션별 판매가만 남은 높이를 채우고 그 안에서 스크롤, 저장 바는 아래 고정.
+//   옵션은 일괄 적용·대표 옵션을 한눈에 비교해야 해서 페이지로 나누지 않는다.
 export default function PricingPage() {
   const { productId } = useParams()
   const navigate = useNavigate()
   const screen = useScreen()
+  const tabs = useSectionTabs(MOBILE_TABS)
   const [next, setNext] = useState(null) // 다음 대기 제품 (목록 순서로 이 제품 뒤 → 없으면 맨 앞)
   const [data, setData] = useState(null) // { product, survey, fx, options }
   const [saved, setSaved] = useState(null) // { [platform]: Pricing } — 마지막으로 서버에서 받은 값
@@ -156,6 +167,8 @@ export default function PricingPage() {
 
   const { product, survey, fx, options } = data
   const platforms = PLATFORMS.filter((p) => saved[p.key])
+  // 조사가 없으면 탭 없이 제품·안내만 보여준다
+  const hide = (id) => (survey ? tabs.hide(id) : '')
   const states = survey
     ? Object.fromEntries(
         platforms.map((p) => [
@@ -302,7 +315,9 @@ export default function PricingPage() {
         }
       />
 
-      <Section name="제품" id="product" title={false} plain>
+      {survey && <SectionTabs {...tabs} />}
+
+      <Section name="제품" id="product" title={false} plain className={hide('product')}>
         <Link to={`/research/products/${product.id}`} className={research.linked}>
           <Thumb src={product.photoUrl} />
           <div className={styles.productBody}>
@@ -320,7 +335,7 @@ export default function PricingPage() {
       </Section>
 
       {/* 환율은 환율 설정에서 바꾼다 — 바꾸면 원가·배송비·차익이 다시 계산됨 (판매가는 그대로) */}
-      <Section name="환율" id="fx" title={false} plain>
+      <Section name="환율" id="fx" title={false} plain className={hide('product')}>
         <div className={styles.fxBar}>
           <span>
             환율 <strong>1위안 = {formatFx(fx.cnyKrw)}원</strong>
@@ -354,7 +369,7 @@ export default function PricingPage() {
         </Section>
       ) : (
         <>
-          <Section name="한 번에 맞추기" id="bulk" title={false} plain>
+          <Section name="한 번에 맞추기" id="bulk" title={false} plain className={hide('bulk')}>
             <PricingBulkBar
               bulk={bulk}
               platforms={platforms}
@@ -367,7 +382,7 @@ export default function PricingPage() {
             />
           </Section>
 
-          <Section name="옵션별 판매가" id="prices" title={false}>
+          <Section name="옵션별 판매가" id="prices" title={false} fill className={hide('prices')}>
             <div className={styles.table} style={{ '--cols': platforms.length }}>
               {/* 머리 — 판매처별 수수료 · 요약 */}
               <div className={`${styles.grid} ${styles.head}`}>

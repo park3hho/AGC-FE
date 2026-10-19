@@ -116,12 +116,9 @@
   font-weight: 700;
 }
 
-/* 홈 › 최근 제품 · 할 일 */
+/* 홈 › 최근 제품 · 할 일 — .fit-row(layout.css) 가 남은 높이를 준다 */
 .columns {
-  display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: var(--space-4);
-  align-items: start;
 }
 
 .recent {
@@ -195,7 +192,10 @@
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
+/* 모바일은 섹션 탭으로 하나만 보이므로 한 칸 */
+@media (max-width: 768px) {
   .columns {
     grid-template-columns: minmax(0, 1fr);
   }

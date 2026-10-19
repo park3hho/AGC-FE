@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { getProducts } from '@/api/product'
@@ -9,10 +9,9 @@ import ListItem from '@/components/common/ListItem'
 import Pager from '@/components/common/Pager'
 import Section from '@/components/common/Section'
 import { PRICING_STATUS, PRICING_STATUS_FILTERS } from '@/constants/pricingConst'
+import { useFitRows } from '@/hooks/useFitRows'
 import { formatCny } from '@/utils/pricing'
 import styles from './ProductBrowser.module.css'
-
-const PAGE_SIZE = 20
 
 const SORTS = [
   { key: 'recent', label: '추가일: 최근 순' },
@@ -29,6 +28,7 @@ const minPrice = (p) =>
   p.latestSurvey?.minPriceCny == null ? Infinity : Number(p.latestSurvey.minPriceCny)
 
 // 제품 목록 — 섹션 '검색·필터' + '제품 목록' (데스크탑 표 / 모바일 행 목록, DESIGN.md §4.4)
+// 목록은 남은 높이를 채우고, 그 높이에 들어가는 행 수만큼 한 페이지로 보여준다 (스크롤 대신 페이지 넘김)
 // 검색어·필터·정렬·페이지는 주소(?q=&status=&sort=&page=)에 둔다 — 뒤로 가기 해도 그대로
 export default function ProductBrowser({
   onOpen, // function(product): 행을 눌렀을 때
@@ -38,6 +38,8 @@ export default function ProductBrowser({
   const [params, setParams] = useSearchParams()
   const [items, setItems] = useState(null)
   const [error, setError] = useState('')
+  const listRef = useRef(null)
+  const pageSize = useFitRows(listRef, { fallback: 65 })
 
   const q = params.get('q') || ''
   const status = params.get('status') || defaultStatus
@@ -68,9 +70,9 @@ export default function ProductBrowser({
     return sort === 'price' ? [...list].sort((a, b) => minPrice(a) - minPrice(b)) : list
   }, [items, q, status, sort])
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
   const current = Math.min(page, pageCount)
-  const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
+  const rows = filtered.slice((current - 1) * pageSize, current * pageSize)
 
   const badge = (p) => (
     <Badge tone={PRICING_STATUS[p.pricingStatus].tone}>
@@ -117,7 +119,22 @@ export default function ProductBrowser({
         </div>
       </Section>
 
-      <Section name="제품 목록" id="list" sub={items && `${filtered.length}개`} flush>
+      <Section
+        name="제품 목록"
+        id="list"
+        sub={items && `${filtered.length}개`}
+        flush
+        fill
+        bodyRef={listRef}
+        footer={
+          <Pager
+            page={current}
+            pageCount={pageCount}
+            total={items ? filtered.length : null}
+            onChange={(n) => set({ page: n })}
+          />
+        }
+      >
         {error && <p className={`form-error ${styles.msg}`}>{error}</p>}
         {items && filtered.length === 0 && (
           <p className={styles.empty}>
@@ -129,7 +146,7 @@ export default function ProductBrowser({
           <>
             {/* 데스크탑 — 표 */}
             <table className={styles.table}>
-              <thead>
+              <thead data-fit-head>
                 <tr>
                   <th>제품</th>
                   <th>코드</th>
@@ -141,7 +158,7 @@ export default function ProductBrowser({
               </thead>
               <tbody>
                 {rows.map((p) => (
-                  <tr key={p.id} onClick={() => onOpen(p)}>
+                  <tr key={p.id} data-fit-row onClick={() => onOpen(p)}>
                     <td>
                       <div className={styles.product}>
                         <Thumb src={p.photoUrl} size={44} />
@@ -166,7 +183,7 @@ export default function ProductBrowser({
             </table>
 
             {/* 모바일 — 행 목록 */}
-            <div className={styles.mobileList}>
+            <div className={styles.mobileList} data-fit-list>
               {rows.map((p) => (
                 <ListItem
                   key={p.id}
@@ -186,13 +203,6 @@ export default function ProductBrowser({
             </div>
           </>
         )}
-
-        <Pager
-          page={current}
-          pageCount={pageCount}
-          total={items ? filtered.length : null}
-          onChange={(n) => set({ page: n })}
-        />
       </Section>
     </>
   )

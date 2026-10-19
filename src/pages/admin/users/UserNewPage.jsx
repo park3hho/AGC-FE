@@ -36,7 +36,7 @@ export default function UserNewPage() {
     <form className="page-flat" onSubmit={submit}>
       <PageHeader title="누구를 추가할까요?" back />
 
-      <Section name="입력" id="form" title={false}>
+      <Section name="입력" id="form" title={false} fill>
         <div className="form-group">
           <label className="form-label" htmlFor="name">
             이름

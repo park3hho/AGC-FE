@@ -1,18 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { getUsers, setUserActive } from '@/api/user'
 import PageHeader from '@/components/common/PageHeader'
+import Pager from '@/components/common/Pager'
 import Section from '@/components/common/Section'
 import { ROLE_LABEL } from '@/constants/permissions'
 import { useAuth } from '@/hooks/useAuth'
+import { useFitRows } from '@/hooks/useFitRows'
 import styles from './Users.module.css'
 
+// 사용자 관리 — 섹션: 사용자 목록. 남은 높이에 맞춘 페이지 넘김 (DESIGN.md §4.4)
 export default function UserListPage() {
   const navigate = useNavigate()
   const { user: me } = useAuth()
   const [users, setUsers] = useState(null)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const listRef = useRef(null)
+  const pageSize = useFitRows(listRef, { fallback: 57 })
 
   useEffect(() => {
     getUsers()
@@ -30,6 +36,11 @@ export default function UserListPage() {
     }
   }
 
+  const list = users || []
+  const pageCount = Math.max(1, Math.ceil(list.length / pageSize))
+  const current = Math.min(page, pageCount)
+  const rows = list.slice((current - 1) * pageSize, current * pageSize)
+
   return (
     <main className="page-flat">
       <PageHeader
@@ -42,9 +53,26 @@ export default function UserListPage() {
         }
       />
 
-      <Section name="사용자 목록" id="list" sub={users && `${users.length}명`}>
-        {error && <p className="form-error">{error}</p>}
-        {(users || []).map((u) => (
+      <Section
+        name="사용자 목록"
+        id="list"
+        sub={users && `${users.length}명`}
+        flush
+        fill
+        bodyRef={listRef}
+        footer={
+          <Pager
+            page={current}
+            pageCount={pageCount}
+            total={users ? users.length : null}
+            unit="명"
+            onChange={setPage}
+          />
+        }
+      >
+        {error && <p className={`form-error ${styles.msg}`}>{error}</p>}
+        <div className={styles.list} data-fit-list>
+        {rows.map((u) => (
           <div key={u.id} className={styles.row}>
             <div className={styles.body}>
               <div className={styles.name}>
@@ -62,6 +90,7 @@ export default function UserListPage() {
             )}
           </div>
         ))}
+        </div>
       </Section>
     </main>
   )

@@ -1,0 +1,104 @@
+/* 가격조사 목록 — 데스크탑 표 / 모바일 행 목록 (ProductBrowser 와 같은 모양) */
+
+.msg {
+  padding: var(--space-4) var(--space-5);
+}
+
+.empty {
+  padding: var(--space-5);
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.table th {
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-app);
+  color: var(--color-text-weak);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  cursor: pointer;
+}
+
+.table tbody tr:hover td {
+  background: var(--color-bg-app);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.r {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.product {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.names {
+  min-width: 0;
+  white-space: normal;
+}
+
+.title {
+  font-weight: 600;
+}
+
+.sub {
+  color: var(--color-text-weak);
+  font-size: 13px;
+}
+
+.code {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-pressed);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.date {
+  color: var(--color-text-weak);
+  font-variant-numeric: tabular-nums;
+}
+
+.mobileList {
+  display: none;
+  flex-direction: column;
+  padding: 0 var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .table {
+    display: none;
+  }
+
+  .mobileList {
+    display: flex;
+  }
+}
