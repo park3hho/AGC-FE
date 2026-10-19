@@ -13,12 +13,13 @@
   background: none;
 }
 
+/* 머리는 얇게 — 데이터 자리를 넓게 (DESIGN.md §4.2 공간 최대 활용) */
 .head {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 52px;
-  padding: var(--space-3) var(--space-5);
+  min-height: var(--section-head-h);
+  padding: var(--space-1) var(--space-4);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -29,7 +30,7 @@
 }
 
 .title {
-  font-size: var(--font-md);
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -48,7 +49,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-3) var(--space-4);
 }
 
 .plain .body {
@@ -59,12 +60,28 @@
   min-width: 0;
 }
 
-/* fill — 남은 높이를 채우고 본문만 스크롤 (머리 · footer 는 고정). DESIGN.md §4.4 */
+/* fill — 남은 높이 안에서 내용만큼 (빈 공간 없음), 넘치면 본문만 스크롤 (머리 · footer 는 고정). DESIGN.md §4.4 */
 .fill {
   display: flex;
-  flex: 1 1 0;
+  flex: 0 1 auto;
   flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+}
+
+/* 가로 틀(.fit-row) 안에서도 칸 높이까지 늘지 않고 내용만큼 */
+:global(.fit-row) > .fill {
+  align-self: start;
+}
+
+/* stretch — 항상 남은 높이를 꽉 채움 (사진처럼 크기가 칸에 따라가는 내용) */
+.fill.stretch {
+  flex: 1 1 0;
   min-height: var(--fill-min);
+}
+
+:global(.fit-row) > .fill.stretch {
+  align-self: stretch;
 }
 
 .fill > .head {
@@ -73,17 +90,22 @@
 
 .fill > .body,
 .fill > .flush {
-  flex: 1 1 0;
+  flex: 0 1 auto;
   min-height: 0;
   overflow-y: auto;
 }
 
+.stretch > .body,
+.stretch > .flush {
+  flex: 1 1 0;
+}
+
 @media (max-width: 768px) {
   .head {
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-1) var(--space-3);
   }
 
   .body {
-    padding: var(--space-4);
+    padding: var(--space-3);
   }
 }

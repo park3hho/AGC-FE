@@ -34,9 +34,15 @@
   --touch-min: 44px;
 
   /* 앱 틀 (DESIGN.md §4.5) */
-  --sidebar-w: 232px;
-  --topbar-h: 56px;
-  --tabbar-h: 64px;
-  --content-max: 1180px;
+  --sidebar-w: 216px;
+  --topbar-h: 44px;
+  --tabbar-h: 56px;
+  --content-max: 1280px;
+
+  /* 공간 최대 활용 (DESIGN.md §4.2) — 머리·여백은 얇게 */
+  --page-pad-y: var(--space-3); /* 화면 위아래 여백 */
+  --page-pad-x: 20px; /* 화면 양옆 여백 */
+  --page-gap: var(--space-3); /* 섹션 사이 */
+  --section-head-h: 40px; /* 섹션 제목 줄 */
   --fill-min: 160px; /* Section fill 의 최소 높이 — 이보다 낮아지면 화면 본문이 비상 스크롤 */
 }

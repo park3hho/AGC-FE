@@ -39,7 +39,7 @@ export default function ProductBrowser({
   const [items, setItems] = useState(null)
   const [error, setError] = useState('')
   const listRef = useRef(null)
-  const pageSize = useFitRows(listRef, { fallback: 65 })
+  const pageSize = useFitRows(listRef, { fallback: 49 })
 
   const q = params.get('q') || ''
   const status = params.get('status') || defaultStatus
@@ -161,7 +161,7 @@ export default function ProductBrowser({
                   <tr key={p.id} data-fit-row onClick={() => onOpen(p)}>
                     <td>
                       <div className={styles.product}>
-                        <Thumb src={p.photoUrl} size={44} />
+                        <Thumb src={p.photoUrl} size={36} />
                         <div className={styles.names}>
                           <div className={styles.title}>{p.titleKo || p.titleCn || '-'}</div>
                           <div className={styles.cn}>{p.titleCn}</div>

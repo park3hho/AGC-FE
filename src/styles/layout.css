@@ -4,13 +4,13 @@
 .page-flat {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--page-gap);
   width: 100%;
   max-width: var(--content-max);
   height: 100%;
   min-height: 0;
   margin: 0 auto;
-  padding: var(--space-5) 32px;
+  padding: var(--page-pad-y) var(--page-pad-x);
   overflow-y: auto;
 }
 
@@ -24,14 +24,14 @@
   display: grid;
   flex: 1 1 0;
   grid-template-rows: minmax(0, 1fr);
-  gap: var(--space-4);
+  gap: var(--page-gap);
   min-height: var(--fill-min);
 }
 
 .fit-col {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--page-gap);
   min-width: 0;
   min-height: 0;
 }
@@ -45,12 +45,12 @@
 }
 
 .page-flat h1 {
-  font-size: var(--font-xl);
+  font-size: var(--font-lg);
 }
 
 @media (max-width: 768px) {
   .page-flat {
-    padding: var(--space-4);
+    padding: var(--space-3);
   }
 }
 
@@ -76,8 +76,7 @@
 .sticky-cta {
   flex-shrink: 0;
   margin-top: auto;
-  padding: var(--space-3) 0;
-  background: var(--color-bg);
+  padding: var(--space-2) 0 0;
 }
 
 /* 모바일 섹션 탭(SectionTabs)으로 가린 섹션 */

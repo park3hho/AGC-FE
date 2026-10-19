@@ -187,7 +187,7 @@ export default function ProductDetailPage() {
             name="사진"
             id="photos"
             title={false}
-            fill={fillOf('photos', true)}
+            fill={fillOf('photos', true) && 'stretch'}
             className={tabs.hide('photos')}
           >
             {hero ? (

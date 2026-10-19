@@ -1,5 +1,33 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 
+const padY = (s) => parseFloat(s.paddingTop) + parseFloat(s.paddingBottom)
+
+// 본문이 쓸 수 있는 최대 높이 — 섹션이 내용만큼 줄어든 상태(Section fill)에서도
+// '부모의 남은 높이'로 잰다. 부모가 grid(.fit-row)면 칸 높이, flex 세로면 형제를 뺀 높이.
+function availableBodyHeight(body) {
+  const section = body.closest('section') || body
+  const parent = section.parentElement
+  if (!parent) return body.clientHeight
+  const ps = getComputedStyle(parent)
+  let avail
+  if (ps.display.includes('grid')) {
+    avail = parent.clientHeight - padY(ps)
+  } else {
+    const gap = parseFloat(ps.rowGap) || 0
+    const others = [...parent.children].filter(
+      (c) =>
+        c !== section &&
+        c.getBoundingClientRect().height > 0 &&
+        getComputedStyle(c).position !== 'absolute',
+    )
+    const used = others.reduce((sum, c) => sum + c.getBoundingClientRect().height, 0)
+    avail = parent.clientHeight - padY(ps) - used - gap * others.length
+  }
+  // 섹션에서 본문을 뺀 부분 (머리 · footer · 테두리)
+  const chrome = section.getBoundingClientRect().height - body.getBoundingClientRect().height
+  return Math.max(0, avail - chrome)
+}
+
 // 섹션 본문 높이에 맞는 행 수 — 페이지 넘김의 한 페이지 크기 (DESIGN.md §4.4)
 //   const bodyRef = useRef(null)
 //   const size = useFitRows(bodyRef, { fallback: 65 })
@@ -23,14 +51,14 @@ export function useFitRows(
 
   measure.current = () => {
     const el = ref.current
-    if (!el) return
+    if (!el || !el.getBoundingClientRect().height) return
     const firstVisible = (sel) =>
       [...el.querySelectorAll(sel)].find((n) => n.getBoundingClientRect().height > 0)
     const rowH = firstVisible(rowSelector)?.getBoundingClientRect().height || fallback
     const headH = firstVisible(headSelector)?.getBoundingClientRect().height || 0
     const style = getComputedStyle(el)
-    const inner =
-      el.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - headH
+    const pad = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
+    const inner = availableBodyHeight(el) - pad - headH
     const n = Math.max(min, Math.floor(inner / rowH))
     setRows((prev) => (prev === n ? prev : n))
   }

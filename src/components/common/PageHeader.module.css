@@ -1,38 +1,47 @@
+/* 화면 머리 — 한 줄로 얇게: 제목 · 설명(같은 줄) · 오른쪽 버튼 (DESIGN.md §4.2 공간 최대 활용) */
 .header {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: var(--touch-min);
+  min-height: 34px;
 }
 
 .back {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--color-bg);
   color: var(--color-text-sub);
   cursor: pointer;
 }
 
 .text {
+  display: flex;
   flex: 1;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
   min-width: 0;
 }
 
 .title {
   overflow: hidden;
+  font-size: var(--font-lg);
+  line-height: 1.3;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .sub {
-  margin-top: var(--space-1);
-  color: var(--color-text-sub);
-  font-size: var(--font-sm);
+  overflow: hidden;
+  color: var(--color-text-weak);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .action {
@@ -41,7 +50,14 @@
   gap: var(--space-2);
 }
 
-/* 좁은 화면 — 제목이 줄어들지 않게 버튼을 아랫줄로 */
+/* 머리 버튼은 낮게 — 데스크탑 */
+.action :global(.btn-md) {
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-sm);
+}
+
+/* 좁은 화면 — 제목이 줄어들지 않게 버튼을 아랫줄로 (터치 크기는 유지) */
 @media (max-width: 600px) {
   .header {
     flex-wrap: wrap;
@@ -52,11 +68,19 @@
   }
 
   .title {
-    font-size: var(--font-lg);
+    font-size: var(--font-md);
+    white-space: normal;
+  }
+
+  .sub {
     white-space: normal;
   }
 
   .action {
     flex-shrink: 1;
+  }
+
+  .action :global(.btn-md) {
+    min-height: 40px;
   }
 }
