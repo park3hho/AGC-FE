@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 
 import { findScreen } from '@/constants/screenConst'
 import { ScreenContext } from '@/contexts/ScreenContext'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import Sidebar from './Sidebar'
 import TabBar from './TabBar'
 import Topbar from './Topbar'
@@ -14,7 +15,11 @@ export default function AppLayout() {
   const screen = findScreen(pathname)
 
   // 화면을 옮기면 맨 위부터 보이게
-  useEffect(() => window.scrollTo(0, 0), [pathname])
+  // ★ 중괄호 필수 — 최신 Chrome 은 scrollTo 가 Promise 를 돌려주는데, 그걸 반환하면
+  //   React 가 정리 함수로 부르다 죽어서 화면이 하얗게 된다 (2026-10-20 장애)
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
 
   return (
     <ScreenContext.Provider value={screen}>
@@ -23,9 +28,11 @@ export default function AppLayout() {
         <div className={styles.main}>
           <Topbar screen={screen} />
           {/* 화면 코드를 받는 동안에도 틀은 그대로 둔다 */}
-          <Suspense fallback={null}>
-            <Outlet />
-          </Suspense>
+          <ErrorBoundary key={pathname}>
+            <Suspense fallback={null}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </div>
         <TabBar />
       </div>

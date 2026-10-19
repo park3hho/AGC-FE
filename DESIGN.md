@@ -118,6 +118,8 @@ export const createUser = (data) => request('/users', { method: 'POST', body: da
   }) { ... }
   ```
 - 파일 길이: 컴포넌트 500줄, 페이지 800줄을 넘으면 분리.
+- 예외: 오류 경계 `components/ErrorBoundary.jsx` 만 클래스 컴포넌트 (React 에 함수형 API 없음). 화면 오류가 앱 전체를 하얗게 만들지 않게 AppLayout 이 화면마다 감싼다.
+- `useEffect` 는 정리 함수 말고는 아무것도 반환하지 않는다 — `useEffect(() => fn(), [])` 처럼 쓰지 말고 중괄호로 감싼다 (scrollTo 가 Promise 를 반환해 앱 전체가 하얗게 된 적 있음, 2026-10-20).
 
 ---
 
