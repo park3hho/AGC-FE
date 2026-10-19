@@ -18,7 +18,7 @@ import {
   formatPct,
   formatAddon,
   formatWon,
-  naverAddonPlan,
+  naverListingPlan,
   salePriceForMargin,
   salePriceForProfit,
   summarize,
@@ -31,13 +31,22 @@ import PricingOptionRow from './PricingOptionRow'
 import styles from './Pricing.module.css'
 
 // 서버 Pricing → 입력값 (전부 문자열). 환율·배송비는 여기서 입력하지 않는다 (환율 설정 · 옵션 용량으로 자동)
-// baseOptionId: 대표 옵션 (네이버 추가금 0원) — null = 자동
+// (네이버) groupOf: 직접 정한 상품 번호 { [optionId]: n } · baseIds: 직접 정한 대표 옵션 — 비어 있으면 자동
 const toForm = (pricing, options) => {
   const byId = Object.fromEntries(pricing.optionPrices.map((o) => [o.optionId, o.salePrice]))
+  const groupOf = {}
+  const baseIds = []
+  for (const o of pricing.optionPrices) {
+    if (o.listingGroup != null) groupOf[o.optionId] = o.listingGroup
+    if (o.isBase) baseIds.push(o.optionId)
+  }
+  // 예전 방식(대표 옵션 1개)으로 저장된 값 — 다음 저장 때 옵션별 isBase 로 바뀐다
+  if (pricing.baseOptionId != null && !baseIds.length) baseIds.push(pricing.baseOptionId)
   return {
     platformFeeRate: trimDecimal(pricing.platformFeeRate),
     paymentFeeRate: trimDecimal(pricing.paymentFeeRate),
-    baseOptionId: pricing.baseOptionId ?? null,
+    groupOf,
+    baseIds: baseIds.sort((a, b) => a - b),
     prices: Object.fromEntries(
       options.map((o) => [o.id, byId[o.id] == null ? '' : String(byId[o.id])]),
     ),
@@ -69,7 +78,11 @@ const platformState = (platform, form, saved, options, survey, fx) => {
   )
   const changedPrices = options.filter((o) => form.prices[o.id] !== baseline.prices[o.id])
   const changedFees = FEE_FIELDS.filter((f) => form[f.key] !== baseline[f.key])
-  const changedBase = form.baseOptionId !== baseline.baseOptionId ? 1 : 0
+  const changedBase =
+    JSON.stringify(form.baseIds) !== JSON.stringify(baseline.baseIds) ||
+    JSON.stringify(form.groupOf) !== JSON.stringify(baseline.groupOf)
+      ? 1
+      : 0
   const changeCount = changedPrices.length + changedFees.length + changedBase
   const stale = saved.saved && saved.surveyId !== survey.id // 저장 뒤 새 조사가 생김
 
@@ -89,12 +102,13 @@ const platformState = (platform, form, saved, options, survey, fx) => {
   }
 }
 
-// 네이버 — 대표 옵션 가격 = 대표가, 나머지는 ±추가금 (한도: NAVER_ADDON_LIMITS, utils/pricing.naverAddonPlan)
+// 네이버 — 상품(묶음)마다 대표 옵션 가격 = 대표가, 나머지는 ±추가금.
+// 한도(NAVER_ADDON_LIMITS)를 넘으면 용량·입수별로 상품을 나눈다 (utils/pricing.naverListingPlan)
 const naverAddons = (form, options) => {
   const items = options
-    .map((o) => ({ id: o.id, sale: toNum(form.prices[o.id]) }))
+    .map((o) => ({ id: o.id, sale: toNum(form.prices[o.id]), pack: o.option2 }))
     .filter((i) => i.sale >= 1)
-  return naverAddonPlan(items, form.baseOptionId)
+  return naverListingPlan(items, { groupOf: form.groupOf, baseIds: form.baseIds })
 }
 
 const EMPTY_MSG = { text: '', error: false }
@@ -195,15 +209,26 @@ export default function PricingPage() {
     }))
   const setFee = (platformKey, field, value) =>
     setForms((f) => ({ ...f, [platformKey]: { ...f[platformKey], [field]: value } }))
-  // 대표 옵션 고르기 — 이미 직접 고른 대표를 다시 누르면 자동(null)으로
+  // 대표 옵션 고르기 (네이버) — 같은 상품의 다른 직접 대표는 풀고, 직접 고른 대표를 다시 누르면 자동으로
   const setBase = (platformKey, optionId) =>
-    setForms((f) => ({
-      ...f,
-      [platformKey]: {
-        ...f[platformKey],
-        baseOptionId: f[platformKey].baseOptionId === optionId ? null : optionId,
-      },
-    }))
+    setForms((f) => {
+      const form = f[platformKey]
+      const group = naver?.byId[optionId]?.group
+      const others = form.baseIds.filter((id) => naver?.byId[id]?.group !== group)
+      const baseIds = form.baseIds.includes(optionId) ? others : [...others, optionId]
+      return { ...f, [platformKey]: { ...form, baseIds: baseIds.sort((a, b) => a - b) } }
+    })
+  // 상품 번호 옮기기 (네이버) — null = 자동
+  const setGroup = (platformKey, optionId, no) =>
+    setForms((f) => {
+      const form = f[platformKey]
+      const groupOf = { ...form.groupOf }
+      if (no == null) delete groupOf[optionId]
+      else groupOf[optionId] = no
+      // 묶음을 옮기면 그 옵션의 직접 대표 지정은 푼다
+      const baseIds = form.baseIds.filter((id) => id !== optionId)
+      return { ...f, [platformKey]: { ...form, groupOf, baseIds } }
+    })
 
   const applyBulk = () => {
     if (bulk.amount === '') return setBulkMsg({ text: '값을 입력하세요', error: true })
@@ -258,11 +283,8 @@ export default function PricingPage() {
       for (const s of toSave) {
         const key = s.platform.key
         const form = forms[key]
-        // 대표 옵션은 판매가가 있을 때만 보낸다 (없으면 자동)
-        const baseOk =
-          s.platform.priceMode === 'base_addon' &&
-          form.baseOptionId != null &&
-          form.prices[form.baseOptionId] !== ''
+        // 상품 나누기·대표 직접 지정은 대표가+추가금 판매처(네이버)만 보낸다
+        const addonMode = s.platform.priceMode === 'base_addon'
         const res = await savePricing(product.id, key, {
           surveyId: survey.id,
           fxRate: fx.cnyKrw, // 저장 시점 환율 기록
@@ -271,8 +293,12 @@ export default function PricingPage() {
           paymentFeeRate: form.paymentFeeRate === '' ? '0' : form.paymentFeeRate,
           optionPrices: options
             .filter((o) => form.prices[o.id] !== '')
-            .map((o) => ({ optionId: o.id, salePrice: Math.round(toNum(form.prices[o.id])) })),
-          baseOptionId: baseOk ? form.baseOptionId : null,
+            .map((o) => ({
+              optionId: o.id,
+              salePrice: Math.round(toNum(form.prices[o.id])),
+              listingGroup: addonMode ? (form.groupOf[o.id] ?? null) : null,
+              isBase: addonMode && form.baseIds.includes(o.id),
+            })),
         })
         setSaved((prev) => ({ ...prev, [key]: res }))
         setForms((prev) => ({ ...prev, [key]: toForm(res, options) }))
@@ -450,13 +476,18 @@ export default function PricingPage() {
                     result: states[p.key].results[o.id],
                     addon:
                       p.key === naverKey && naver
-                        ? naver.byId[o.id] && { ...naver.byId[o.id], auto: naver.auto }
+                        ? naver.byId[o.id] && {
+                            ...naver.byId[o.id],
+                            auto: naver.byId[o.id].autoBase,
+                            groupCount: naver.groups.length,
+                          }
                         : undefined,
                     invalid: invalidPrice(forms[p.key].prices[o.id]),
                     changed: states[p.key].changedIds.has(o.id),
                   }))}
                   onChange={(platformKey, v) => setPrice(platformKey, o.id, v)}
                   onSetBase={(platformKey) => setBase(platformKey, o.id)}
+                  onSetGroup={(platformKey, no) => setGroup(platformKey, o.id, no)}
                 />
               ))}
             </div>
@@ -469,48 +500,71 @@ export default function PricingPage() {
                 </p>
               ))}
 
-            {naver && naver.overIds.length > 0 && (
-              <div className={styles.warnBox}>
-                <b>네이버 등록 불가 {naver.overIds.length}건</b> · 대표가 {formatWon(naver.base)}(
-                {optionName(optionById[naver.baseId])}) 기준 추가금은 {formatAddon(naver.range.min)}{' '}
-                ~ {formatAddon(naver.range.max)}원 ({naver.range.minPct}% ~ +{naver.range.maxPct}
-                %)까지예요. {naver.overIds.map((id) => optionName(optionById[id])).join(', ')}{' '}
-                옵션이 한도를 넘어요.
-                {naver.recommendedId != null && naver.recommendedId !== naver.baseId ? (
-                  <span className={styles.warnFix}>
-                    {optionName(optionById[naver.recommendedId])}을 대표로 하면 모두 한도 안이에요.
-                    <button
-                      type="button"
-                      className="btn-secondary btn-sm"
-                      onClick={() =>
-                        setForms((f) => ({
-                          ...f,
-                          [naverKey]: { ...f[naverKey], baseOptionId: naver.recommendedId },
-                        }))
-                      }
-                    >
-                      대표로 지정
-                    </button>
-                  </span>
-                ) : (
-                  naver.recommendedId == null && (
+            {/* 네이버 — 직접 정한 묶음·대표 때문에 한도를 넘는 상품마다 경고 */}
+            {naver &&
+              naver.groups
+                .filter((g) => g.overIds.length > 0)
+                .map((g) => (
+                  <div key={g.no} className={styles.warnBox}>
+                    <b>
+                      네이버{naver.groups.length > 1 ? ` 상품 ${g.no}` : ''} 등록 불가{' '}
+                      {g.overIds.length}건
+                    </b>{' '}
+                    · 대표가 {formatWon(g.base)}({optionName(optionById[g.baseId])}) 기준 추가금은{' '}
+                    {formatAddon(g.range.min)} ~ {formatAddon(g.range.max)}원 (
+                    {`${g.range.minPct}% ~ +${g.range.maxPct}%`})까지예요.{' '}
+                    {g.overIds.map((id) => optionName(optionById[id])).join(', ')} 옵션이 한도를
+                    넘어요.
                     <span className={styles.warnFix}>
-                      어느 옵션을 대표로 해도 한도를 넘어요. 가격차가 큰 옵션은 따로 등록하세요.
+                      {g.recommendedId != null && g.recommendedId !== g.baseId
+                        ? `${optionName(optionById[g.recommendedId])}을 대표로 하거나, `
+                        : ''}
+                      직접 바꾼 상품 번호·대표를 자동으로 돌리면 한도 안으로 나눠줘요.
+                      <button
+                        type="button"
+                        className="btn-secondary btn-sm"
+                        onClick={() =>
+                          setForms((f) => ({
+                            ...f,
+                            [naverKey]: { ...f[naverKey], groupOf: {}, baseIds: [] },
+                          }))
+                        }
+                      >
+                        자동으로 나누기
+                      </button>
                     </span>
-                  )
-                )}
+                  </div>
+                ))}
+
+            {/* 네이버 — 상품 여러 개로 나눠 등록 */}
+            {naver && naver.groups.length > 1 && (
+              <div className={styles.splitBox}>
+                <b>네이버는 상품 {naver.groups.length}개로 나눠 등록해요</b>
+                <span className={styles.splitHint}>
+                  한 상품에 다 넣으면 추가금 한도를 넘어서 용량·입수별로 나눴어요.
+                </span>
+                <ul className={styles.splitList}>
+                  {naver.groups.map((g) => (
+                    <li key={g.no}>
+                      <span className={styles.groupChip}>상품 {g.no}</span>
+                      대표 {optionName(optionById[g.baseId])} <b>{formatWon(g.base)}</b>
+                      {g.ids.length > 1 && ` · 옵션 ${g.ids.length}개`}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
             <p className={styles.footHint}>
-              쿠팡은 옵션마다 판매가를 따로 등록해요. 네이버는 대표 옵션
-              {naver
-                ? ` ${optionName(optionById[naver.baseId])}(${formatWon(naver.base)}, ${
-                    naver.auto ? '자동 선택' : '직접 지정'
-                  })`
+              쿠팡은 옵션마다 판매가를 따로 등록해요. 네이버는 상품마다 대표 옵션 가격을 대표가로,
+              나머지는 ±추가금으로 등록해요
+              {naver && naver.groups.length === 1
+                ? ` (대표 ${optionName(optionById[naver.groups[0].baseId])} ${formatWon(
+                    naver.groups[0].base,
+                  )}, ${naver.groups[0].autoBase ? '자동' : '직접 지정'})`
                 : ''}
-              을 대표가로, 나머지는 ±추가금으로 등록해요. 네이버 칸의 추가금 표시를 누르면 그 옵션이
-              대표가 돼요.
+              . 네이버 칸의 추가금 표시를 누르면 그 옵션이 대표가 되고, 상품이 여러 개면 상품 번호를
+              바꿀 수 있어요.
             </p>
           </Section>
 
