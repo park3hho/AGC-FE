@@ -27,29 +27,18 @@ const toRule = (r) => ({
   boxWeightG: r.box_weight_g,
 })
 
-// 제품별 기준 조사 옵션의 배송비 + 현재 환율 + 요금 규칙
-export const getShippingFees = async ({ page = 1, size = 100 } = {}) => {
-  const data = await request(`/shipping-fees?page=${page}&size=${size}`, {
-    errorMsg: '배송비를 불러오지 못했어요',
+// 배송비 화면 — 요금 규칙 + 무게 구간별 요금표(위안) + 현재 환율. 원화는 화면에서 환율을 곱한다
+export const getShippingRule = async () => {
+  const data = await request('/shipping-fees/rule', {
+    errorMsg: '배송비 요금표를 불러오지 못했어요',
   })
   return {
     fx: toFx(data.fx),
     rule: toRule(data.rule),
-    items: data.items.map((it) => ({
-      product: {
-        id: it.product.id,
-        code: it.product.code,
-        titleCn: it.product.title_cn || '',
-        titleKo: it.product.title_ko || '',
-        photoUrl: fileUrl(it.product.photo_url),
-      },
-      survey: it.survey
-        ? { id: it.survey.id, code: it.survey.code, surveyDate: it.survey.survey_date }
-        : null,
-      options: it.options.map(toShippingOption),
+    brackets: data.brackets.map((b) => ({
+      billableKg: b.billable_kg, // 문자열 "6.5"
+      maxVolumeMl: b.max_volume_ml, // 정수 — 이 구간에 들어가는 최대 용량 (박스 뺀 값)
+      shippingCny: b.shipping_cny, // 문자열 "55.00"
     })),
-    total: data.total,
-    page: data.page,
-    size: data.size,
   }
 }
