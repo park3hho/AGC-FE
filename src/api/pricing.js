@@ -17,8 +17,11 @@ const toPricing = (p) => ({
   optionPrices: (p.option_prices || []).map((o) => ({
     optionId: o.option_id,
     salePrice: o.sale_price ?? null, // 정수 (원) · 없으면 null
+    listingGroup: o.listing_group ?? null, // (네이버) 직접 정한 상품 번호 · null = 자동
+    isBase: !!o.is_base, // (네이버) 그 상품의 대표로 직접 지정
   })),
-  baseOptionId: p.base_option_id ?? null, // 대표 옵션 (네이버 추가금 0원) · null = 자동
+  // 예전 방식(상품 1개일 때의 대표 옵션) — 읽기만 하고, 저장은 옵션별 isBase 로 한다
+  baseOptionId: p.base_option_id ?? null,
   updatedAt: p.updated_at ?? null,
 })
 
@@ -61,8 +64,10 @@ export const savePricing = async (productId, platform, body) => {
       option_prices: body.optionPrices.map((o) => ({
         option_id: o.optionId,
         sale_price: Number(o.salePrice),
+        listing_group: o.listingGroup ?? null, // 네이버 상품 나누기 — 직접 정한 것만
+        is_base: !!o.isBase,
       })),
-      base_option_id: body.baseOptionId ?? null, // 판매가가 있는 옵션만 · null = 자동
+      base_option_id: null, // 예전 방식 — 더 안 씀 (옵션별 is_base)
     },
     errorMsg: '가격을 저장하지 못했어요',
   })

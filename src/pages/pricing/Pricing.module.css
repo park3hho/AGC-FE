@@ -381,6 +381,69 @@
   color: var(--color-text-sub);
 }
 
+/* 네이버 상품 나눠 등록 — 안내 상자 · 상품 번호 칩 · 칸 안 고르기 */
+.splitBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--color-primary-bg);
+  font-size: var(--font-sm);
+}
+
+.splitBox > b {
+  color: var(--color-primary-pressed);
+}
+
+.splitHint {
+  color: var(--color-text-sub);
+}
+
+.splitList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.splitList li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.groupChip {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.groupSelect {
+  flex-shrink: 0;
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid var(--color-primary);
+  border-radius: 4px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.groupManual {
+  background: var(--color-bg);
+  color: var(--color-primary-pressed);
+}
+
 .saveBar {
   display: flex;
   align-items: center;

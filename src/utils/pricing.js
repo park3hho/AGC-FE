@@ -101,38 +101,101 @@ export const naverAddonRange = (basePrice) => {
   }
 }
 
-// 네이버 대표가 · 추가금 계획
-// items: [{ id, sale }] — 판매가가 있는 옵션만. chosenId: 직접 고른 대표 옵션 (없거나 판매가가 없으면 자동)
-// 자동 = 모든 옵션이 한도 안에 들어오는 가장 싼 옵션, 그런 게 없으면 가장 싼 옵션
-// 반환: { baseId, base, auto, range, byId: { [id]: { amount, isBase, over } }, overIds, recommendedId } · 옵션이 없으면 null
-export const naverAddonPlan = (items, chosenId) => {
-  if (!items.length) return null
-  const fits = (base) => {
-    const r = naverAddonRange(base.sale)
-    return items.every((i) => i.sale - base.sale >= r.min && i.sale - base.sale <= r.max)
+// ── 네이버 상품 나눠 등록 (2026-10-20) ──
+// 한 상품에 모든 옵션을 넣으면 추가금 한도를 넘을 때, 상품 여러 개로 나눈다.
+//   1) 한 상품에 다 들어가면 그대로 1개
+//   2) 안 되면 용량·입수(option2)별로 묶고, 묶음 안에서도 넘으면 가격으로 더 나눈다
+//   대표 = 묶음 안 옵션이 모두 한도 안에 드는 가장 싼 옵션 (검색에 보이는 가격이 낮게)
+// 사람이 직접 정한 것(manual)은 자동보다 우선한다.
+
+const bySale = (a, b) => a.sale - b.sale
+
+const fitsAll = (base, items) => {
+  const r = naverAddonRange(base.sale)
+  return !!r && items.every((i) => i.sale - base.sale >= r.min && i.sale - base.sale <= r.max)
+}
+
+// 모두 한도 안에 드는 가장 싼 대표 — 없으면 null
+const cheapestFittingBase = (items) =>
+  [...items].sort(bySale).find((b) => fitsAll(b, items)) || null
+
+// 가격으로 나누기 — 싼 것부터 한 묶음에 최대한 많이
+const splitByPrice = (items) => {
+  let rest = [...items].sort(bySale)
+  const groups = []
+  while (rest.length) {
+    let k = rest.length
+    while (k > 1 && !cheapestFittingBase(rest.slice(0, k))) k -= 1
+    groups.push(rest.slice(0, k))
+    rest = rest.slice(k)
   }
-  const sorted = [...items].sort((a, b) => a.sale - b.sale)
-  const chosen = chosenId == null ? null : items.find((i) => i.id === chosenId) || null
-  const recommended = sorted.find(fits) || null
-  const base = chosen || recommended || sorted[0]
-  const range = naverAddonRange(base.sale)
+  return groups
+}
+
+// items: [{ id, sale, pack }] — 판매가가 있는 옵션만. pack = 용량·입수(option2)
+// manual: { groupOf: { [id]: 상품 번호 }, baseIds: [id] } — 직접 정한 묶음·대표
+// 반환: { groups: [{ no, ids, baseId, base, range, autoBase, overIds, recommendedId }],
+//         byId: { [id]: { group, amount, isBase, over, autoBase, manualGroup } }, overIds } · 옵션이 없으면 null
+export const naverListingPlan = (items, manual = {}) => {
+  if (!items.length) return null
+  const groupOf = manual.groupOf || {}
+  const baseIds = new Set(manual.baseIds || [])
+
+  const autoItems = items.filter((i) => groupOf[i.id] == null)
+  let autoGroups = []
+  if (autoItems.length && cheapestFittingBase(autoItems)) {
+    autoGroups = [autoItems]
+  } else if (autoItems.length) {
+    const packs = new Map()
+    for (const i of autoItems) packs.set(i.pack || '', [...(packs.get(i.pack || '') || []), i])
+    autoGroups = [...packs.values()].flatMap(splitByPrice)
+  }
+  const minSale = (g) => Math.min(...g.map((i) => i.sale))
+  const slots = [...autoGroups].sort((a, b) => minSale(a) - minSale(b)).map((g) => [...g])
+  for (const i of items) {
+    const n = groupOf[i.id]
+    if (n == null) continue
+    while (slots.length < n) slots.push([])
+    slots[n - 1].push(i)
+  }
+
   const byId = {}
   const overIds = []
-  for (const i of items) {
-    const amount = i.sale - base.sale
-    const over = amount < range.min || amount > range.max
-    byId[i.id] = { amount, isBase: i.id === base.id, over }
-    if (over) overIds.push(i.id)
-  }
-  return {
-    baseId: base.id,
-    base: base.sale,
-    auto: !chosen,
-    range,
-    byId,
-    overIds,
-    recommendedId: recommended ? recommended.id : null,
-  }
+  const groups = slots
+    .filter((g) => g.length)
+    .map((g, idx) => {
+      const no = idx + 1
+      const manualBase = g.find((i) => baseIds.has(i.id)) || null
+      const recommended = cheapestFittingBase(g)
+      const base = manualBase || recommended || [...g].sort(bySale)[0]
+      const range = naverAddonRange(base.sale)
+      const groupOver = []
+      for (const i of g) {
+        const amount = i.sale - base.sale
+        const over = !range || amount < range.min || amount > range.max
+        byId[i.id] = {
+          group: no,
+          amount,
+          isBase: i.id === base.id,
+          over,
+          autoBase: !manualBase,
+          manualGroup: groupOf[i.id] != null,
+        }
+        if (over) groupOver.push(i.id)
+      }
+      overIds.push(...groupOver)
+      return {
+        no,
+        ids: g.map((i) => i.id),
+        baseId: base.id,
+        base: base.sale,
+        range,
+        autoBase: !manualBase,
+        overIds: groupOver,
+        recommendedId: recommended ? recommended.id : null,
+      }
+    })
+  return { groups, byId, overIds }
 }
 
 // 추가금 표시 — 3500 → "+3,500", -3800 → "−3,800", 0 → "0"

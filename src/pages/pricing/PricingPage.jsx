@@ -471,12 +471,11 @@ export default function PricingPage() {
 
             {naver && naver.overIds.length > 0 && (
               <div className={styles.warnBox}>
-                <b>네이버 등록 불가 {naver.overIds.length}건</b> · 대표가{' '}
-                {formatWon(naver.base)}({optionName(optionById[naver.baseId])}) 기준 추가금은{' '}
-                {formatAddon(naver.range.min)} ~ {formatAddon(naver.range.max)}원 ({naver.range.minPct}% ~
-                +{naver.range.maxPct}%)까지예요.{' '}
-                {naver.overIds.map((id) => optionName(optionById[id])).join(', ')} 옵션이 한도를
-                넘어요.
+                <b>네이버 등록 불가 {naver.overIds.length}건</b> · 대표가 {formatWon(naver.base)}(
+                {optionName(optionById[naver.baseId])}) 기준 추가금은 {formatAddon(naver.range.min)}{' '}
+                ~ {formatAddon(naver.range.max)}원 ({naver.range.minPct}% ~ +{naver.range.maxPct}
+                %)까지예요. {naver.overIds.map((id) => optionName(optionById[id])).join(', ')}{' '}
+                옵션이 한도를 넘어요.
                 {naver.recommendedId != null && naver.recommendedId !== naver.baseId ? (
                   <span className={styles.warnFix}>
                     {optionName(optionById[naver.recommendedId])}을 대표로 하면 모두 한도 안이에요.
