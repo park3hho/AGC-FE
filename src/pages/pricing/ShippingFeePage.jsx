@@ -31,6 +31,8 @@ export default function ShippingFeePage() {
   if (!data) return null
 
   const { fx, rule, brackets } = data
+  const max = brackets[brackets.length - 1] // 소형 한도 구간 (30kg)
+  const maxKrw = max ? cnyToKrw(max.shippingCny, fx.cnyKrw) : null
 
   return (
     <main className="page-flat">
@@ -48,6 +50,13 @@ export default function ShippingFeePage() {
         <div className={styles.hint}>
           무게 = 용량(ml) × 1g + 박스 {rule.boxWeightG}g → {Number(rule.stepKg)}kg 단위 올림
         </div>
+        {max && (
+          <div className={styles.ruleMax}>
+            최대 {Number(max.billableKg)}kg = 용량 {formatMl(max.maxVolumeMl)}까지 ·{' '}
+            {formatCny(max.shippingCny)} ·{' '}
+            <strong>{maxKrw == null ? '-' : formatWon(maxKrw)}</strong>
+          </div>
+        )}
         <div className={styles.ruleFx}>
           <span>
             환율 <strong>1위안 = {formatFx(fx.cnyKrw)}원</strong>

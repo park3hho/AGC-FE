@@ -25,6 +25,10 @@
   font-weight: 600;
 }
 
+.ruleMax {
+  font-size: var(--font-sm);
+}
+
 .ruleFx {
   display: flex;
   flex-wrap: wrap;
