@@ -39,9 +39,14 @@ export const BULK_TARGET_ALL = 'all'
 
 // 환율 출처 — BE core/pricing_config.FxSource 와 같아야 한다
 export const FX_SOURCE_LABEL = {
+  hana: '하나은행 고시',
+  open_er_api: 'open.er-api',
   manual: '직접 입력',
   default: '기본값',
 }
+
+// 자동으로 받는 환율 출처 — 이 출처면 '자동' 표시
+export const FX_AUTO_SOURCES = ['hana', 'open_er_api']
 
 // 제품의 가격 책정 상태 — 목록 배지 · 필터 · 홈 숫자 (utils/pricing.pricingStatusOf)
 //   done: 모든 판매처 판매가 저장 · partial: 일부만 · pending: 조사는 있고 아직 안 정함 · nosurvey: 가격조사 없음
