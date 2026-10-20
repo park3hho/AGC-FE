@@ -251,7 +251,7 @@ const rows = items.slice((page - 1) * size, page * size)
 | 배송비 | 요금 규칙 `rule` · 요금표 `table` |
 | 환율 | 지금 환율 `now` · 오늘 환율 입력 `input` · 최근 기록 `history` |
 | 회사 계정 | 필터 `filters` · 계정 목록 `list` |
-| 회사 계정 추가 · 사용자 추가 | 입력 `form` |
+| 회사 계정 추가 · 회사 계정 수정 · 사용자 추가 | 입력 `form` (저장 버튼은 섹션 아래 고정) |
 | 사용자 관리 | 사용자 목록 `list` |
 | 더보기 (모바일) | 메뉴 `menu` · 내 계정 `me` |
 - 필터는 칩 대신 **드롭다운** (`<select>`), 첫 항목은 '전체'.

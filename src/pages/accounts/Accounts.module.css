@@ -22,10 +22,12 @@
   background: var(--color-bg);
 }
 
-/* 데스크탑: 한 줄 — 플랫폼 | ID | PW | 용도 */
+/* 데스크탑: 한 줄 — 플랫폼 | 홈페이지 | ID | PW | 용도 | 수정·삭제 */
 .card {
   display: grid;
-  grid-template-columns: 160px minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 0.9fr);
+  grid-template-columns:
+    140px minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 0.8fr)
+    auto;
   align-items: center;
   column-gap: var(--space-4);
   row-gap: var(--space-1);
@@ -39,6 +41,52 @@
 
 .platform {
   font-weight: 600;
+}
+
+.site {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-sm);
+}
+
+.site a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.site a:hover {
+  text-decoration: underline;
+}
+
+.none {
+  color: var(--color-text-weak);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+.danger {
+  color: var(--color-danger);
+}
+
+/* 추가·수정 화면 */
+.grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.formFoot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
 }
 
 .field {
@@ -96,6 +144,14 @@
   .card {
     grid-template-columns: minmax(0, 1fr);
     row-gap: var(--space-2);
+  }
+
+  .actions {
+    justify-content: flex-start;
+  }
+
+  .grid2 {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

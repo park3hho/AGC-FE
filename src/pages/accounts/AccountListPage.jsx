@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { getCompanyAccounts, revealPassword } from '@/api/companyAccount'
+import { deleteCompanyAccount, getCompanyAccounts, revealPassword } from '@/api/companyAccount'
 import PageHeader from '@/components/common/PageHeader'
 import Pager from '@/components/common/Pager'
 import Section from '@/components/common/Section'
@@ -33,12 +33,37 @@ function CopyButton({
   )
 }
 
-// 계정 1줄 — 데스크탑: 한 줄 (플랫폼 · ID · PW · 용도), 모바일: 세로로 쌓기
+// 홈페이지 표시 — 주소 전체 대신 도메인만 (www. 제외)
+const hostOf = (url) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url
+  }
+}
+
+// 계정 1줄 — 데스크탑: 한 줄 (플랫폼 · 홈페이지 · ID · PW · 용도 · 수정/삭제), 모바일: 세로로 쌓기
 function AccountCard({
   account, // object: 회사 계정 (비밀번호 제외)
+  canEdit, // boolean: 수정·삭제 권한 (account_edit)
+  onEdit, // function: 수정 화면으로
+  onDeleted, // function(id): 삭제됐을 때
 }) {
   const [password, setPassword] = useState('') // 보기 누를 때만 받아온다
   const [error, setError] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const remove = async () => {
+    if (!window.confirm(`${account.platform} (${account.loginId}) 계정을 삭제할까요?`)) return
+    setDeleting(true)
+    try {
+      await deleteCompanyAccount(account.id)
+      onDeleted(account.id)
+    } catch (err) {
+      setError(err.message)
+      setDeleting(false)
+    }
+  }
 
   const toggle = async () => {
     if (password) return setPassword('')
@@ -53,6 +78,15 @@ function AccountCard({
   return (
     <div className={styles.card}>
       <div className={styles.platform}>{account.platform}</div>
+      <div className={styles.site}>
+        {account.url ? (
+          <a href={account.url} target="_blank" rel="noreferrer" title={account.url}>
+            {hostOf(account.url)} ↗
+          </a>
+        ) : (
+          <span className={styles.none}>-</span>
+        )}
+      </div>
       <div className={styles.field}>
         <span className={styles.key}>ID</span>
         <span className={styles.value}>{account.loginId}</span>
@@ -73,6 +107,21 @@ function AccountCard({
           </span>
         ))}
       </div>
+      {canEdit && (
+        <div className={styles.actions}>
+          <button type="button" className="btn-secondary btn-sm" onClick={onEdit}>
+            수정
+          </button>
+          <button
+            type="button"
+            className={`btn-ghost btn-sm ${styles.danger}`}
+            onClick={remove}
+            disabled={deleting}
+          >
+            삭제
+          </button>
+        </div>
+      )}
       {error && <p className={`form-error ${styles.cardError}`}>{error}</p>}
     </div>
   )
@@ -88,6 +137,7 @@ export default function AccountListPage() {
   const [page, setPage] = useState(1)
   const listRef = useRef(null)
   const pageSize = useFitRows(listRef, { fallback: 64 })
+  const canEdit = hasFeature(user, FEATURE.ACCOUNT_EDIT)
 
   useEffect(() => {
     getCompanyAccounts()
@@ -106,7 +156,7 @@ export default function AccountListPage() {
         title="회사 계정"
         back
         action={
-          hasFeature(user, FEATURE.ACCOUNT_EDIT) && (
+          canEdit && (
             <button className="btn-primary btn-md" onClick={() => navigate('/accounts/new')}>
               계정 추가
             </button>
@@ -156,7 +206,13 @@ export default function AccountListPage() {
         )}
         <div className={styles.list} data-fit-list>
           {rows.map((a) => (
-            <AccountCard key={a.id} account={a} />
+            <AccountCard
+              key={a.id}
+              account={a}
+              canEdit={canEdit}
+              onEdit={() => navigate(`/accounts/${a.id}/edit`)}
+              onDeleted={(id) => setItems((list) => list.filter((x) => x.id !== id))}
+            />
           ))}
         </div>
       </Section>

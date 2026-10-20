@@ -20,7 +20,7 @@ const PricingPage = lazy(() => import('@/pages/pricing/PricingPage'))
 const ShippingFeePage = lazy(() => import('@/pages/pricing/ShippingFeePage'))
 const ExchangeRatePage = lazy(() => import('@/pages/pricing/ExchangeRatePage'))
 const AccountListPage = lazy(() => import('@/pages/accounts/AccountListPage'))
-const AccountNewPage = lazy(() => import('@/pages/accounts/AccountNewPage'))
+const AccountFormPage = lazy(() => import('@/pages/accounts/AccountFormPage'))
 const UserListPage = lazy(() => import('@/pages/admin/users/UserListPage'))
 const UserNewPage = lazy(() => import('@/pages/admin/users/UserNewPage'))
 
@@ -52,7 +52,8 @@ export default function App() {
               <Route path="/accounts" element={<AccountListPage />} />
             </Route>
             <Route element={<RequireAuth feature={FEATURE.ACCOUNT_EDIT} />}>
-              <Route path="/accounts/new" element={<AccountNewPage />} />
+              <Route path="/accounts/new" element={<AccountFormPage />} />
+              <Route path="/accounts/:id/edit" element={<AccountFormPage />} />
             </Route>
 
             <Route element={<RequireAuth feature={FEATURE.USER_MANAGE} />}>
