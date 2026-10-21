@@ -48,6 +48,7 @@ const PATHS = {
     </>
   ),
   layout: <path d="M4 4h16v16H4zM4 9h16M9 9v11" />,
+  pen: <path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4" />,
   bag: <path d="M6 3L3 7v13a1 1 0 001 1h16a1 1 0 001-1V7l-3-4zM3 7h18M16 11a4 4 0 01-8 0" />,
   sections: (
     <>

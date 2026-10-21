@@ -17,6 +17,8 @@ const ProductDetailPage = lazy(() => import('@/pages/research/product/ProductDet
 const PriceDetailPage = lazy(() => import('@/pages/research/price/PriceDetailPage'))
 const PricingListPage = lazy(() => import('@/pages/pricing/PricingListPage'))
 const PricingPage = lazy(() => import('@/pages/pricing/PricingPage'))
+const DesignListPage = lazy(() => import('@/pages/design/DesignListPage'))
+const DesignEditPage = lazy(() => import('@/pages/design/DesignEditPage'))
 const ShippingFeePage = lazy(() => import('@/pages/pricing/ShippingFeePage'))
 const ExchangeRatePage = lazy(() => import('@/pages/pricing/ExchangeRatePage'))
 const AccountListPage = lazy(() => import('@/pages/accounts/AccountListPage'))
@@ -46,6 +48,8 @@ export default function App() {
               <Route path="/research/prices/:id" element={<PriceDetailPage />} />
               <Route path="/pricing" element={<PricingListPage />} />
               <Route path="/pricing/:productId" element={<PricingPage />} />
+              <Route path="/design" element={<DesignListPage />} />
+              <Route path="/design/:productId" element={<DesignEditPage />} />
               <Route path="/shipping" element={<ShippingFeePage />} />
               <Route path="/exchange-rate" element={<ExchangeRatePage />} />
             </Route>

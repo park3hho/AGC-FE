@@ -14,11 +14,12 @@ export const FEATURE = {
   ACCOUNT_VIEW: 'account_view',
   ACCOUNT_EDIT: 'account_edit',
   USER_MANAGE: 'user_manage',
+  DETAIL_REVIEW: 'detail_review', // 상세페이지 휴먼 체크 (승인 · 수정 요청 · 공통 안내) — API 키로는 못 씀
 }
 
 export const ROLE_FEATURES = {
   admin: Object.values(FEATURE),
-  member: [FEATURE.RESEARCH, FEATURE.ACCOUNT_VIEW],
+  member: [FEATURE.RESEARCH, FEATURE.ACCOUNT_VIEW, FEATURE.DETAIL_REVIEW],
 }
 
 export const hasFeature = (user, feature) => !!user && ROLE_FEATURES[user.role]?.includes(feature)

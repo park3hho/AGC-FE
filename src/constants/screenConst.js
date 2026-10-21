@@ -34,6 +34,8 @@ export const SCREENS = [
   },
   { path: '/pricing', name: '가격 책정', group: '판매' },
   { path: '/pricing/:productId', name: '가격 책정 (제품)', group: '판매', parent: '/pricing' },
+  { path: '/design', name: '디자인', group: '판매' },
+  { path: '/design/:productId', name: '디자인 (제품)', group: '판매', parent: '/design' },
   { path: '/shipping', name: '배송비', group: '설정' },
   { path: '/exchange-rate', name: '환율', group: '설정' },
   { path: '/accounts', name: '회사 계정', group: '설정' },

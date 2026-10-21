@@ -42,6 +42,16 @@ export const MENU = [
     feature: FEATURE.RESEARCH,
     tab: true,
   },
+  {
+    key: 'design',
+    group: 'sales',
+    label: '디자인',
+    icon: 'pen',
+    tone: 'primary',
+    path: '/design',
+    feature: FEATURE.RESEARCH,
+  },
+  // 상품 등록은 승인된 상세페이지만 받는다 (DESIGN.md §4.7)
   { key: 'listing', group: 'sales', label: '상품 등록', icon: 'layout', soon: true },
   { key: 'orders', group: 'sales', label: '주문', icon: 'bag', soon: true },
   {

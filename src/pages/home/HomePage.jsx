@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { getApiCredentials } from '@/api/apiCredential'
+import { getDetailPages } from '@/api/detailPage'
 import { getExchangeRate } from '@/api/exchangeRate'
 import { getPriceResearches } from '@/api/priceResearch'
 import { getProducts } from '@/api/product'
@@ -90,7 +91,7 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const canResearch = hasFeature(user, FEATURE.RESEARCH)
-  const [data, setData] = useState(null) // { products, surveyCount, fx }
+  const [data, setData] = useState(null) // { products, surveyCount, fx, design }
   const [error, setError] = useState('')
   const tabs = useSectionTabs(TABS)
   const canSeeKeys = hasFeature(user, FEATURE.ACCOUNT_VIEW)
@@ -105,9 +106,15 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!canResearch) return
-    Promise.all([getProducts(), getPriceResearches(), getExchangeRate()])
-      .then(([products, surveys, fx]) =>
-        setData({ products, surveyCount: surveys.length, fx: fx.current }),
+    // 디자인 숫자는 못 받아도 홈은 보여준다 (design: null)
+    Promise.all([
+      getProducts(),
+      getPriceResearches(),
+      getExchangeRate(),
+      getDetailPages().catch(() => null),
+    ])
+      .then(([products, surveys, fx, design]) =>
+        setData({ products, surveyCount: surveys.length, fx: fx.current, design: design?.counts }),
       )
       .catch((err) => setError(err.message))
   }, [canResearch])
@@ -146,7 +153,10 @@ export default function HomePage() {
     )
   }
 
-  const { products, surveyCount, fx } = data
+  const { products, surveyCount, fx, design } = data
+  const reviewWait = design?.review || 0 // 상세페이지 검수 대기
+  const noDetail = design?.none || 0 // 가격 책정은 끝났는데 상세페이지가 없음
+  const needFix = design?.changes || 0
   const count = (s) => products.filter((p) => s.includes(p.pricingStatus)).length
   const done = count(['done'])
   const todo = count(['pending', 'partial'])
@@ -164,8 +174,16 @@ export default function HomePage() {
       path: '/research/prices',
     },
     { n: 3, label: '가격 책정', text: `${todo}개 대기`, path: '/pricing', hot: todo > 0 },
-    { n: 4, label: '상품 등록', text: '준비 중' },
-    { n: 5, label: '주문 처리', text: '준비 중' },
+    {
+      n: 4,
+      label: '디자인',
+      text: design ? `검수 대기 ${reviewWait} · 승인 ${design.approved || 0}` : '상세페이지',
+      path: '/design',
+      hot: reviewWait > 0,
+    },
+    // 상품 등록은 승인된 상세페이지만 받는다 (FE DESIGN.md §4.7)
+    { n: 5, label: '상품 등록', text: '준비 중' },
+    { n: 6, label: '주문 처리', text: '준비 중' },
   ]
 
   // API 키 만료·재인증 — 급한 것만 (utils/apiKey.keyStatuses)
@@ -185,6 +203,33 @@ export default function HomePage() {
 
   const todos = [
     ...keyTodos,
+    reviewWait > 0 && {
+      key: 'design-review',
+      icon: 'pen',
+      tone: 'warning',
+      title: `사람 확인을 기다리는 상세페이지 ${reviewWait}개`,
+      sub: '휴먼 체크를 모두 하면 승인돼요. 승인된 것만 상품 등록에 쓸 수 있어요',
+      button: '확인하기',
+      path: '/design?status=review',
+    },
+    needFix > 0 && {
+      key: 'design-changes',
+      icon: 'pen',
+      tone: 'neutral',
+      title: `수정 요청받은 상세페이지 ${needFix}개`,
+      sub: '검수 메모대로 고친 뒤 다시 검수를 요청해요',
+      button: '고치기',
+      path: '/design?status=changes',
+    },
+    noDetail > 0 && {
+      key: 'design-none',
+      icon: 'pen',
+      tone: 'primary',
+      title: `상세페이지가 없는 제품 ${noDetail}개`,
+      sub: '가격 책정은 끝났어요. 템플릿으로 초안을 만들 수 있어요',
+      button: '만들기',
+      path: '/design?status=none',
+    },
     todo > 0 && {
       key: 'pricing',
       icon: 'tag',
