@@ -105,7 +105,6 @@ export const getDetailPage = async (productId) => {
     template: data.template,
     photos: data.photos || [],
     common: toCommon(data.common),
-    checks: data.checks || [],
   }
 }
 
@@ -119,11 +118,12 @@ export const saveDetailPage = async (productId, content, { submit = false } = {}
   return toPage(data.page)
 }
 
-export const approveDetailPage = async (productId, checks, note) => {
+// 휴먼 체크 '확인' = 승인. 초안 · 검수 대기 · 수정 필요 어디서든 된다 (체크리스트 없음)
+export const approveDetailPage = async (productId, note) => {
   const data = await request(`/detail-pages/${productId}/approve`, {
     method: 'POST',
-    body: { checks, note: note || null },
-    errorMsg: '승인하지 못했어요',
+    body: { note: note || null },
+    errorMsg: '확인하지 못했어요',
   })
   return toPage(data.page)
 }

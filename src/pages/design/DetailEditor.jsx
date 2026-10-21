@@ -87,7 +87,7 @@ function HeroFields({ c, set, photos }) {
           multi
           value={c.headline}
           onChange={(v) => set(['headline'], v)}
-          placeholder="줄바꿈 = 줄 · *글자* = 파란 강조"
+          placeholder="줄바꿈 = 줄 · *글자* = 파란 강조 · _{6} = 아래첨자"
         />
       </Row>
       <Row label="제품명">
@@ -140,7 +140,7 @@ function PointsFields({ c, set }) {
               <Text
                 value={p.big}
                 onChange={(v) => set(['items', i, 'big'], v)}
-                placeholder="큰 숫자"
+                placeholder="큰 숫자 (VB_{6})"
               />
               <Text
                 value={p.big_unit}

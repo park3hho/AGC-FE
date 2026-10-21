@@ -142,18 +142,19 @@ export default function DesignEditPage() {
     return sets
   }
 
-  const approve = (checks, note) =>
+  // 휴먼 체크 '확인' — 승인 후 상세 이미지(JPG)를 바로 저장한다
+  const approve = (note) =>
     run('review', async () => {
-      const p = await approveDetailPage(productId, checks, note)
+      const p = await approveDetailPage(productId, note)
       applyPage(p)
       try {
         await exportImages(p)
       } catch (err) {
         throw new Error(
-          `승인했어요. 상세 이미지 저장은 실패 — ${err.message} (이미지 내보내기로 다시)`,
+          `확인했어요. 상세 이미지 저장은 실패 — ${err.message} (이미지 내보내기로 다시)`,
         )
       }
-      flash('승인했어요 · 상세 이미지(JPG)를 저장했어요')
+      flash('확인했어요 · 상세 이미지(JPG)를 저장했어요')
     })
   const requestChanges = (note) =>
     run('review', async () => {
@@ -265,7 +266,7 @@ export default function DesignEditPage() {
                 title={
                   jpgReady
                     ? '네이버 860px · 쿠팡 780px, 3000px 이하 조각 (zip)'
-                    : '승인된 상세페이지만 내보낼 수 있어요'
+                    : '휴먼 체크에서 확인한 상세페이지만 내보낼 수 있어요'
                 }
                 onClick={downloadJpgs}
               >
@@ -289,7 +290,7 @@ export default function DesignEditPage() {
               ? '아직 저장 안 함 — 템플릿으로 채운 초안이에요'
               : dirty
                 ? status === 'approved'
-                  ? '바꾼 내용을 저장하면 다시 검수 대기가 돼요'
+                  ? '바꾼 내용을 저장하면 다시 확인해야 해요'
                   : '저장 안 한 변경이 있어요'
                 : `${page.updatedBy?.name || '-'} 저장`)
           )}

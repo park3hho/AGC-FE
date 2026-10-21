@@ -41,6 +41,7 @@ export const TEMPLATE_CSS = `
 .dp .dp-point h3{font-size:28px;font-weight:800;letter-spacing:-.02em}
 .dp .dp-point p{font-size:19px;color:var(--sub);margin-top:6px;line-height:1.55}
 .dp .dp-big{margin-left:auto;text-align:right;font-size:44px;font-weight:800;color:var(--deep);letter-spacing:-.03em;white-space:nowrap}
+.dp sub{font-size:.55em;line-height:0;position:relative;top:.12em;vertical-align:baseline;letter-spacing:0;margin-left:.04em}
 .dp .dp-big small{display:block;font-size:14px;color:var(--sub);font-weight:500;letter-spacing:0}
 .dp .dp-s3{background:var(--bg)}
 .dp .dp-flavors{display:flex;flex-direction:column;gap:28px;margin-top:48px}

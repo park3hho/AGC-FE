@@ -4,7 +4,7 @@
 export const TEMPLATE_WIDTH = 860
 
 // 템플릿 버전 — 그림이 달라지는 템플릿·글꼴 변경 때 올린다. JPG 내보내기 기록(detail_page_export.template)에 남는다
-export const DETAIL_TEMPLATE_VERSION = 's1-s6@2026-10-22'
+export const DETAIL_TEMPLATE_VERSION = 's1-s6@2026-10-22b' // b: _{글자} 아래첨자
 
 // 템플릿 글꼴 — Pretendard(OFL, public/fonts) 를 앱에 실어 어느 PC 에서나 같은 그림이 나오게 한다.
 //   이 PC 에 설치된 Pretendard 와 섞이지 않게 이름을 따로 쓴다
@@ -40,45 +40,15 @@ export const DETAIL_STATUS_FILTERS = [
   { key: 'approved', label: '승인' },
 ]
 
-// 휴먼 체크 — 전부 체크해야 승인 버튼이 켜진다. key 는 BE REVIEW_CHECKS 와 같아야 한다
-//   needs: 'regNo' = 공통 안내에 실제 등록번호가 있어야 체크 가능 · 'noMarks' = 확인 표시([[...]])가 0개여야 체크 가능
-export const REVIEW_CHECKS = [
-  {
-    key: 'reg_no',
-    label: '등록번호 확인',
-    hint: '맨 위·맨 아래 구매대행업 등록번호가 실제 번호인가요?',
-    needs: 'regNo',
-  },
-  {
-    key: 'ingredients',
-    label: '원재료를 실제 라벨과 대조',
-    hint: '맛마다 라벨 사진과 S4 원재료가 같은가요?',
-  },
-  {
-    key: 'photo_promo',
-    label: '사진 속 중국 현지 프로모·문구 확인',
-    hint: '병의 이벤트 스티커(扫码赢红包 등)·가격 문구를 안내했나요?',
-  },
-  {
-    key: 'claims',
-    label: '효능·과장 표현 없음',
-    hint: '"피로 회복", "다이어트" 같은 효능·최고·1위 표현이 없나요?',
-  },
-  {
-    key: 'draft_copy',
-    label: '가안 문구 확정',
-    hint: '노란 확인 표시와 S6 가안 문구를 모두 정했나요?',
-    needs: 'noMarks',
-  },
-]
+// 휴먼 체크 — 체크리스트 없이 '확인' 한 번 = 승인 (2026-10-22 사용자 결정, ReviewPanel)
 
-// 확인 표시 — 문구 안의 [[...]]. 미리보기에 노란 표시로 보이고, 남아 있으면 승인할 수 없다
+// 확인 표시 — 문구 안의 [[...]]. 미리보기에 노란 표시로 보인다. 남아 있어도 확인은 되고 경고만 한다
 export const MARKER_RE = /\[\[(.+?)\]\]/g
 
 // 검수 기록 action → 화면 글자
 export const REVIEW_ACTION_LABEL = {
   submit: '검수 요청',
-  approve: '승인',
+  approve: '확인',
   changes: '수정 요청',
   reset: '검수 대기로 되돌림',
 }
