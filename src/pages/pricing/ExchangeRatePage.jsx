@@ -36,7 +36,7 @@ const MOBILE_TABS = [
 ]
 
 // 환율 — 가격 책정 · 배송비가 같이 쓰는 위안 환율.
-// 자동: BE 가 매시간 하나은행 고시(안 되면 open.er-api)를 받아 저장한다 — 저장 버튼 없이 알아서.
+// 자동: BE 가 매일 오전 9시 하나은행 고시(안 되면 open.er-api)를 받아 저장한다 — 저장 버튼 없이 알아서.
 // 추이: 서버가 저장한 기록만 그린다 (외부 과거 데이터는 안 받음).
 // 직접 입력은 평소엔 접어 둔다 — 넣으면 그날은 자동으로 바뀌지 않고, '지금 받아오기'를 누르면 다시 자동 값.
 export default function ExchangeRatePage() {
@@ -134,7 +134,7 @@ export default function ExchangeRatePage() {
 
   let status = '아직 받은 환율이 없어 기본값을 쓰고 있어요'
   if (current.date && auto) {
-    status = `${current.date} ${kstTime(current.updatedAt)} · ${sourceLabel(current.source)} · 매시간 자동 저장`
+    status = `${current.date} ${kstTime(current.updatedAt)} · ${sourceLabel(current.source)} · 매일 9시 자동 저장`
   } else if (current.date) {
     status = `${current.date} · 직접 입력 · 오늘은 자동으로 바뀌지 않아요`
   }
@@ -230,7 +230,7 @@ export default function ExchangeRatePage() {
             points={points}
             emptyText={
               points.length === 1
-                ? '매시간 1개씩 쌓여요 · 기록이 2개 이상이면 선이 보여요'
+                ? '매일 9시에 1개씩 쌓여요 · 기록이 2개 이상이면 선이 보여요'
                 : '이 기간에 저장한 기록이 없어요'
             }
           />

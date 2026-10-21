@@ -9,7 +9,7 @@ export const toFx = (f) => ({
   updatedAt: f.updated_at ?? null,
 })
 
-// 추이 한 점 — 서버가 저장한 기록 (매시간 자동 · 지금 받아오기 · 직접 입력)
+// 추이 한 점 — 서버가 저장한 기록 (매일 9시 자동 · 지금 받아오기 · 직접 입력)
 const toTrend = (t) => ({ at: t.at, cnyKrw: t.cny_krw, source: t.source })
 
 // 현재 환율 + 날짜별 기록(최근 30일). days 를 주면 trend(최근 days 일 서버 기록, 최대 400)도
