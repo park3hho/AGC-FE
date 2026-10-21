@@ -21,6 +21,8 @@ const ShippingFeePage = lazy(() => import('@/pages/pricing/ShippingFeePage'))
 const ExchangeRatePage = lazy(() => import('@/pages/pricing/ExchangeRatePage'))
 const AccountListPage = lazy(() => import('@/pages/accounts/AccountListPage'))
 const AccountFormPage = lazy(() => import('@/pages/accounts/AccountFormPage'))
+const ApiKeyListPage = lazy(() => import('@/pages/accounts/ApiKeyListPage'))
+const ApiKeyFormPage = lazy(() => import('@/pages/accounts/ApiKeyFormPage'))
 const UserListPage = lazy(() => import('@/pages/admin/users/UserListPage'))
 const UserNewPage = lazy(() => import('@/pages/admin/users/UserNewPage'))
 
@@ -50,10 +52,13 @@ export default function App() {
 
             <Route element={<RequireAuth feature={FEATURE.ACCOUNT_VIEW} />}>
               <Route path="/accounts" element={<AccountListPage />} />
+              <Route path="/accounts/api-keys" element={<ApiKeyListPage />} />
             </Route>
             <Route element={<RequireAuth feature={FEATURE.ACCOUNT_EDIT} />}>
               <Route path="/accounts/new" element={<AccountFormPage />} />
               <Route path="/accounts/:id/edit" element={<AccountFormPage />} />
+              <Route path="/accounts/api-keys/new" element={<ApiKeyFormPage />} />
+              <Route path="/accounts/api-keys/:id/edit" element={<ApiKeyFormPage />} />
             </Route>
 
             <Route element={<RequireAuth feature={FEATURE.USER_MANAGE} />}>

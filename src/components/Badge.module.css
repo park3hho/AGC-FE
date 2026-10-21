@@ -36,3 +36,8 @@
   background: var(--color-bg-sub);
   color: var(--color-text-sub);
 }
+
+.danger {
+  background: #fdecee;
+  color: var(--color-danger);
+}

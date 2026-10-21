@@ -9,6 +9,7 @@ import { USAGES } from '@/constants/accountConst'
 import { FEATURE, hasFeature } from '@/constants/permissions'
 import { useAuth } from '@/hooks/useAuth'
 import { useFitRows } from '@/hooks/useFitRows'
+import AccountTabs from './AccountTabs'
 import styles from './Accounts.module.css'
 
 function CopyButton({
@@ -154,6 +155,7 @@ export default function AccountListPage() {
     <main className="page-flat">
       <PageHeader
         title="회사 계정"
+        sub={<AccountTabs />}
         back
         action={
           canEdit && (

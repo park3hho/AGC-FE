@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { getApiCredentials } from '@/api/apiCredential'
 import { getExchangeRate } from '@/api/exchangeRate'
 import { getPriceResearches } from '@/api/priceResearch'
 import { getProducts } from '@/api/product'
@@ -16,6 +17,7 @@ import { PRICING_STATUS } from '@/constants/pricingConst'
 import { useAuth } from '@/hooks/useAuth'
 import { useFitRows } from '@/hooks/useFitRows'
 import { todayKst } from '@/utils/date'
+import { keyStatuses } from '@/utils/apiKey'
 import { formatCny, formatFx } from '@/utils/pricing'
 import styles from './HomePage.module.css'
 
@@ -91,6 +93,15 @@ export default function HomePage() {
   const [data, setData] = useState(null) // { products, surveyCount, fx }
   const [error, setError] = useState('')
   const tabs = useSectionTabs(TABS)
+  const canSeeKeys = hasFeature(user, FEATURE.ACCOUNT_VIEW)
+  const [keys, setKeys] = useState([]) // API 키 — 만료·재인증이 가까우면 할 일에 띄운다
+
+  useEffect(() => {
+    if (!canSeeKeys) return
+    getApiCredentials()
+      .then(setKeys)
+      .catch(() => setKeys([])) // 키 목록을 못 받아도 홈은 그대로
+  }, [canSeeKeys])
 
   useEffect(() => {
     if (!canResearch) return
@@ -157,7 +168,23 @@ export default function HomePage() {
     { n: 5, label: '주문 처리', text: '준비 중' },
   ]
 
+  // API 키 만료·재인증 — 급한 것만 (utils/apiKey.keyStatuses)
+  const keyTodos = keys.flatMap((k) =>
+    keyStatuses(k)
+      .filter((s) => s.alert)
+      .map((s) => ({
+        key: `key-${k.id}-${s.kind}`,
+        icon: 'key',
+        tone: 'warning',
+        title: `${k.service} — ${s.kind === 'expire' ? '키 만료' : '재인증'} 챙겨주세요`,
+        sub: s.text,
+        button: '보기',
+        path: '/accounts/api-keys',
+      })),
+  )
+
   const todos = [
+    ...keyTodos,
     todo > 0 && {
       key: 'pricing',
       icon: 'tag',
