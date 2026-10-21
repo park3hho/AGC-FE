@@ -9,10 +9,19 @@ export const toFx = (f) => ({
   updatedAt: f.updated_at ?? null,
 })
 
-// 현재 환율 + 최근 기록 (최대 30건)
-export const getExchangeRate = async () => {
-  const data = await request('/exchange-rate', { errorMsg: '환율을 불러오지 못했어요' })
-  return { current: toFx(data.current), history: data.history.map(toFx) }
+// 추이 한 점 — 서버가 저장한 기록 (매시간 자동 · 지금 받아오기 · 직접 입력)
+const toTrend = (t) => ({ at: t.at, cnyKrw: t.cny_krw, source: t.source })
+
+// 현재 환율 + 날짜별 기록(최근 30일). days 를 주면 trend(최근 days 일 서버 기록, 최대 400)도
+export const getExchangeRate = async ({ days } = {}) => {
+  const data = await request(days ? `/exchange-rate?days=${days}` : '/exchange-rate', {
+    errorMsg: '환율을 불러오지 못했어요',
+  })
+  return {
+    current: toFx(data.current),
+    history: data.history.map(toFx),
+    trend: (data.trend || []).map(toTrend), // 오래된 → 최근
+  }
 }
 
 // 지금 받아오기 — 하나은행 고시(안 되면 open.er-api)를 바로 받아 오늘 값으로 (직접 입력값도 바뀜)

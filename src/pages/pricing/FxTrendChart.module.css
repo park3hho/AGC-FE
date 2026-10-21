@@ -1,0 +1,75 @@
+/* 환율 추이 그래프 — 부모(섹션 본문) 높이를 꽉 채운다 */
+.box {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 140px;
+  height: 100%;
+}
+
+.svg {
+  display: block;
+  touch-action: none;
+}
+
+.grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.axis {
+  fill: var(--color-text-weak);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.area {
+  fill: var(--color-primary);
+  opacity: 0.08;
+}
+
+.line {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.mark {
+  fill: var(--color-primary);
+}
+
+.cross {
+  stroke: var(--color-text-weak);
+  stroke-dasharray: 3 3;
+}
+
+.dot {
+  fill: var(--color-bg);
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+
+.tip {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  width: 120px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.tip span {
+  color: var(--color-text-weak);
+}
+
+.empty {
+  padding: var(--space-4);
+  color: var(--color-text-sub);
+  font-size: var(--font-sm);
+}

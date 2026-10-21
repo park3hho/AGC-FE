@@ -48,6 +48,15 @@ export const FX_SOURCE_LABEL = {
 // 자동으로 받는 환율 출처 — 이 출처면 '자동' 표시
 export const FX_AUTO_SOURCES = ['hana', 'open_er_api']
 
+// 환율 추이 기간 — 서버가 저장한 기록만 (매시간 1개). 31일보다 길면 BE 가 하루 마지막 값 하나씩으로 줄여 준다
+export const FX_TREND_RANGES = [
+  { key: '1d', label: '1일', days: 1 },
+  { key: '1w', label: '1주', days: 7 },
+  { key: '1m', label: '1달', days: 30 },
+  { key: '1y', label: '1년', days: 365 },
+]
+export const FX_TREND_DEFAULT = '1w'
+
 // 제품의 가격 책정 상태 — 목록 배지 · 필터 · 홈 숫자 (utils/pricing.pricingStatusOf)
 //   done: 모든 판매처 판매가 저장 · partial: 일부만 · pending: 조사는 있고 아직 안 정함 · nosurvey: 가격조사 없음
 export const PRICING_STATUS = {
