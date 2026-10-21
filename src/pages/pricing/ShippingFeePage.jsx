@@ -7,6 +7,7 @@ import Pager from '@/components/common/Pager'
 import Section from '@/components/common/Section'
 import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
 import { useFitRows } from '@/hooks/useFitRows'
+import ShippingTabs from '@/pages/shipping/ShippingTabs'
 import { cnyToKrw, formatCny, formatFx, formatWon } from '@/utils/pricing'
 import styles from './Shipping.module.css'
 
@@ -38,7 +39,7 @@ export default function ShippingFeePage() {
   if (error) {
     return (
       <main className="page-flat">
-        <PageHeader title="배송비" back />
+        <PageHeader title="배송" sub={<ShippingTabs />} back />
         <p className="form-error">{error}</p>
       </main>
     )
@@ -55,7 +56,7 @@ export default function ShippingFeePage() {
 
   return (
     <main className="page-flat">
-      <PageHeader title="배송비" back />
+      <PageHeader title="배송" sub={<ShippingTabs />} back />
       <SectionTabs {...tabs} />
 
       {/* 요금 규칙 + 현재 환율 */}
@@ -79,8 +80,8 @@ export default function ShippingFeePage() {
             </div>
           )}
           <div className={styles.hint}>
-            {Number(rule.maxKg)}kg을 넘으면 이 요금표(집운 소형)로 보낼 수 없어요. 부피 무게 · 관세는
-            반영하지 않아요.
+            {Number(rule.maxKg)}kg을 넘으면 이 요금표(집운 소형)로 보낼 수 없어요. 부피 무게 ·
+            관세는 반영하지 않아요.
           </div>
           <div className={styles.ruleFx}>
             <span>

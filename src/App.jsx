@@ -25,6 +25,8 @@ const AccountListPage = lazy(() => import('@/pages/accounts/AccountListPage'))
 const AccountFormPage = lazy(() => import('@/pages/accounts/AccountFormPage'))
 const ApiKeyListPage = lazy(() => import('@/pages/accounts/ApiKeyListPage'))
 const ApiKeyFormPage = lazy(() => import('@/pages/accounts/ApiKeyFormPage'))
+const ShippingAddressListPage = lazy(() => import('@/pages/shipping/ShippingAddressListPage'))
+const ShippingAddressFormPage = lazy(() => import('@/pages/shipping/ShippingAddressFormPage'))
 const UserListPage = lazy(() => import('@/pages/admin/users/UserListPage'))
 const UserNewPage = lazy(() => import('@/pages/admin/users/UserNewPage'))
 
@@ -51,6 +53,9 @@ export default function App() {
               <Route path="/design" element={<DesignListPage />} />
               <Route path="/design/:productId" element={<DesignEditPage />} />
               <Route path="/shipping" element={<ShippingFeePage />} />
+              <Route path="/shipping/addresses" element={<ShippingAddressListPage />} />
+              <Route path="/shipping/addresses/new" element={<ShippingAddressFormPage />} />
+              <Route path="/shipping/addresses/:id/edit" element={<ShippingAddressFormPage />} />
               <Route path="/exchange-rate" element={<ExchangeRatePage />} />
             </Route>
 

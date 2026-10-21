@@ -57,7 +57,7 @@ export const MENU = [
   {
     key: 'shipping',
     group: 'settings',
-    label: '배송비',
+    label: '배송', // 탭: 배송비 · 출고지·반품지
     icon: 'truck',
     tone: 'primary',
     path: '/shipping',
