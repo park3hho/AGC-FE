@@ -120,7 +120,11 @@ export default function ExchangeRatePage() {
   // 추이 — 고른 기간 동안 서버가 저장한 기록
   const points = trend.map((p) => ({ at: p.at, rate: Number(p.cnyKrw) }))
   const rates = points.map((p) => p.rate)
-  const change = points.length > 1 ? ((rates[rates.length - 1] - rates[0]) / rates[0]) * 100 : null
+  // 기간 처음 → 끝 변화율 (소수 1자리, -0.0 은 0.0)
+  const change =
+    points.length > 1
+      ? Number((((rates[rates.length - 1] - rates[0]) / rates[0]) * 100).toFixed(1)) || 0
+      : null
 
   // 최근 기록 — 전날 대비
   const pageCount = Math.max(1, Math.ceil(history.length / pageSize))
@@ -201,7 +205,7 @@ export default function ExchangeRatePage() {
             change == null
               ? null
               : `최저 ${Math.min(...rates).toFixed(2)} · 최고 ${Math.max(...rates).toFixed(2)} · ${
-                  change >= 0 ? '+' : ''
+                  change > 0 ? '+' : ''
                 }${change.toFixed(1)}%`
           }
           action={
