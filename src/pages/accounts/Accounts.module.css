@@ -317,3 +317,13 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) var(--touch-min);
   }
 }
+
+/* API 키 머리의 홈페이지 링크 */
+a.site {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a.site:hover {
+  text-decoration: underline;
+}
