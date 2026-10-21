@@ -39,13 +39,7 @@ export const SCREENS = [
   { path: '/shipping', name: '배송비', group: '설정' },
   { path: '/shipping/addresses', name: '출고지·반품지', group: '설정', parent: '/shipping' },
   {
-    path: '/shipping/addresses/new',
-    name: '주소 추가',
-    group: '설정',
-    parent: '/shipping/addresses',
-  },
-  {
-    path: '/shipping/addresses/:id/edit',
+    path: '/shipping/addresses/edit',
     name: '주소 수정',
     group: '설정',
     parent: '/shipping/addresses',

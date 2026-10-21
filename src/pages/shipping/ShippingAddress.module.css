@@ -222,3 +222,25 @@
     grid-row: 2;
   }
 }
+
+/* 한 주소 화면 — 마켓 × 출고지/반품지 번호 표 */
+.codeHead {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.codes .codeRow {
+  grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.missing {
+  color: var(--color-warning);
+}
+
+.gridCodes {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  max-width: 640px;
+}
