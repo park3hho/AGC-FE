@@ -1,7 +1,25 @@
 // 상세페이지(디자인) 상수 — BE core/detail_page_config.py 와 문자열이 같아야 한다 (docs/api-contract.md '상세페이지')
 
-// 상세페이지 폭 (px) — 네이버·쿠팡 상세 이미지 기준 폭. 미리보기·PNG 모두 이 폭으로 그린다
+// 상세페이지 폭 (px) — 네이버 상세 이미지 기준 폭. 미리보기·JPG 모두 이 폭으로 그린다
 export const TEMPLATE_WIDTH = 860
+
+// 템플릿 버전 — 그림이 달라지는 템플릿·글꼴 변경 때 올린다. JPG 내보내기 기록(detail_page_export.template)에 남는다
+export const DETAIL_TEMPLATE_VERSION = 's1-s6@2026-10-22'
+
+// 템플릿 글꼴 — Pretendard(OFL, public/fonts) 를 앱에 실어 어느 PC 에서나 같은 그림이 나오게 한다.
+//   이 PC 에 설치된 Pretendard 와 섞이지 않게 이름을 따로 쓴다
+export const TEMPLATE_FONT_FAMILY = 'AGC Pretendard'
+export const TEMPLATE_FONT_URL = '/fonts/PretendardVariable.woff2'
+
+// JPG 내보내기 — 판매처별 폭. BE core/detail_page_config.EXPORT_* 와 같아야 한다
+//   쿠팡은 860px 그림을 780px 로 줄인다 (자르는 위치는 두 판매처가 같다)
+export const EXPORT_PLATFORMS = [
+  { key: 'naver', label: '네이버', width: 860 },
+  { key: 'coupang', label: '쿠팡', width: 780 },
+]
+export const EXPORT_MAX_HEIGHT = 3000 // 조각 1장 최대 높이 (860px 기준) — 쿠팡 권장 3000 · 네이버 5000 중 작은 값
+export const EXPORT_JPEG_QUALITY = 0.92
+export const EXPORT_MAX_UPLOAD_BYTES = 10 * 1024 * 1024 // 한 판매처 조각 합계 (BE EXPORT_MAX_TOTAL_BYTES)
 
 // 상태 — none 은 상세페이지가 아직 없는 제품 (목록 필터용, BE 에 저장되는 값 아님)
 export const DETAIL_STATUS = {

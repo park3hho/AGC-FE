@@ -8,16 +8,24 @@ import {
   requestDetailChanges,
   saveDetailCommon,
   saveDetailPage,
+  uploadDetailExport,
 } from '@/api/detailPage'
 import Badge from '@/components/Badge'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
-import { DETAIL_STATUS, MARKER_RE, TEMPLATE_WIDTH } from '@/constants/designConst'
+import {
+  DETAIL_STATUS,
+  EXPORT_MAX_UPLOAD_BYTES,
+  EXPORT_PLATFORMS,
+  MARKER_RE,
+  TEMPLATE_WIDTH,
+} from '@/constants/designConst'
 import { FEATURE, hasFeature } from '@/constants/permissions'
 import { useAuth } from '@/hooks/useAuth'
 import { useScreen } from '@/hooks/useScreen'
-import { downloadBlob, nodeToPngBlob } from '@/utils/exportPng'
+import { downloadBlob, renderDetailJpgs } from '@/utils/exportJpg'
+import { makeZip } from '@/utils/zip'
 import DetailEditor from './DetailEditor'
 import PreviewFrame from './PreviewFrame'
 import ReviewPanel from './ReviewPanel'
@@ -63,7 +71,7 @@ export default function DesignEditPage() {
   const [saved, setSaved] = useState(null) // 마지막 저장된 content (없으면 null)
   const [common, setCommon] = useState(null) // 편집 중 공통 안내
   const [savedCommon, setSavedCommon] = useState(null)
-  const [busy, setBusy] = useState('') // '' | 'save' | 'submit' | 'review' | 'common' | 'png'
+  const [busy, setBusy] = useState('') // '' | 'save' | 'submit' | 'review' | 'common' | 'jpg'
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
@@ -115,10 +123,37 @@ export default function DesignEditPage() {
       applyPage(p)
       flash(submit ? '검수를 요청했어요' : '저장했어요')
     })
+  // JPG 조각을 그리고, 지금 내용의 이미지가 BE 에 없는 판매처는 올린다 (검수 권한이 있을 때만)
+  //   p: 승인된 page (contentHash · exports) → 그린 조각 sets
+  const exportImages = async (p) => {
+    const { sets } = await renderDetailJpgs(pageRef.current, data.product.code)
+    if (canReview) {
+      const next = { ...(p.exports || {}) }
+      for (const pf of EXPORT_PLATFORMS) {
+        if (next[pf.key]?.current) continue
+        const files = sets[pf.key]
+        if (files.reduce((s, f) => s + f.blob.size, 0) > EXPORT_MAX_UPLOAD_BYTES) {
+          throw new Error(`${pf.label} 이미지 합계가 10MB 를 넘어요`)
+        }
+        next[pf.key] = await uploadDetailExport(productId, pf.key, p.contentHash, files)
+      }
+      setData((d) => ({ ...d, page: { ...d.page, exports: next } }))
+    }
+    return sets
+  }
+
   const approve = (checks, note) =>
     run('review', async () => {
-      applyPage(await approveDetailPage(productId, checks, note))
-      flash('승인했어요')
+      const p = await approveDetailPage(productId, checks, note)
+      applyPage(p)
+      try {
+        await exportImages(p)
+      } catch (err) {
+        throw new Error(
+          `승인했어요. 상세 이미지 저장은 실패 — ${err.message} (이미지 내보내기로 다시)`,
+        )
+      }
+      flash('승인했어요 · 상세 이미지(JPG)를 저장했어요')
     })
   const requestChanges = (note) =>
     run('review', async () => {
@@ -138,10 +173,13 @@ export default function DesignEditPage() {
           : '공통 안내를 저장했어요',
       )
     })
-  const downloadPng = () =>
-    run('png', async () => {
-      const blob = await nodeToPngBlob(pageRef.current, TEMPLATE_WIDTH)
-      downloadBlob(blob, `상세페이지_${data.product.code}.png`)
+  // 이미지 내보내기 — 네이버 860 · 쿠팡 780 조각을 zip 하나로 내려받는다 (저장 안 된 판매처는 올리기도)
+  const downloadJpgs = () =>
+    run('jpg', async () => {
+      const sets = await exportImages(page)
+      const files = EXPORT_PLATFORMS.flatMap((pf) => sets[pf.key])
+      downloadBlob(await makeZip(files), `상세이미지_${data.product.code}.zip`)
+      flash(`JPG ${files.length}장을 내려받았어요`)
     })
 
   if (!data) {
@@ -154,7 +192,14 @@ export default function DesignEditPage() {
   }
 
   const st = DETAIL_STATUS[status]
-  const pngReady = status === 'approved' && !dirty && !commonDirty
+  const jpgReady = status === 'approved' && !dirty && !commonDirty
+  // 미리보기 이름표 옆 — 저장된 상세 이미지 버전 (지금 내용과 다르면 '예전')
+  const exportNote = EXPORT_PLATFORMS.map((pf) => {
+    const e = page?.exports?.[pf.key]
+    return e ? `${pf.label} v${e.version}${e.current ? '' : '(예전)'}` : null
+  })
+    .filter(Boolean)
+    .join(' · ')
   const canSubmit = !['review', 'approved'].includes(status) || dirty
 
   return (
@@ -208,7 +253,7 @@ export default function DesignEditPage() {
           <Section
             name="미리보기"
             id="preview"
-            sub={`${TEMPLATE_WIDTH}px`}
+            sub={exportNote ? `${TEMPLATE_WIDTH}px · JPG ${exportNote}` : `${TEMPLATE_WIDTH}px`}
             flush
             fill="stretch"
             className={tabs.hide('preview')}
@@ -216,11 +261,15 @@ export default function DesignEditPage() {
               <button
                 type="button"
                 className="btn-secondary btn-sm"
-                disabled={!pngReady || !!busy}
-                title={pngReady ? '' : '승인된 상세페이지만 내려받을 수 있어요'}
-                onClick={downloadPng}
+                disabled={!jpgReady || !!busy}
+                title={
+                  jpgReady
+                    ? '네이버 860px · 쿠팡 780px, 3000px 이하 조각 (zip)'
+                    : '승인된 상세페이지만 내보낼 수 있어요'
+                }
+                onClick={downloadJpgs}
               >
-                {busy === 'png' ? '만드는 중…' : 'PNG 다운로드'}
+                {busy === 'jpg' ? '만드는 중…' : '이미지 내보내기 (JPG)'}
               </button>
             }
           >

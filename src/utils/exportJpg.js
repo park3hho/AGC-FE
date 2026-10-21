@@ -1,0 +1,179 @@
+// 상세페이지 템플릿(.dp)을 판매처별 JPG 조각으로 — 새 패키지 없이 (DESIGN.md §1 · §4.7)
+//   1) 요소를 복제하고 사진 · 글꼴(Pretendard)을 data URL 로 넣는다 (그림 안에서는 바깥 파일을 못 읽는다)
+//   2) 복제본을 SVG foreignObject 로 2배 크기 canvas 에 그린다 (폭 860px 고정 · 앱에 실은 글꼴 → 어느 PC 든 같은 그림)
+//   3) 섹션 경계에서 3000px 이하로 자르고, 판매처 폭(네이버 860 · 쿠팡 780)으로 줄여 JPG 로 만든다
+// 자르는 위치는 두 판매처가 같다 — 조각 n 은 판매처가 달라도 같은 내용이다.
+import {
+  EXPORT_JPEG_QUALITY,
+  EXPORT_MAX_HEIGHT,
+  EXPORT_PLATFORMS,
+  TEMPLATE_FONT_FAMILY,
+  TEMPLATE_FONT_URL,
+  TEMPLATE_WIDTH,
+} from '@/constants/designConst'
+
+// 섹션 안에서라도 자를 수 있는 줄 — 섹션 하나가 3000px 를 넘을 때만 쓴다
+const ROW_SELECTOR =
+  '.dp-point, .dp-flavor, .dp-info tr, .dp-nutri, .dp-how, .dp-s6 li, .dp-note, h2, .dp-lead'
+const MIN_SLICE = 300 // 이보다 짧은 조각이 생기지 않게 (섹션 경계를 고를 때)
+const MAX_RENDER_SCALE = 2
+const MAX_CANVAS_SIDE = 32000 // 브라우저 canvas 한 변 한도(32767) 안쪽
+
+const blobToDataUrl = (blob) =>
+  new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onload = () => resolve(r.result)
+    r.onerror = () => reject(r.error)
+    r.readAsDataURL(blob)
+  })
+
+const fetchDataUrl = async (url, what) => {
+  const res = await fetch(url, { credentials: 'include' })
+  if (!res.ok) throw new Error(`${what}을 불러오지 못했어요`)
+  return blobToDataUrl(await res.blob())
+}
+
+let fontDataUrl = null // 글꼴 2MB — 한 번만 받는다
+const getFontDataUrl = async () => {
+  fontDataUrl = fontDataUrl || (await fetchDataUrl(TEMPLATE_FONT_URL, '글꼴'))
+  return fontDataUrl
+}
+
+// 화면의 글꼴이 다 받아졌는지 — 자르는 위치를 재기 전에 기다린다 (글꼴이 바뀌면 높이가 바뀐다)
+export async function waitTemplateFont() {
+  await Promise.all(
+    ['400', '500', '600', '700', '800'].map((w) =>
+      document.fonts.load(`${w} 20px "${TEMPLATE_FONT_FAMILY}"`, '가A1'),
+    ),
+  )
+  await document.fonts.ready
+  if (!document.fonts.check(`800 20px "${TEMPLATE_FONT_FAMILY}"`, '가')) {
+    throw new Error('템플릿 글꼴(Pretendard)을 불러오지 못했어요')
+  }
+}
+
+// 자르는 위치 (860px 기준 y) — [0, …, 전체 높이]. 섹션 경계 → 줄 경계 → 강제 순으로 고른다
+export function planCuts(node, maxHeight = EXPORT_MAX_HEIGHT) {
+  const root = node.getBoundingClientRect()
+  const k = root.width / node.offsetWidth || 1 // 미리보기가 줄여 보여줘도(transform) 원래 px 로
+  const total = Math.ceil(node.scrollHeight)
+  const yOf = (el) => Math.round((el.getBoundingClientRect().top - root.top) / k)
+  const blocks = [...node.children].filter((el) => el.tagName !== 'STYLE').map(yOf)
+  const rows = [...node.querySelectorAll(ROW_SELECTOR)].map(yOf)
+
+  const cuts = [0]
+  let start = 0
+  while (total - start > maxHeight) {
+    const limit = start + maxHeight
+    const pick = (ys) => Math.max(-1, ...ys.filter((y) => y >= start + MIN_SLICE && y <= limit))
+    let cut = pick(blocks)
+    if (cut < 0) cut = pick(rows)
+    if (cut < 0) cut = limit
+    cuts.push(cut)
+    start = cut
+  }
+  cuts.push(total)
+  return cuts
+}
+
+const loadImage = (url) =>
+  new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('이미지로 바꾸지 못했어요'))
+    img.src = url
+  })
+
+// 요소 전체를 scale 배 canvas 로
+async function renderCanvas(node, height, scale) {
+  const clone = node.cloneNode(true)
+  clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
+  const [font] = await Promise.all([
+    getFontDataUrl(),
+    ...[...clone.querySelectorAll('img')].map(async (img) => {
+      const src = img.getAttribute('src')
+      if (src && !src.startsWith('data:')) img.setAttribute('src', await fetchDataUrl(src, '사진'))
+    }),
+  ])
+  const style = clone.querySelector('style')
+  if (!style || !style.textContent.includes(TEMPLATE_FONT_URL)) {
+    throw new Error('템플릿 스타일을 찾지 못했어요')
+  }
+  style.textContent = style.textContent.split(TEMPLATE_FONT_URL).join(font)
+
+  const html = new XMLSerializer().serializeToString(clone)
+  const w = TEMPLATE_WIDTH
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${w * scale}" height="${height * scale}" viewBox="0 0 ${w} ${height}">` +
+    `<foreignObject x="0" y="0" width="${w}" height="${height}">${html}</foreignObject></svg>`
+  const img = await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`)
+  if (img.decode) await img.decode().catch(() => {})
+
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(w * scale)
+  canvas.height = Math.round(height * scale)
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+  return canvas
+}
+
+const toJpeg = (canvas) =>
+  new Promise((resolve, reject) =>
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error('JPG 를 만들지 못했어요'))),
+      'image/jpeg',
+      EXPORT_JPEG_QUALITY,
+    ),
+  )
+
+// node: 상세페이지 템플릿(.dp) · code: 파일 이름 앞부분(제품 코드)
+// → { cuts, sets: { naver: [{ name, blob, width, height }], coupang: [...] } }
+export async function renderDetailJpgs(node, code) {
+  await waitTemplateFont()
+  const cuts = planCuts(node)
+  const height = cuts[cuts.length - 1]
+  const scale = Math.min(MAX_RENDER_SCALE, MAX_CANVAS_SIDE / height)
+  const full = await renderCanvas(node, height, scale)
+
+  const sets = {}
+  for (const pf of EXPORT_PLATFORMS) {
+    const r = pf.width / TEMPLATE_WIDTH
+    sets[pf.key] = []
+    for (let i = 0; i < cuts.length - 1; i += 1) {
+      // 판매처 px 로 위·아래를 각각 반올림 — 조각을 이어 붙이면 빈틈 없이 맞는다
+      const top = Math.round(cuts[i] * r)
+      const h = Math.round(cuts[i + 1] * r) - top
+      const c = document.createElement('canvas')
+      c.width = pf.width
+      c.height = h
+      const ctx = c.getContext('2d')
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, c.width, c.height)
+      const sy = (top / r) * scale
+      const sh = (h / r) * scale
+      ctx.drawImage(full, 0, sy, full.width, Math.min(sh, full.height - sy), 0, 0, pf.width, h)
+      sets[pf.key].push({
+        name: `${code}_${pf.key}_${String(i + 1).padStart(2, '0')}.jpg`,
+        blob: await toJpeg(c),
+        width: pf.width,
+        height: h,
+      })
+    }
+  }
+  return { cuts, sets }
+}
+
+export function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}

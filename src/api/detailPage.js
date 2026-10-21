@@ -1,4 +1,5 @@
-import { fileUrl, request } from '@/api/client'
+import { fileUrl, postForm, request } from '@/api/client'
+import { DETAIL_TEMPLATE_VERSION } from '@/constants/designConst'
 import { toKstDate } from '@/utils/date'
 
 // 상세페이지(디자인) API — 스펙: docs/api-contract.md '상세페이지'
@@ -19,6 +20,21 @@ const toSummary = (s) =>
       }
     : null
 
+// 상세 이미지 내보내기 기록 (판매처 1곳) — current: 지금 내용으로 그린 것인지
+const toExport = (e) =>
+  e
+    ? {
+        platform: e.platform,
+        version: e.version,
+        contentHash: e.content_hash,
+        current: !!e.current,
+        template: e.template || '',
+        files: (e.files || []).map((f) => ({ ...f, url: fileUrl(f.url) })),
+        createdAt: e.created_at,
+        createdBy: toUser(e.created_by),
+      }
+    : null
+
 const toPage = (p) =>
   p
     ? {
@@ -27,6 +43,10 @@ const toPage = (p) =>
         content: p.content,
         reviewChecks: p.review_checks || [],
         markerCount: p.marker_count || 0,
+        contentHash: p.content_hash || '',
+        exports: Object.fromEntries(
+          Object.entries(p.exports || {}).map(([k, e]) => [k, toExport(e)]),
+        ),
         reviews: (p.reviews || []).map((r) => ({
           action: r.action,
           user: toUser(r.user),
@@ -115,6 +135,20 @@ export const requestDetailChanges = async (productId, note) => {
     errorMsg: '수정 요청을 보내지 못했어요',
   })
   return toPage(data.page)
+}
+
+// 상세 이미지(JPG 조각) 저장 — 승인된 페이지만. contentHash: 그릴 때의 page.contentHash (그 사이 바뀌면 409)
+//   files: [{ name, blob }] 순서대로
+export const uploadDetailExport = async (productId, platform, contentHash, files) => {
+  const form = new FormData()
+  form.append('platform', platform)
+  form.append('content_hash', contentHash)
+  form.append('template', DETAIL_TEMPLATE_VERSION)
+  files.forEach((f) => form.append('files', f.blob, f.name))
+  const data = await postForm(`/detail-pages/${productId}/exports`, form, {
+    errorMsg: '상세 이미지를 저장하지 못했어요',
+  })
+  return toExport(data.export)
 }
 
 // 공통 안내 저장 — resetCount = 이 변경으로 검수 대기로 돌아간 승인 페이지 수

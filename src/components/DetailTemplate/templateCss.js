@@ -1,13 +1,16 @@
 // 상세페이지 템플릿 스타일 — CSS Modules 가 아니라 문자열인 이유 (DESIGN.md §4.7):
-//   PNG 로 내려받을 때 이 페이지 DOM 을 그대로 그림(SVG foreignObject)으로 바꾸는데,
+//   JPG 로 내보낼 때 이 페이지 DOM 을 그대로 그림(SVG foreignObject)으로 바꾸는데,
 //   그때 함께 들어가는 스타일은 페이지 안의 <style> 뿐이다. 그래서 모든 규칙을 .dp 아래로 묶어 페이지 안에 넣는다.
 // 기준 디자인: 2026-10-21 사용자 승인 상세페이지 (S1~S6, 폭 860px)
-import { TEMPLATE_WIDTH } from '@/constants/designConst'
+// 글꼴: 앱에 실은 Pretendard 만 쓴다 (@font-face) — JPG 를 그릴 때 utils/exportJpg 가 이 주소를 data URL 로 바꿔 넣는다
+import { TEMPLATE_FONT_FAMILY, TEMPLATE_FONT_URL, TEMPLATE_WIDTH } from '@/constants/designConst'
 
 export const TEMPLATE_CSS = `
+@font-face{font-family:'${TEMPLATE_FONT_FAMILY}';src:url(${TEMPLATE_FONT_URL}) format('woff2');
+  font-weight:100 900;font-style:normal;font-display:block}
 .dp{--ink:#0f1b2d;--sub:#5b6778;--line:#e3e9f1;--bg:#f4f8fc;--blue:#1d6fe0;--sky:#e7f1ff;--deep:#0b2a55;
   width:${TEMPLATE_WIDTH}px;background:#fff;color:var(--ink);overflow:hidden;text-align:left;
-  font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  font-family:'${TEMPLATE_FONT_FAMILY}',sans-serif;
   -webkit-font-smoothing:antialiased;line-height:1.5}
 .dp *{box-sizing:border-box;margin:0;padding:0}
 .dp img{display:block}

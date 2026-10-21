@@ -33,7 +33,21 @@ export const fileUrl = (path) => (path?.startsWith('/files/') ? `${BASE_URL}${pa
 export async function upload(path, file, { field = 'file', errorMsg } = {}) {
   const form = new FormData()
   form.append(field, file)
-  const res = await fetch(`${BASE_URL}${path}`, { method: 'POST', credentials: 'include', body: form })
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    credentials: 'include',
+    body: form,
+  })
+  return handleResponse(res, errorMsg)
+}
+
+// 여러 칸·파일을 한 번에 (multipart) — form: FormData
+export async function postForm(path, form, { errorMsg } = {}) {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    credentials: 'include',
+    body: form,
+  })
   return handleResponse(res, errorMsg)
 }
 
