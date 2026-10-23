@@ -66,8 +66,6 @@ function InfoCard({
     <article className={styles.card}>
       <div className={styles.head}>
         <b className={styles.name}>{item.name}</b>
-        {linkLabel && <Badge tone="primary">{linkLabel}</Badge>}
-        {status && <Badge tone={status.tone}>{status.text}</Badge>}
         {canEdit && (
           <span className={styles.actions}>
             <button type="button" className="btn-ghost btn-sm" onClick={onEdit}>
@@ -79,6 +77,13 @@ function InfoCard({
           </span>
         )}
       </div>
+
+      {(linkLabel || status) && (
+        <div className={styles.badges}>
+          {linkLabel && <Badge tone="primary">{linkLabel}</Badge>}
+          {status && <Badge tone={status.tone}>{status.text}</Badge>}
+        </div>
+      )}
 
       {item.value && (
         <div className={styles.valueRow}>

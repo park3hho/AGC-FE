@@ -78,12 +78,20 @@
 
 .head {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-1) var(--space-2);
+  gap: var(--space-2);
+  min-height: 32px;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
 }
 
 .name {
+  flex: 1;
+  min-width: 0;
   font-weight: 600;
 }
 
@@ -108,9 +116,10 @@
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 .details {
