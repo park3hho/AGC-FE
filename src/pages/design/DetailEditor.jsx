@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { fileUrl } from '@/api/client'
 import Pager from '@/components/common/Pager'
@@ -370,10 +371,15 @@ function CommonFields({ common, setCommon, canEdit, dirty, saving, onSave }) {
       <Row label="등록번호">
         <Text
           value={common.reg_no}
-          disabled={!canEdit}
+          disabled={!canEdit || common.regNoLinked}
           onChange={(v) => setCommon({ ...common, reg_no: v })}
           placeholder="수입식품등 인터넷 구매대행업 등록번호 (발급 후 입력)"
         />
+        {common.regNoLinked && (
+          <span className={styles.linkNote}>
+            회사 정보 › 기본 정보에서 가져와요. 고치려면 <Link to="/accounts">기본 정보</Link>에서
+          </span>
+        )}
       </Row>
       <Row label="판매자">
         <Text

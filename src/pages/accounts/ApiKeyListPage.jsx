@@ -148,7 +148,7 @@ function KeyCard({
   )
 }
 
-// 회사 계정 › API 키 — 섹션: 키 목록. 키마다 만료·재인증 배지 (가까우면 홈 할 일에도 뜬다)
+// 회사 정보 › API 키 — 섹션: 키 목록. 키마다 만료·재인증 배지 (가까우면 홈 할 일에도 뜬다)
 export default function ApiKeyListPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -165,7 +165,7 @@ export default function ApiKeyListPage() {
   return (
     <main className="page-flat">
       <PageHeader
-        title="회사 계정"
+        title="회사 정보"
         sub={<AccountTabs />}
         back
         action={

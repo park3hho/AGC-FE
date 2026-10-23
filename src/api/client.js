@@ -29,6 +29,9 @@ async function handleResponse(res, errorMsg, authRedirect = true) {
 // BE 에 올린 파일(/files/...)은 API 주소를 앞에 붙여야 열린다 — 외부 http(s) 주소는 그대로
 export const fileUrl = (path) => (path?.startsWith('/files/') ? `${BASE_URL}${path}` : path || '')
 
+// API 주소 그대로 (로그인 쿠키로 받는 파일 링크 등 — 예: /company-info/1/files/2)
+export const apiUrl = (path) => `${BASE_URL}${path}`
+
 // 파일 업로드 (multipart) — Content-Type 은 브라우저가 boundary 와 함께 정한다
 export async function upload(path, file, { field = 'file', errorMsg } = {}) {
   const form = new FormData()

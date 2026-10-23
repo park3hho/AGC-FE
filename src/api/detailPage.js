@@ -72,6 +72,7 @@ const toCommon = (c) => ({
   notice_title: c.notice_title || '',
   notice: c.notice || [],
   regNoReady: !!c.reg_no_ready,
+  regNoLinked: !!c.reg_no_linked, // 회사 정보 › 기본 정보에서 가져온 값 — S6 에서 못 고침
   updatedAt: c.updated_at,
 })
 

@@ -45,9 +45,24 @@ export const SCREENS = [
     parent: '/shipping/addresses',
   },
   { path: '/exchange-rate', name: '환율', group: '설정' },
-  { path: '/accounts', name: '회사 계정', group: '설정' },
-  { path: '/accounts/new', name: '회사 계정 추가', group: '설정', parent: '/accounts' },
-  { path: '/accounts/api-keys', name: 'API 키', group: '설정', parent: '/accounts' },
+  // 회사 정보 — 탭 3개 (기본 정보 · 로그인 계정 · API 키)
+  { path: '/accounts', name: '기본 정보', group: '설정' },
+  { path: '/accounts/info/new', name: '기본 정보 추가', group: '설정', parent: '/accounts' },
+  { path: '/accounts/info/:id/edit', name: '기본 정보 수정', group: '설정', parent: '/accounts' },
+  { path: '/accounts/logins', name: '로그인 계정', group: '설정' },
+  {
+    path: '/accounts/logins/new',
+    name: '로그인 계정 추가',
+    group: '설정',
+    parent: '/accounts/logins',
+  },
+  {
+    path: '/accounts/logins/:id/edit',
+    name: '로그인 계정 수정',
+    group: '설정',
+    parent: '/accounts/logins',
+  },
+  { path: '/accounts/api-keys', name: 'API 키', group: '설정' },
   {
     path: '/accounts/api-keys/new',
     name: 'API 키 추가',
@@ -60,7 +75,6 @@ export const SCREENS = [
     group: '설정',
     parent: '/accounts/api-keys',
   },
-  { path: '/accounts/:id/edit', name: '회사 계정 수정', group: '설정', parent: '/accounts' },
   { path: '/admin/users', name: '사용자 관리', group: '설정' },
   { path: '/admin/users/new', name: '사용자 추가', group: '설정', parent: '/admin/users' },
 ]

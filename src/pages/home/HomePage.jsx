@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { getApiCredentials } from '@/api/apiCredential'
+import { getCompanyInfo } from '@/api/companyInfo'
 import { getDetailPages } from '@/api/detailPage'
 import { getExchangeRate } from '@/api/exchangeRate'
 import { getPriceResearches } from '@/api/priceResearch'
@@ -19,6 +20,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useFitRows } from '@/hooks/useFitRows'
 import { todayKst } from '@/utils/date'
 import { keyStatuses } from '@/utils/apiKey'
+import { infoStatus } from '@/utils/companyInfo'
 import { formatCny, formatFx } from '@/utils/pricing'
 import styles from './HomePage.module.css'
 
@@ -96,12 +98,16 @@ export default function HomePage() {
   const tabs = useSectionTabs(TABS)
   const canSeeKeys = hasFeature(user, FEATURE.ACCOUNT_VIEW)
   const [keys, setKeys] = useState([]) // API 키 — 만료·재인증이 가까우면 할 일에 띄운다
+  const [infos, setInfos] = useState([]) // 회사 정보 › 기본 정보 — 만료가 가까우면 (만료 알림 켠 것만)
 
   useEffect(() => {
     if (!canSeeKeys) return
     getApiCredentials()
       .then(setKeys)
       .catch(() => setKeys([])) // 키 목록을 못 받아도 홈은 그대로
+    getCompanyInfo()
+      .then((d) => setInfos(d.items))
+      .catch(() => setInfos([]))
   }, [canSeeKeys])
 
   useEffect(() => {
@@ -201,8 +207,26 @@ export default function HomePage() {
       })),
   )
 
+  // 기본 정보 만료 (전자상거래업자부호 등) — 만료 알림을 켠 것만
+  const infoTodos = infos.flatMap((i) => {
+    const s = infoStatus(i)
+    if (!s?.alert) return []
+    return [
+      {
+        key: `info-${i.id}`,
+        icon: 'building',
+        tone: 'warning',
+        title: `${i.name} — 만료 챙겨주세요`,
+        sub: s.text,
+        button: '보기',
+        path: '/accounts',
+      },
+    ]
+  })
+
   const todos = [
     ...keyTodos,
+    ...infoTodos,
     reviewWait > 0 && {
       key: 'design-review',
       icon: 'pen',

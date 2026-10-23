@@ -21,6 +21,8 @@ const DesignListPage = lazy(() => import('@/pages/design/DesignListPage'))
 const DesignEditPage = lazy(() => import('@/pages/design/DesignEditPage'))
 const ShippingFeePage = lazy(() => import('@/pages/pricing/ShippingFeePage'))
 const ExchangeRatePage = lazy(() => import('@/pages/pricing/ExchangeRatePage'))
+const CompanyInfoPage = lazy(() => import('@/pages/accounts/CompanyInfoPage'))
+const CompanyInfoFormPage = lazy(() => import('@/pages/accounts/CompanyInfoFormPage'))
 const AccountListPage = lazy(() => import('@/pages/accounts/AccountListPage'))
 const AccountFormPage = lazy(() => import('@/pages/accounts/AccountFormPage'))
 const ApiKeyListPage = lazy(() => import('@/pages/accounts/ApiKeyListPage'))
@@ -59,12 +61,15 @@ export default function App() {
             </Route>
 
             <Route element={<RequireAuth feature={FEATURE.ACCOUNT_VIEW} />}>
-              <Route path="/accounts" element={<AccountListPage />} />
+              <Route path="/accounts" element={<CompanyInfoPage />} />
+              <Route path="/accounts/logins" element={<AccountListPage />} />
               <Route path="/accounts/api-keys" element={<ApiKeyListPage />} />
             </Route>
             <Route element={<RequireAuth feature={FEATURE.ACCOUNT_EDIT} />}>
-              <Route path="/accounts/new" element={<AccountFormPage />} />
-              <Route path="/accounts/:id/edit" element={<AccountFormPage />} />
+              <Route path="/accounts/info/new" element={<CompanyInfoFormPage />} />
+              <Route path="/accounts/info/:id/edit" element={<CompanyInfoFormPage />} />
+              <Route path="/accounts/logins/new" element={<AccountFormPage />} />
+              <Route path="/accounts/logins/:id/edit" element={<AccountFormPage />} />
               <Route path="/accounts/api-keys/new" element={<ApiKeyFormPage />} />
               <Route path="/accounts/api-keys/:id/edit" element={<ApiKeyFormPage />} />
             </Route>

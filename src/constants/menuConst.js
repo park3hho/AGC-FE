@@ -75,8 +75,8 @@ export const MENU = [
   {
     key: 'account',
     group: 'settings',
-    label: '회사 계정',
-    icon: 'key',
+    label: '회사 정보', // 탭: 기본 정보 · 로그인 계정 · API 키
+    icon: 'building',
     tone: 'warning',
     path: '/accounts',
     feature: FEATURE.ACCOUNT_VIEW,

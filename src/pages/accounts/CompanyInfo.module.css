@@ -1,0 +1,245 @@
+/* 회사 정보 › 기본 정보 — 분류 묶음 + 카드 격자 (목록 섹션 안에서만 스크롤) */
+.msg {
+  padding: var(--space-4) var(--space-5) 0;
+}
+
+.empty {
+  padding: var(--space-5);
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
+/* 분류로 이동 — 목록 맨 위에 붙어 있음 */
+.jump {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.jumpBtn {
+  height: 28px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.jumpBtn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.jumpBtn small,
+.groupTitle small {
+  color: var(--color-text-weak);
+  font-weight: 400;
+}
+
+.group {
+  padding: var(--space-3) var(--space-5) var(--space-4);
+  scroll-margin-top: 48px;
+}
+
+.group + .group {
+  border-top: 1px solid var(--color-border);
+}
+
+.groupTitle {
+  margin: 0 0 var(--space-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--space-2);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+.name {
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.danger {
+  color: var(--color-danger);
+}
+
+.valueRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+}
+
+.value {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 2px var(--space-3);
+  margin: 0;
+}
+
+.detail {
+  display: flex;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: 13px;
+}
+
+.detail dt {
+  flex-shrink: 0;
+  color: var(--color-text-sub);
+}
+
+.detail dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.meta a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.meta a:hover {
+  text-decoration: underline;
+}
+
+.files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.file {
+  max-width: 100%;
+  padding: 2px var(--space-2);
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--color-bg-sub);
+  color: var(--color-text);
+  font-size: 12px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file:hover {
+  color: var(--color-primary);
+}
+
+.memo {
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: 6px;
+  background: var(--color-bg-app);
+  color: var(--color-text-sub);
+  font-size: 12px;
+  white-space: pre-line;
+}
+
+/* 추가·수정 — 파일 목록 */
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  font-size: 13px;
+}
+
+.fileRow > :first-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  font-size: 14px;
+}
+
+.hint {
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .jump,
+  .group,
+  .msg {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.pick {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  cursor: pointer;
+}

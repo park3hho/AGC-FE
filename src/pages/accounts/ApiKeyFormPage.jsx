@@ -77,7 +77,7 @@ function PairRows({
   )
 }
 
-// 회사 계정 › API 키 추가 · 수정 — 섹션: 입력 (저장 버튼은 섹션 아래 고정)
+// 회사 정보 › API 키 추가 · 수정 — 섹션: 입력 (저장 버튼은 섹션 아래 고정)
 export default function ApiKeyFormPage() {
   const { id } = useParams()
   const editing = id != null

@@ -128,7 +128,7 @@ function AccountCard({
   )
 }
 
-// 회사 계정 — 섹션: 필터 · 계정 목록. 목록은 남은 높이에 맞춘 페이지 넘김 (DESIGN.md §4.4)
+// 회사 정보 › 로그인 계정 — 섹션: 필터 · 계정 목록. 목록은 남은 높이에 맞춘 페이지 넘김 (DESIGN.md §4.4)
 export default function AccountListPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -154,12 +154,12 @@ export default function AccountListPage() {
   return (
     <main className="page-flat">
       <PageHeader
-        title="회사 계정"
+        title="회사 정보"
         sub={<AccountTabs />}
         back
         action={
           canEdit && (
-            <button className="btn-primary btn-md" onClick={() => navigate('/accounts/new')}>
+            <button className="btn-primary btn-md" onClick={() => navigate('/accounts/logins/new')}>
               계정 추가
             </button>
           )
@@ -212,7 +212,7 @@ export default function AccountListPage() {
               key={a.id}
               account={a}
               canEdit={canEdit}
-              onEdit={() => navigate(`/accounts/${a.id}/edit`)}
+              onEdit={() => navigate(`/accounts/logins/${a.id}/edit`)}
               onDeleted={(id) => setItems((list) => list.filter((x) => x.id !== id))}
             />
           ))}

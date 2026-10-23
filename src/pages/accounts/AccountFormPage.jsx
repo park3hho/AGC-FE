@@ -9,7 +9,7 @@ import styles from './Accounts.module.css'
 
 const EMPTY = { platform: '', url: '', loginId: '', password: '' }
 
-// 회사 계정 추가 · 수정 — 섹션: 입력 (저장 버튼은 섹션 아래 고정)
+// 회사 정보 › 로그인 계정 추가 · 수정 — 섹션: 입력 (저장 버튼은 섹션 아래 고정)
 // 플랫폼은 자유 입력 (제안 목록은 자동완성일 뿐). 수정에서 PW 는 바꿀 때만 입력한다.
 export default function AccountFormPage() {
   const { id } = useParams()
@@ -70,7 +70,7 @@ export default function AccountFormPage() {
     try {
       if (editing) await updateCompanyAccount(id, body)
       else await createCompanyAccount(body)
-      navigate('/accounts', { replace: true })
+      navigate('/accounts/logins', { replace: true })
     } catch (err) {
       setError(err.message)
       setSaving(false)

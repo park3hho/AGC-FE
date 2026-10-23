@@ -463,3 +463,15 @@
     padding-right: var(--space-3);
   }
 }
+
+/* S6 등록번호 — 회사 정보에서 가져올 때 안내 */
+.linkNote {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.linkNote a {
+  color: var(--color-primary);
+}
