@@ -38,12 +38,6 @@
   gap: var(--page-gap);
 }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
 .chip {
   padding: 2px 9px;
   border: 1px solid var(--color-border);
@@ -198,11 +192,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.more {
-  margin-left: auto;
-  font-size: 12px;
-}
-
 .eventSummary {
   margin-top: 2px;
   font-size: 13px;
@@ -313,19 +302,6 @@
   gap: var(--space-3);
 }
 
-.fGrid2 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
-  gap: var(--space-3);
-}
-
-.linkRow {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 88px auto;
-  gap: var(--space-2);
-  align-items: center;
-}
-
 .linkText {
   overflow: hidden;
   font-size: 13px;
@@ -356,10 +332,6 @@
 
 @media (max-width: 900px) {
   .fGrid,
-  .fGrid2 {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .itemRow {
     grid-template-columns: minmax(0, 1fr) 64px 72px var(--touch-min);
   }
@@ -384,30 +356,6 @@
 }
 
 /* 목록 단계 탭 (접수 · 처리 · 완료 · 전체) */
-.stageTabs {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  border-radius: var(--radius);
-  background: var(--color-bg-sub);
-}
-
-.stageTab {
-  padding: 2px 9px;
-  border: 0;
-  border-radius: var(--radius);
-  background: none;
-  color: var(--color-text-sub);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.stageOn {
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-weight: 700;
-  box-shadow: 0 0 0 1px var(--color-border);
-}
 
 /* 추적 기록 위 진행 막대 — 세부 단계 11칸 (큰 단계 사이 틈), 아래 한 줄 요약 */
 .progress {
