@@ -47,7 +47,10 @@ export const createListing = async (body) => {
 }
 
 export const deleteListing = async (id) => {
-  await request(`/listings/${id}`, { method: 'DELETE', errorMsg: '마켓 등록 기록을 지우지 못했어요' })
+  await request(`/listings/${id}`, {
+    method: 'DELETE',
+    errorMsg: '마켓 등록 기록을 지우지 못했어요',
+  })
 }
 
 // 쿠팡에서 불러오기 — 쿠팡 셀러 상품 전체를 읽어 옵션 SKU(제품 코드-옵션 id)로 제품에 붙인다

@@ -70,7 +70,10 @@ export default function ProductsPage() {
     PLATFORMS.map((p) => {
       const mine = listings.filter((l) => l.productId === productId && l.platform === p.key)
       if (!mine.length) return null
-      const first = mine.map((l) => l.listedAt).filter(Boolean).sort()[0]
+      const first = mine
+        .map((l) => l.listedAt)
+        .filter(Boolean)
+        .sort()[0]
       return `${p.label} ${mine.length}${first ? ` · ${toKstDateTime(first).slice(5)}` : ''}`
     })
       .filter(Boolean)

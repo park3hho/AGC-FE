@@ -60,10 +60,7 @@ export default function ProductOverviewPage() {
   const [form, setForm] = useState(null) // 직접 추가 입력 (null = 닫힘)
   const [imgTab, setImgTab] = useState('coupang')
 
-  const loadListings = useCallback(
-    () => getListings(productId).then(setListings),
-    [productId],
-  )
+  const loadListings = useCallback(() => getListings(productId).then(setListings), [productId])
 
   useEffect(() => {
     Promise.all([getProduct(productId), getPricing(productId), getDetailPage(productId)])
@@ -78,7 +75,10 @@ export default function ProductOverviewPage() {
     if (!data) return null
     const { product, surveys, pricing, design } = data
     const page = design.page
-    const dates = surveys.map((s) => s.researchedAt).filter(Boolean).sort()
+    const dates = surveys
+      .map((s) => s.researchedAt)
+      .filter(Boolean)
+      .sort()
     const approvals = (page?.reviews || []).filter((r) => r.action === 'approve')
     const firstApprove = approvals.length ? approvals[approvals.length - 1].createdAt : null
     const approvedAt = page?.status === 'approved' ? page.reviewedAt : null
@@ -141,7 +141,11 @@ export default function ProductOverviewPage() {
   }
 
   const remove = async (l) => {
-    if (!window.confirm(`${PLATFORM_LABEL[l.platform]} ${l.marketProductId} 기록을 지울까요? (마켓 상품은 그대로예요)`))
+    if (
+      !window.confirm(
+        `${PLATFORM_LABEL[l.platform]} ${l.marketProductId} 기록을 지울까요? (마켓 상품은 그대로예요)`,
+      )
+    )
       return
     setBusy(`del-${l.id}`)
     try {
@@ -230,7 +234,8 @@ export default function ProductOverviewPage() {
                     .filter((l) => l.url)
                     .map((l) => (
                       <a key={l.id} href={l.url} target="_blank" rel="noreferrer" title={l.title}>
-                        {PLATFORM_LABEL[l.platform]} {l.items.map((i) => i.name).join('/') || l.marketProductId} ↗
+                        {PLATFORM_LABEL[l.platform]}{' '}
+                        {l.items.map((i) => i.name).join('/') || l.marketProductId} ↗
                       </a>
                     ))}
                   {survey?.coupangMinPrice != null && (
@@ -540,7 +545,14 @@ export default function ProductOverviewPage() {
           {exp ? (
             <div className={styles.images}>
               {exp.files.map((f) => (
-                <img key={f.url} src={f.url} alt="" width={f.width} height={f.height} loading="lazy" />
+                <img
+                  key={f.url}
+                  src={f.url}
+                  alt=""
+                  width={f.width}
+                  height={f.height}
+                  loading="lazy"
+                />
               ))}
             </div>
           ) : (
