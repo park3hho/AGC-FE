@@ -5,7 +5,6 @@ import { getDetailPage } from '@/api/detailPage'
 import { createListing, deleteListing, getListings, syncCoupangListings } from '@/api/listing'
 import { getPricing } from '@/api/pricing'
 import { getProduct } from '@/api/product'
-import Badge from '@/components/Badge'
 import HoverInfo from '@/components/common/HoverInfo'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
@@ -333,9 +332,9 @@ export default function ProductOverviewPage() {
         action={
           <div className={styles.headChips}>
             {page?.status === 'approved' ? (
-              <Badge tone="success">디자인 승인</Badge>
+              <span className={styles.stateOk}>● 디자인 승인</span>
             ) : (
-              <Badge tone="warning">디자인 승인 전</Badge>
+              <span className={styles.stateWarn}>● 디자인 승인 전</span>
             )}
             {survey?.taobaoUrl && (
               <a
