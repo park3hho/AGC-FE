@@ -253,6 +253,16 @@ export default function ProductOverviewPage() {
   const linksOf = (optionId) =>
     listings.filter((l) => l.url && l.items.some((i) => i.optionId === optionId))
 
+  // 책정 기준 환율 vs 현재 환율 — 한 줄 (예: 261020 기준 200원 → 현재 198.83원 (−1.17))
+  const fxLine = (m) => {
+    const now = Number(pricing.fx.cnyKrw)
+    const diff = now - Number(m.fxRate)
+    const d =
+      Math.abs(diff) < 0.005
+        ? '변동 없음'
+        : `${diff > 0 ? '+' : '−'}${formatFx(Math.abs(diff).toFixed(2))}`
+    return `${YMD(m.pricedAt)} 기준 ${formatFx(m.fxRate)}원 → 현재 ${formatFx(pricing.fx.cnyKrw)}원 (${d})`
+  }
   const costOf = (x) => x.markets[mainKey] || Object.values(x.markets)[0] || null
   const costInfo = (x) => {
     const m = costOf(x)
@@ -267,9 +277,7 @@ export default function ProductOverviewPage() {
             { label: `배송 ${formatCny(x.o.shippingCny)}`, value: m.ship, color: MIX.ship },
           ]}
         />
-        <div className={styles.tipNote}>
-          위안 합계 × {formatFx(m.fxRate)}원 ({YMD(m.pricedAt)} 기준)
-        </div>
+        <div className={styles.tipNote}>{fxLine(m)}</div>
       </>
     )
   }
@@ -290,9 +298,7 @@ export default function ProductOverviewPage() {
             { label: '차익', value: m.r.profit, color: MIX.profit },
           ]}
         />
-        <div className={styles.tipNote}>
-          {YMD(m.pricedAt)} 기준 · 환율 {formatFx(m.fxRate)}원
-        </div>
+        <div className={styles.tipNote}>{fxLine(m)}</div>
       </>
     )
   }
