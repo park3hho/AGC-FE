@@ -1,0 +1,127 @@
+/* 공통 › 내 계정 모달 */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: min(360px, calc(100vw - 32px));
+  padding: var(--space-4);
+  border-radius: 14px;
+  background: var(--color-bg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  transform: translate(-50%, -50%);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-bg-sub);
+  color: var(--color-text-sub);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.who small {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--color-text-sub);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--color-bg-sub);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rowText small {
+  color: var(--color-text-sub);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.devWord {
+  color: var(--color-dev);
+  font-weight: 600;
+}
+
+/* 켜기·끄기 스위치 */
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--color-border);
+  appearance: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s;
+}
+
+.switch:checked {
+  background: var(--color-dev);
+}
+
+.switch:checked::after {
+  transform: translateX(16px);
+}
+
+.logout {
+  color: var(--color-danger);
+}

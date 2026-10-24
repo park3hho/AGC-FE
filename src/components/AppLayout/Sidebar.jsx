@@ -1,23 +1,27 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink } from 'react-router-dom'
 
+import AccountModal from '@/components/AccountModal'
 import Icon from '@/components/Icon'
 import { MENU, MENU_GROUPS } from '@/constants/menuConst'
 import { hasFeature, ROLE_LABEL } from '@/constants/permissions'
 import { useAuth } from '@/hooks/useAuth'
+import { devVisible, useDevMode } from '@/hooks/useDevMode'
 import styles from './AppLayout.module.css'
 
-const navClass = ({ isActive }) => `${styles.navItem} ${isActive ? styles.navOn : ''}`
+const navClass =
+  (dev) =>
+  ({ isActive }) =>
+    `${styles.navItem} ${isActive ? styles.navOn : ''} ${dev ? styles.navDev : ''}`
 
-// 공통 › 왼쪽 메뉴 — 데스크탑에서만 보임
+// 공통 › 왼쪽 메뉴 — 데스크탑에서만 보임. 아래 내 계정을 누르면 모달 (개발자 모드 · 로그아웃)
 export default function Sidebar() {
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
-  const visible = MENU.filter((m) => m.soon || hasFeature(user, m.feature))
-
-  const out = async () => {
-    await logout()
-    navigate('/login', { replace: true })
-  }
+  const { user } = useAuth()
+  const devMode = useDevMode()
+  const [accountOpen, setAccountOpen] = useState(false)
+  const visible = MENU.filter(
+    (m) => (m.soon || hasFeature(user, m.feature)) && devVisible(m, devMode),
+  )
 
   return (
     <aside className={styles.sidebar} data-section="공통 › 왼쪽 메뉴">
@@ -30,7 +34,7 @@ export default function Sidebar() {
       </div>
 
       <nav className={styles.nav}>
-        <NavLink to="/" end className={navClass}>
+        <NavLink to="/" end className={navClass(false)}>
           <Icon name="home" size={18} />홈
         </NavLink>
 
@@ -48,7 +52,7 @@ export default function Sidebar() {
                     <small>준비 중</small>
                   </span>
                 ) : (
-                  <NavLink key={m.key} to={m.path} className={navClass}>
+                  <NavLink key={m.key} to={m.path} className={navClass(m.dev)}>
                     <Icon name={m.icon} size={18} />
                     {m.label}
                   </NavLink>
@@ -59,16 +63,23 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className={styles.me}>
+      <button
+        type="button"
+        className={styles.me}
+        onClick={() => setAccountOpen(true)}
+        title="내 계정 · 개발자 모드 · 로그아웃"
+      >
         <span className={styles.avatar}>{user.name?.[0] || '?'}</span>
         <span className={styles.meText}>
           <b>{user.name}</b>
-          <small>{ROLE_LABEL[user.role]}</small>
+          <small>
+            {ROLE_LABEL[user.role]}
+            {devMode && <span className={styles.devTag}> · 개발자 모드</span>}
+          </small>
         </span>
-        <button className="btn-ghost btn-sm" onClick={out}>
-          로그아웃
-        </button>
-      </div>
+        <Icon name="more" size={18} />
+      </button>
+      {accountOpen && <AccountModal onClose={() => setAccountOpen(false)} />}
     </aside>
   )
 }

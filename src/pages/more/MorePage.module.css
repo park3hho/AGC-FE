@@ -70,3 +70,9 @@
   gap: var(--space-3);
   font-size: var(--font-sm);
 }
+
+/* 개발자 모드 전용 메뉴 — 보라색 글씨 */
+.dev,
+.dev .icon {
+  color: var(--color-dev);
+}

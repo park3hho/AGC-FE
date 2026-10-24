@@ -1,24 +1,26 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import AccountModal from '@/components/AccountModal'
 import Icon from '@/components/Icon'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import { MENU, MENU_GROUPS } from '@/constants/menuConst'
 import { hasFeature, ROLE_LABEL } from '@/constants/permissions'
 import { useAuth } from '@/hooks/useAuth'
+import { devVisible, useDevMode } from '@/hooks/useDevMode'
 import styles from './MorePage.module.css'
 
 // 더보기 (모바일 아래 탭) — 섹션: 메뉴 · 내 계정
 // 한 화면에 다 들어가게 메뉴는 묶음별 타일 격자로 (DESIGN.md §4.4 — 스크롤 대신 줄이기)
 export default function MorePage() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
-  const items = MENU.filter((m) => m.soon || hasFeature(user, m.feature))
-
-  const out = async () => {
-    await logout()
-    navigate('/login', { replace: true })
-  }
+  const { user } = useAuth()
+  const devMode = useDevMode()
+  const [accountOpen, setAccountOpen] = useState(false)
+  const items = MENU.filter(
+    (m) => (m.soon || hasFeature(user, m.feature)) && devVisible(m, devMode),
+  )
 
   return (
     <main className="page-flat">
@@ -36,7 +38,7 @@ export default function MorePage() {
                   <button
                     key={m.key}
                     type="button"
-                    className={styles.tile}
+                    className={`${styles.tile} ${m.dev ? styles.dev : ''}`}
                     disabled={m.soon}
                     onClick={() => navigate(m.path)}
                   >
@@ -58,11 +60,12 @@ export default function MorePage() {
           <span>
             <b>{user.name}</b> · {ROLE_LABEL[user.role]}
           </span>
-          <button className="btn-secondary btn-sm" onClick={out}>
-            로그아웃
+          <button className="btn-secondary btn-sm" onClick={() => setAccountOpen(true)}>
+            내 계정
           </button>
         </div>
       </Section>
+      {accountOpen && <AccountModal onClose={() => setAccountOpen(false)} />}
     </main>
   )
 }

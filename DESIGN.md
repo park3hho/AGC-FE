@@ -221,6 +221,7 @@ const rows = items.slice((page - 1) * size, page * size)
 - 메뉴 목록은 `constants/menuConst.js` 의 `MENU`(그룹 포함) 하나로 사이드바·아래 탭·더보기를 모두 그린다.
 - 화면 이름·빵가루는 `constants/screenConst.js` 의 `SCREENS`(경로 → 이름·그룹·상위 화면)에서만 가져온다. 새 화면을 만들면 여기에 먼저 추가한다.
 - 아직 없는 기능(주문)은 메뉴에 '준비 중'으로 두고 누를 수 없게 한다.
+- **개발자 모드** (2026-10-24): 내 계정 모달에서 켠다 (이 브라우저 localStorage, 권한 아님). `menuConst` 의 `dev: true` 메뉴는 개발자 모드일 때만 보이고 글씨는 보라색(`--color-dev`). 지금 dev 메뉴: 타오바오 구매.
 
 ### 4.6 섹션 이름 규칙 — 2026-10-20
 사용자가 "제품 상세 › 사진 고쳐줘"처럼 **이름으로 바로 부를 수 있게** 화면을 나눈다.
@@ -238,7 +239,7 @@ const rows = items.slice((page - 1) * size, page * size)
 
 | 화면 | 섹션 (이름 · id) |
 |---|---|
-| 공통 | 왼쪽 메뉴 `sidebar` · 위쪽 바 `topbar` · 아래 탭 `tabbar` |
+| 공통 | 왼쪽 메뉴 `sidebar` · 위쪽 바 `topbar` · 아래 탭 `tabbar` · 내 계정 모달 (왼쪽 메뉴 맨 아래 / 더보기 › 내 계정을 누르면: 개발자 모드 켜기 · 로그아웃) |
 | 홈 | 현황 숫자 `stats` · 진행 단계 `flow` · 최근 제품 `recent` · 할 일 `todo` |
 | 제품조사 | 검색·필터 `filters` · 제품 목록 `list` |
 | 제품 상세 | 사진 `photos` · 기본 정보 `info` · 판매가 요약 `price-summary` · 옵션 `options` · 가격조사 `surveys` |

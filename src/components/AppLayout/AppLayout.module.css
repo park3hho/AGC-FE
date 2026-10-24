@@ -326,3 +326,37 @@
     background: var(--color-bg);
   }
 }
+
+/* 내 계정 — 누르면 모달 (개발자 모드 · 로그아웃) */
+button.me {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-text-sub);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.me:hover .meText b {
+  color: var(--color-primary);
+}
+
+.devTag {
+  color: var(--color-dev);
+  font-weight: 600;
+}
+
+/* 개발자 모드 전용 메뉴 — 보라색 글씨 */
+.navDev,
+.navDev:hover {
+  color: var(--color-dev);
+}
+
+.navDev.navOn,
+.navDev.navOn:hover {
+  background: var(--color-dev-bg);
+  color: var(--color-dev);
+}

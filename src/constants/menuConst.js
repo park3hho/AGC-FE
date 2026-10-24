@@ -10,6 +10,7 @@ export const MENU_GROUPS = [
 // 왼쪽 메뉴 · 아래 탭 · 더보기를 모두 이 목록 하나로 그린다
 //   tab: 모바일 아래 탭에 바로 보임 (나머지는 '더보기')
 //   soon: 아직 없는 기능 — 메뉴에 '준비 중'으로만 보이고 누를 수 없음
+//   dev: 개발자 모드(내 계정 모달에서 켬)일 때만 보임 — 메뉴 글씨는 보라색 (--color-dev)
 export const MENU = [
   {
     key: 'product',
@@ -74,6 +75,7 @@ export const MENU = [
     key: 'purchases',
     group: 'sales',
     label: '타오바오 구매', // 타오바오에서 산 것 · 판매처 → 집운 창고 배송
+    dev: true,
     icon: 'yuan',
     tone: 'success',
     path: '/purchases',
