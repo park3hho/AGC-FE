@@ -428,7 +428,7 @@ export default function OrderReceivePage() {
               (view === 'raw'
                 ? '마켓이 보낸 응답 그대로 · 개인정보만 가림'
                 : view === 'detail'
-                  ? `${o.code} · ${MARKETS[o.market].label} ${o.orderNo}`
+                  ? o.code
                   : `${o.code} · ${detail.events.length}건`)
             }
             fill
