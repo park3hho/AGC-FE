@@ -228,3 +228,14 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.table td.ellipsis {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btnLink,
+.btnLink:hover {
+  text-decoration: none;
+}

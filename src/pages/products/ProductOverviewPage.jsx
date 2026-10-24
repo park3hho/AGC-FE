@@ -230,14 +230,6 @@ export default function ProductOverviewPage() {
                       타오바오 원본 ↗
                     </a>
                   )}
-                  {listings
-                    .filter((l) => l.url)
-                    .map((l) => (
-                      <a key={l.id} href={l.url} target="_blank" rel="noreferrer" title={l.title}>
-                        {PLATFORM_LABEL[l.platform]}{' '}
-                        {l.items.map((i) => i.name).join('/') || l.marketProductId} ↗
-                      </a>
-                    ))}
                   {survey?.coupangMinPrice != null && (
                     <span className={styles.muted}>
                       국내 쿠팡 최저 {formatWon(survey.coupangMinPrice)}
@@ -312,10 +304,12 @@ export default function ProductOverviewPage() {
             id="prices"
             sub={`지금 환율 ${pricing.fx.cnyKrw ? Number(pricing.fx.cnyKrw) : '-'}원으로 계산 · 판매가는 저장한 값`}
             flush
-            fill
             className={tabs.hide('prices')}
             action={
-              <Link className="btn-secondary btn-sm" to={`/pricing/${product.id}`}>
+              <Link
+                className={`btn-secondary btn-sm ${styles.btnLink}`}
+                to={`/pricing/${product.id}`}
+              >
                 가격 책정 열기
               </Link>
             }
@@ -385,6 +379,7 @@ export default function ProductOverviewPage() {
             id="listings"
             sub={notice || `${listings.length}개`}
             flush
+            fill
             className={tabs.hide('listings')}
             action={
               canEdit && (
@@ -462,7 +457,8 @@ export default function ProductOverviewPage() {
                   <thead>
                     <tr>
                       <th>판매처</th>
-                      <th>상품명 · 상품번호</th>
+                      <th>상품명</th>
+                      <th>상품번호</th>
                       <th>옵션 · 가격</th>
                       <th>업로드 일시</th>
                       <th>상태</th>
@@ -473,7 +469,7 @@ export default function ProductOverviewPage() {
                     {listings.map((l) => (
                       <tr key={l.id}>
                         <td>{PLATFORM_LABEL[l.platform]}</td>
-                        <td className={styles.wrap}>
+                        <td className={styles.ellipsis} title={l.title}>
                           {l.url ? (
                             <a href={l.url} target="_blank" rel="noreferrer">
                               {l.title || '(상품명 없음)'} ↗
@@ -481,12 +477,14 @@ export default function ProductOverviewPage() {
                           ) : (
                             l.title || '(상품명 없음)'
                           )}
-                          <div className={styles.muted}>
-                            {l.marketProductId}
-                            {l.source === 'api' ? ' · 마켓에서 불러옴' : ' · 직접 입력'}
-                          </div>
                         </td>
-                        <td className={styles.wrap}>
+                        <td
+                          className={styles.muted}
+                          title={l.source === 'api' ? '마켓에서 불러옴' : '직접 입력'}
+                        >
+                          {l.marketProductId}
+                        </td>
+                        <td className={styles.ellipsis}>
                           {l.items.map((i) => `${i.name} ${formatWon(i.salePrice)}`).join(' / ') ||
                             '-'}
                         </td>
@@ -536,7 +534,10 @@ export default function ProductOverviewPage() {
                   {p.label}
                 </button>
               ))}
-              <Link className="btn-secondary btn-sm" to={`/design/${product.id}`}>
+              <Link
+                className={`btn-secondary btn-sm ${styles.btnLink}`}
+                to={`/design/${product.id}`}
+              >
                 디자인 열기
               </Link>
             </>
