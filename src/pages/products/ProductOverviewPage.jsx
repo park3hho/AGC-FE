@@ -333,7 +333,7 @@ export default function ProductOverviewPage() {
                   const cost = costSettings ? costWithShipping(o, costSettings) : null
                   return (
                     <tr key={o.id}>
-                      <td className={styles.wrap}>{optionName(o)}</td>
+                      <td>{optionName(o)}</td>
                       <td className={styles.num}>
                         {formatCny(o.priceCny)} + {formatCny(o.shippingCny)}
                       </td>

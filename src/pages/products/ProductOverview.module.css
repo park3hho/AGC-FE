@@ -82,7 +82,7 @@
   flex-direction: column;
   gap: 1px;
   min-width: 0;
-  padding: 6px 10px;
+  padding: 4px 10px;
   border-left: 3px solid var(--color-primary);
   border-radius: 4px;
   background: var(--color-bg-app);
@@ -230,7 +230,7 @@
 }
 
 .table td.ellipsis {
-  max-width: 280px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
