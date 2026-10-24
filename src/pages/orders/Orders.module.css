@@ -433,43 +433,55 @@
   box-shadow: 0 0 0 1px var(--color-border);
 }
 
-/* 추적 기록 위 진행 막대 — 세부 단계 11개 */
+/* 추적 기록 위 진행 막대 — 세부 단계 11칸 (큰 단계 사이 틈), 아래 한 줄 요약 */
 .progress {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
-  gap: 4px;
-  margin: 0 0 var(--space-3);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pBar {
+  display: flex;
+  gap: 2px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.pStep {
-  display: flex;
-  flex-direction: column;
-  padding: 4px 6px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  color: var(--color-text-weak);
-  font-size: 11px;
-  line-height: 1.35;
+.pSeg {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-border);
 }
 
-.pStep small {
-  font-variant-numeric: tabular-nums;
+.pGap {
+  margin-left: 5px;
 }
 
 .pDone {
-  border-color: var(--color-primary-bg);
-  background: var(--color-primary-bg);
-  color: var(--color-primary);
+  background: var(--color-primary);
 }
 
 .pNow {
-  border-color: var(--color-primary);
-  color: var(--color-text);
-  font-weight: 700;
+  background: var(--color-primary);
+  opacity: 0.35;
 }
 
+.pText {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+/* 목록 머리 아래 필터 줄 (단계 탭 · 검색 · 통관부호 칩) */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
 /* 기록의 관련 번호 */
 .refs {
   display: flex;

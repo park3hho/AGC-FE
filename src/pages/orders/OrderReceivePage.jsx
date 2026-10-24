@@ -97,21 +97,36 @@ function TraceProgress({
     if (!first[s] || t < first[s]) first[s] = t
   }
   const lastDone = TRACE_STEPS.reduce((n, x, i) => (first[x.step] ? i : n), -1)
+  const now = TRACE_STEPS[lastDone + 1]
+  const done = TRACE_STEPS[lastDone]
+  const start = first[TRACE_STEPS[0].step]
+  const days =
+    done && start ? Math.round((new Date(first[done.step]) - new Date(start)) / 86400000) : null
   return (
-    <ol className={styles.progress} aria-label="진행 단계">
-      {TRACE_STEPS.map((x, i) => (
-        <li
-          key={x.step}
-          className={`${styles.pStep} ${first[x.step] ? styles.pDone : i === lastDone + 1 ? styles.pNow : ''}`}
-          title={`${TRACE_STAGE[x.stage].label} › ${x.step}`}
-        >
-          <span>{x.step}</span>
-          <small>
-            {first[x.step] ? kst(first[x.step]).slice(5, 10) : i === lastDone + 1 ? '지금' : '-'}
-          </small>
-        </li>
-      ))}
-    </ol>
+    <div className={styles.progress} aria-label="진행 단계">
+      <ol className={styles.pBar}>
+        {TRACE_STEPS.map((x, i) => (
+          <li
+            key={x.step}
+            className={`${styles.pSeg} ${first[x.step] ? styles.pDone : i === lastDone + 1 ? styles.pNow : ''} ${
+              i > 0 && TRACE_STEPS[i - 1].stage !== x.stage ? styles.pGap : ''
+            }`}
+            title={`${TRACE_STAGE[x.stage].label} › ${x.step}${first[x.step] ? ` · ${kst(first[x.step])}` : ''}`}
+          />
+        ))}
+      </ol>
+      <div className={styles.pText}>
+        {done ? (
+          <>
+            <b>{done.step}</b> {kst(first[done.step]).slice(5, 10)}
+          </>
+        ) : (
+          '아직 시작 전'
+        )}
+        {now && <span className={styles.weak}> · 다음 {now.step}</span>}
+        {days != null && days > 0 && <span className={styles.weak}> · 주문부터 {days}일</span>}
+      </div>
+    </div>
   )
 }
 
@@ -316,49 +331,42 @@ export default function OrderReceivePage() {
       </Section>
 
       <div className={`fit-row ${styles.split}`}>
-        <Section
-          name="접수 목록"
-          id="list"
-          sub={data && `${data.total}건`}
-          flush
-          fill
-          action={
-            <div className={styles.chips}>
-              <span className={styles.stageTabs} role="tablist" aria-label="주문 단계">
-                {ORDER_STAGES.map((s) => (
-                  <button
-                    key={s.key}
-                    type="button"
-                    role="tab"
-                    aria-selected={stage === s.key}
-                    className={`${styles.stageTab} ${stage === s.key ? styles.stageOn : ''}`}
-                    onClick={() => set({ stage: s.key === 'received' ? null : s.key, id: null })}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </span>
-              <input
-                className={styles.search}
-                value={search}
-                onChange={(e) => set({ q: e.target.value || null, id: null })}
-                placeholder="OR-… · 마켓 주문번호"
-                aria-label="자사 코드·마켓 주문번호 검색"
-              />
-              {PCCC_FILTERS.map((k) => (
+        <Section name="접수 목록" id="list" sub={data && `${data.total}건`} flush fill>
+          <div className={styles.toolbar}>
+            <span className={styles.stageTabs} role="tablist" aria-label="주문 단계">
+              {ORDER_STAGES.map((s) => (
                 <button
-                  key={k}
+                  key={s.key}
                   type="button"
-                  className={`${styles.chip} ${filter === k ? styles.chipOn : ''}`}
-                  onClick={() => set({ pccc: k, id: null })}
+                  role="tab"
+                  aria-selected={stage === s.key}
+                  className={`${styles.stageTab} ${stage === s.key ? styles.stageOn : ''}`}
+                  onClick={() => set({ stage: s.key === 'received' ? null : s.key, id: null })}
                 >
-                  {k === 'all' ? '전체' : PCCC_STATUS[k].short}{' '}
-                  {k === 'all' ? allCount : counts[k] || 0}
+                  {s.label}
                 </button>
               ))}
-            </div>
-          }
-        >
+            </span>
+            <input
+              className={styles.search}
+              value={search}
+              onChange={(e) => set({ q: e.target.value || null, id: null })}
+              placeholder="OR-… · 마켓 주문번호"
+              aria-label="자사 코드·마켓 주문번호 검색"
+            />
+            {PCCC_FILTERS.map((k) => (
+              <button
+                key={k}
+                type="button"
+                className={`${styles.chip} ${filter === k ? styles.chipOn : ''}`}
+                onClick={() => set({ pccc: k, id: null })}
+              >
+                {k === 'all' ? '전체' : PCCC_STATUS[k].short}{' '}
+                {k === 'all' ? allCount : counts[k] || 0}
+              </button>
+            ))}
+          </div>
+
           {data && data.items.length === 0 && (
             <p className={styles.empty}>
               {search
