@@ -33,8 +33,13 @@ const SECTIONS = [
 ]
 const PLATFORM_LABEL = Object.fromEntries(PLATFORMS.map((p) => [p.key, p.label]))
 const EMPTY_FORM = { platform: 'naver', marketProductId: '', title: '', url: '', listedAt: '' }
-// 구성 막대 색 — 상품·배송은 옅은 파랑, 수수료 회색, 차익 진한 파랑 (오버레이는 body 에 그려져 CSS 변수 대신 값)
-const MIX = { goods: '#b0c4de', ship: '#7fa7d9', fee: '#d5d9de', profit: '#3182f6' }
+// 구성 막대 색 — 상품·배송은 옅은 primary, 수수료 border, 차익 primary (전역 토큰이라 body 에 그린 오버레이에서도 테마를 따라감)
+const MIX = {
+  goods: 'color-mix(in srgb, var(--color-primary) 28%, var(--color-bg))',
+  ship: 'color-mix(in srgb, var(--color-primary) 55%, var(--color-bg))',
+  fee: 'var(--color-border)',
+  profit: 'var(--color-primary)',
+}
 const YMD = (iso) => toKstDate(iso).slice(2).replace(/-/g, '') // '261024' — 가격 확정일
 const SHORT = (iso) => toKstDateTime(iso).slice(5) // 'MM-DD HH:mm'
 
