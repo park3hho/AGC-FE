@@ -1,10 +1,10 @@
-// 상세페이지 템플릿(.dp)을 판매처별 JPG 조각으로 — 새 패키지 없이 (DESIGN.md §1 · §4.7)
+// 상세페이지 템플릿(.dp)을 판매처별 이미지 조각으로 — 새 패키지 없이 (DESIGN.md §1 · §4.7)
 //   1) 요소를 복제하고 사진 · 글꼴(Pretendard)을 data URL 로 넣는다 (그림 안에서는 바깥 파일을 못 읽는다)
 //   2) 복제본을 SVG foreignObject 로 2배 크기 canvas 에 그린다 (폭 860px 고정 · 앱에 실은 글꼴 → 어느 PC 든 같은 그림)
-//   3) 섹션 경계에서 3000px 이하로 자르고, 판매처 폭(네이버 860 · 쿠팡 780)으로 줄여 JPG 로 만든다
+//   3) 섹션 경계에서 3000px 이하로 자르고, 판매처 폭으로 줄인다 — 네이버 860 PNG(무손실) · 쿠팡 780 JPG(품질 100)
+//      2배 그림 → 판매처 폭으로 한 번에 줄이기 (1배·단계별 축소와 비교해 글자가 가장 또렷했다, 2026-10-24)
 // 자르는 위치는 두 판매처가 같다 — 조각 n 은 판매처가 달라도 같은 내용이다.
 import {
-  EXPORT_JPEG_QUALITY,
   EXPORT_MAX_HEIGHT,
   EXPORT_PLATFORMS,
   TEMPLATE_FONT_FAMILY,
@@ -119,18 +119,19 @@ async function renderCanvas(node, height, scale) {
   return canvas
 }
 
-const toJpeg = (canvas) =>
+// 판매처 형식으로 — PNG 는 무손실, JPG 는 pf.quality (1 = 최고)
+const toBlob = (canvas, pf) =>
   new Promise((resolve, reject) =>
     canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error('JPG 를 만들지 못했어요'))),
-      'image/jpeg',
-      EXPORT_JPEG_QUALITY,
+      (b) => (b ? resolve(b) : reject(new Error(`${pf.ext.toUpperCase()} 를 만들지 못했어요`))),
+      pf.mime,
+      pf.quality,
     ),
   )
 
 // node: 상세페이지 템플릿(.dp) · code: 파일 이름 앞부분(제품 코드)
 // → { cuts, sets: { naver: [{ name, blob, width, height }], coupang: [...] } }
-export async function renderDetailJpgs(node, code) {
+export async function renderDetailImages(node, code) {
   await waitTemplateFont()
   const cuts = planCuts(node)
   const height = cuts[cuts.length - 1]
@@ -156,9 +157,15 @@ export async function renderDetailJpgs(node, code) {
       const sy = (top / r) * scale
       const sh = (h / r) * scale
       ctx.drawImage(full, 0, sy, full.width, Math.min(sh, full.height - sy), 0, 0, pf.width, h)
+      const blob = await toBlob(c, pf)
+      if (blob.size > pf.maxFileBytes) {
+        throw new Error(
+          `${pf.label} ${i + 1}번째 조각이 ${(blob.size / 1024 / 1024).toFixed(1)}MB 예요 (최대 ${pf.maxFileBytes / 1024 / 1024}MB)`,
+        )
+      }
       sets[pf.key].push({
-        name: `${code}_${pf.key}_${String(i + 1).padStart(2, '0')}.jpg`,
-        blob: await toJpeg(c),
+        name: `${code}_${pf.key}_${String(i + 1).padStart(2, '0')}.${pf.ext}`,
+        blob,
         width: pf.width,
         height: h,
       })
