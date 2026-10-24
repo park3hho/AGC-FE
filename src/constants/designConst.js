@@ -4,7 +4,7 @@
 export const TEMPLATE_WIDTH = 860
 
 // 템플릿 버전 — 그림이 달라지는 템플릿·글꼴·내보내기 형식 변경 때 올린다. 내보내기 기록(detail_page_export.template)에 남는다
-export const DETAIL_TEMPLATE_VERSION = 's1-s6@2026-10-24' // 네이버 PNG(무손실) · 쿠팡 JPG 100
+export const DETAIL_TEMPLATE_VERSION = 's1-s6@2026-10-24b' // 사진 없는 맛 카드 = 글만 (사진 없음 표시 안 함)
 
 // 템플릿 글꼴 — Pretendard(OFL, public/fonts) 를 앱에 실어 어느 PC 에서나 같은 그림이 나오게 한다.
 //   이 PC 에 설치된 Pretendard 와 섞이지 않게 이름을 따로 쓴다

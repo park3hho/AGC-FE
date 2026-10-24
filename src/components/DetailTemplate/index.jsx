@@ -181,14 +181,13 @@ const DetailTemplate = forwardRef(function DetailTemplate(
           )}
           <div className="dp-flavors">
             {flavorItems.map((f, i) => (
-              <div key={i} className="dp-flavor">
-                <div className="dp-ph">
-                  {f.photo_url ? (
+              <div key={i} className={f.photo_url ? 'dp-flavor' : 'dp-flavor dp-flavor-text'}>
+                {/* 사진 없는 맛은 글만 있는 카드 — 고객 이미지에 '사진 없음' 을 절대 넣지 않는다 (DESIGN §4.7) */}
+                {f.photo_url && (
+                  <div className="dp-ph">
                     <img src={fileUrl(f.photo_url)} alt="" />
-                  ) : (
-                    <div className="dp-nophoto">사진 없음</div>
-                  )}
-                </div>
+                  </div>
+                )}
                 <div className="dp-tx">
                   <div className="dp-opt">옵션 {i + 1}</div>
                   <h3>

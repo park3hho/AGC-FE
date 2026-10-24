@@ -77,5 +77,6 @@ export const TEMPLATE_CSS = `
 .dp .dp-s6 li{display:flex;gap:24px;padding:20px 0;border-bottom:1px solid #344055;font-size:17px;line-height:1.6}
 .dp .dp-s6 li b{flex:0 0 170px;color:#fff;font-weight:700}
 .dp .dp-foot{background:#121926;color:#7d8aa0;text-align:center;font-size:14px;padding:22px 0}
-.dp .dp-nophoto{display:flex;align-items:center;justify-content:center;height:100%;color:#8a96a8;font-size:18px}
+.dp .dp-flavor-text{border-left:8px solid var(--blue)}
+.dp .dp-flavor-text .dp-tx{padding:40px 44px 40px 40px;min-height:220px}
 `

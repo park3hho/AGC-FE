@@ -221,6 +221,7 @@ function FlavorsFields({ c, set, photos }) {
               onChange={(v) => set(['items', i, 'photo_url'], v)}
             />
           </Row>
+          {!f.photo_url && <p className={styles.hint}>사진 없음 — 미리보기·이미지에선 글만 있는 카드로 나가요</p>}
         </div>
       ) : (
         <p className={styles.hint}>가격조사 옵션이 없어 맛 카드가 없어요</p>
