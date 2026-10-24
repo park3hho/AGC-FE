@@ -41,34 +41,26 @@ function MarketMark({
   )
 }
 
-// 수집 칸 1개 — 마켓별 마지막 수집 결과
+// 수집 칸 1개 — 마켓별 마지막으로 가져온 시각만. 그때 받은·새·변경·검증 건수는 마우스를 올리면 (실패면 그대로 보임)
 function RunCard({
   market, // 'naver' | 'coupang'
   run, // object | null: 마지막 수집
 }) {
+  const detail =
+    run &&
+    `마지막 가져오기 결과 — 받은 ${run.fetched} · 새 주문 ${run.created} · 변경 ${run.changed} · 통관부호 검증 ${run.checked}`
   return (
-    <div className={styles.run}>
+    <div className={styles.run} title={run?.ok ? detail : undefined}>
       <MarketMark market={market} />
-      <div className={styles.runText}>
-        <b>{MARKETS[market].label}</b>
-        {!run && <span className={styles.weak}>아직 안 가져왔어요</span>}
-        {run && (
-          <>
-            <span>
-              {kstTime(run.finishedAt || run.startedAt)} ·{' '}
-              {run.trigger === 'poller' ? '자동' : '수동'}
-              {run.ok === null && ' · 가져오는 중'}
-            </span>
-            {run.ok ? (
-              <span className={styles.weak}>
-                받은 {run.fetched} · 새 주문 {run.created} · 변경 {run.changed} · 검증 {run.checked}
-              </span>
-            ) : (
-              run.ok === false && <span className={styles.bad}>실패 — {run.error}</span>
-            )}
-          </>
-        )}
-      </div>
+      <b>{MARKETS[market].label}</b>
+      {!run && <span className={styles.weak}>아직 안 가져왔어요</span>}
+      {run && (
+        <span className={styles.weak}>
+          {kstTime(run.finishedAt || run.startedAt)} · {run.trigger === 'poller' ? '자동' : '수동'}
+          {run.ok === null && ' · 가져오는 중'}
+        </span>
+      )}
+      {run?.ok === false && <span className={styles.bad}>실패 — {run.error}</span>}
     </div>
   )
 }

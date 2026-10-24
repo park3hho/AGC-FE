@@ -35,18 +35,12 @@
   gap: var(--space-3) var(--space-5);
 }
 
-.run {
-  display: flex;
-  gap: var(--space-2);
-  align-items: flex-start;
-  min-width: 0;
-}
-
-.runText,
+.run,
 .poll {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: 4px var(--space-2);
+  align-items: center;
   min-width: 0;
   font-size: 13px;
 }
