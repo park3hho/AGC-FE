@@ -66,7 +66,7 @@ export const MENU = [
     group: 'sales',
     label: '주문',
     icon: 'bag',
-    tone: 'danger',
+    tone: 'warning',
     path: '/orders',
     feature: FEATURE.ORDER,
   },

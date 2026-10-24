@@ -1,0 +1,258 @@
+/* 판매 › 주문 접수 (DESIGN.md §4.6 섹션: 수집 · 접수 목록 · 주문 상세 · 추적 기록) */
+
+.weak {
+  color: var(--color-text-weak);
+}
+
+.bad {
+  color: var(--color-danger);
+}
+
+.mark {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.naver {
+  background: #03c75a;
+}
+
+.coupang {
+  background: #e52528;
+}
+
+/* 수집 */
+.runs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 0.8fr);
+  gap: var(--space-3) var(--space-5);
+}
+
+.run {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.runText,
+.poll {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+}
+
+/* 목록 | 상세 */
+.split {
+  grid-template-columns: minmax(0, 1.4fr) minmax(360px, 1fr);
+  gap: var(--page-gap);
+}
+
+.side {
+  gap: var(--page-gap);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  padding: 2px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.chipOn {
+  border-color: var(--color-text);
+  background: var(--color-text);
+  color: #fff;
+}
+
+.empty {
+  padding: var(--space-5);
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 128px 88px;
+  gap: var(--space-3);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--color-bg-app);
+}
+
+.rowOn {
+  background: var(--color-primary-bg);
+}
+
+.prod {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.prod b {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prod small,
+.rowState small {
+  overflow: hidden;
+  color: var(--color-text-weak);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowState {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.price {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* 상세 */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dTitle {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 4px var(--space-3);
+  margin: 0;
+  font-size: 13px;
+}
+
+.kv dt {
+  color: var(--color-text-weak);
+}
+
+.kv dd {
+  margin: 0;
+  word-break: keep-all;
+}
+
+.pccc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  font-family: ui-monospace, monospace;
+}
+
+/* 추적 기록 */
+.events {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event {
+  padding: var(--space-2) 0;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.event:last-child {
+  border-bottom: 0;
+}
+
+.eventHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--space-2);
+  align-items: center;
+  font-size: 12px;
+}
+
+.eventTime {
+  color: var(--color-text-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+.more {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.eventSummary {
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.eventData {
+  overflow: auto;
+  max-height: 260px;
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 8px;
+  background: var(--color-bg-app);
+  font-size: 11px;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 900px) {
+  .runs,
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .row {
+    grid-template-columns: 24px minmax(0, 1fr) 88px;
+  }
+
+  .price {
+    display: none;
+  }
+}
