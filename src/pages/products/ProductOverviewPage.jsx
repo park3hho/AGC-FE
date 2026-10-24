@@ -13,7 +13,7 @@ import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
 import { FEATURE, hasFeature } from '@/constants/permissions'
 import { GOOD_MARGIN_PCT, PLATFORMS } from '@/constants/pricingConst'
 import { useAuth } from '@/hooks/useAuth'
-import { toKstDateTime } from '@/utils/date'
+import { toKstDate, toKstDateTime } from '@/utils/date'
 import {
   calcOption,
   cnyToKrw,
@@ -36,6 +36,7 @@ const PLATFORM_LABEL = Object.fromEntries(PLATFORMS.map((p) => [p.key, p.label])
 const EMPTY_FORM = { platform: 'naver', marketProductId: '', title: '', url: '', listedAt: '' }
 // 구성 막대 색 — 상품·배송은 옅은 파랑, 수수료 회색, 차익 진한 파랑 (오버레이는 body 에 그려져 CSS 변수 대신 값)
 const MIX = { goods: '#b0c4de', ship: '#7fa7d9', fee: '#d5d9de', profit: '#3182f6' }
+const YMD = (iso) => toKstDate(iso).slice(2).replace(/-/g, '') // '261024' — 가격 확정일
 const SHORT = (iso) => toKstDateTime(iso).slice(5) // 'MM-DD HH:mm'
 
 // 걸린 시간 — 1시간 미만 'N분', 2일 미만 'N시간 M분', 그 이상 'N일 N시간'
@@ -114,7 +115,7 @@ export default function ProductOverviewPage() {
   }, [productId, loadListings])
 
   // 옵션 × 판매처 계산 — 가격을 확정(저장)한 시점 환율 기준 (product_pricing.fx_rate · 판매처마다 다름)
-  //   원가 = (상품 위안 + 배송 위안) × 그 환율. 오늘 환율로 다시 계산한 차익(rNow)은 오버레이에서만 비교로 보여준다.
+  //   원가 = (상품 위안 + 배송 위안) × 그 환율. 화면에는 'YYMMDD 기준'으로 적는다 (오늘 환율 비교는 나중에 따로)
   const rows = useMemo(() => {
     if (!data) return []
     const { pricing } = data
@@ -141,7 +142,6 @@ export default function ProductOverviewPage() {
           ship,
           cost: goods != null && ship != null ? goods + ship : null,
           r: sale ? calcOption(o, sale, settings) : null,
-          rNow: sale ? calcOption(o, sale, { ...base, fxRate: pricing.fx.cnyKrw }) : null,
         }
       })
       return { o, markets }
@@ -268,8 +268,7 @@ export default function ProductOverviewPage() {
           ]}
         />
         <div className={styles.tipNote}>
-          위안 합계 × {formatFx(m.fxRate)}원 ({PLATFORM_LABEL[mainKey]} 가격 확정{' '}
-          {SHORT(m.pricedAt)} 환율)
+          위안 합계 × {formatFx(m.fxRate)}원 ({YMD(m.pricedAt)} 기준)
         </div>
       </>
     )
@@ -277,7 +276,6 @@ export default function ProductOverviewPage() {
   const saleInfo = (x, key) => {
     const m = x.markets[key]
     if (!m?.r) return null
-    const diff = m.rNow ? m.rNow.profit - m.r.profit : 0
     return (
       <>
         <div className={styles.tipTitle}>
@@ -293,15 +291,7 @@ export default function ProductOverviewPage() {
           ]}
         />
         <div className={styles.tipNote}>
-          가격 확정 {SHORT(m.pricedAt)} · 환율 {formatFx(m.fxRate)}원
-          {m.rNow && Math.abs(diff) >= 1 && (
-            <>
-              <br />
-              오늘 환율 {formatFx(pricing.fx.cnyKrw)}원이면 차익 {formatWon(m.rNow.profit)} (
-              {diff > 0 ? '+' : ''}
-              {wonNum(diff)}원)
-            </>
-          )}
+          {YMD(m.pricedAt)} 기준 · 환율 {formatFx(m.fxRate)}원
         </div>
       </>
     )
@@ -374,7 +364,7 @@ export default function ProductOverviewPage() {
               </div>
               <div className={styles.kpi}>
                 <div>
-                  <small>차익 (가격 확정 기준)</small>
+                  <small>차익 ({YMD(pricing.pricings[mainKey]?.updatedAt) || '-'} 기준)</small>
                   <b>
                     {range(
                       mainResults.map((r) => r.profit),
