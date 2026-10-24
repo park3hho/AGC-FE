@@ -314,38 +314,52 @@ export default function OrderReceivePage() {
                   <button
                     type="button"
                     className="btn-secondary btn-sm"
-                    onClick={() => setShowRaw(!showRaw)}
-                    disabled={!detail.raw}
-                  >
-                    {showRaw ? '마켓 원본 닫기' : '마켓 원본 데이터'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-secondary btn-sm"
                     onClick={recheck}
                     disabled={busy === 'recheck'}
                   >
                     {busy === 'recheck' ? '검증 중…' : '통관부호 다시 검증'}
                   </button>
                 </div>
-                {showRaw && detail.raw && (
-                  <div>
-                    <p className={styles.weak}>
-                      {MARKETS[o.market].label}가 보낸 응답 그대로예요 — 이름·전화·주소·통관부호
-                      같은 개인정보만 가렸어요.
-                    </p>
-                    <pre className={styles.raw}>{JSON.stringify(detail.raw, null, 2)}</pre>
-                  </div>
-                )}
               </div>
             )}
           </Section>
 
-          <Section name="추적 기록" id="trace" sub={detail && `${detail.events.length}건`} fill>
+          <Section
+            name="추적 기록"
+            id="trace"
+            sub={
+              detail &&
+              (showRaw ? '마켓이 보낸 응답 그대로 · 개인정보만 가림' : `${detail.events.length}건`)
+            }
+            fill
+            action={
+              detail?.raw && (
+                <div className={styles.chips}>
+                  <button
+                    type="button"
+                    className={`${styles.chip} ${!showRaw ? styles.chipOn : ''}`}
+                    onClick={() => setShowRaw(false)}
+                  >
+                    기록
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.chip} ${showRaw ? styles.chipOn : ''}`}
+                    onClick={() => setShowRaw(true)}
+                  >
+                    마켓 원본
+                  </button>
+                </div>
+              )
+            }
+          >
             {!detail && (
               <p className={styles.weak}>주문을 고르면 수집·검증·처리 기록이 시간 순으로 보여요.</p>
             )}
-            {detail && (
+            {detail && showRaw && (
+              <pre className={styles.raw}>{JSON.stringify(detail.raw, null, 2)}</pre>
+            )}
+            {detail && !showRaw && (
               <ol className={styles.events}>
                 {detail.events.map((e) => (
                   <EventRow key={e.id} event={e} />
