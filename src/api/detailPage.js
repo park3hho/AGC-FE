@@ -12,6 +12,7 @@ const toSummary = (s) =>
   s
     ? {
         status: s.status,
+        createdAt: s.created_at || null, // 디자인 시작 (첫 저장)
         updatedAt: s.updated_at,
         updatedBy: toUser(s.updated_by),
         reviewedAt: s.reviewed_at,

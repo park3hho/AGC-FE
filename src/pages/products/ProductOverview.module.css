@@ -1,0 +1,230 @@
+/* 상품 상세 — 왼쪽: 기본 정보 · 진행 기록 · 가격 · 마켓 등록 / 오른쪽: 상세설명 (이 섹션만 스크롤) */
+.layout {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+}
+
+/* 기본 정보 */
+.info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.infoText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.infoTitle {
+  font-weight: 700;
+}
+
+.cn {
+  color: var(--color-text-weak);
+  font-size: 13px;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.links a,
+.table a {
+  color: var(--color-primary-pressed);
+  text-decoration: none;
+}
+
+.links a:hover,
+.table a:hover {
+  text-decoration: underline;
+}
+
+.code {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-pressed);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.loss {
+  color: var(--color-danger);
+  font-size: 12px;
+}
+
+/* 진행 기록 — 4단계 한 줄 */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--color-primary);
+  border-radius: 4px;
+  background: var(--color-bg-app);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.steps b {
+  font-size: 13px;
+}
+
+.steps span {
+  color: var(--color-text-sub);
+}
+
+.steps em {
+  color: var(--color-primary-pressed);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* 가격 · 마켓 등록 표 */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.table th {
+  padding: 6px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-app);
+  color: var(--color-text-weak);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 6px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table th.num,
+.table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table td.wrap {
+  white-space: normal;
+}
+
+.date {
+  color: var(--color-text-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 1px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.empty {
+  padding: var(--space-4) var(--space-5);
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
+/* 마켓 등록 › 직접 추가 한 줄 */
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.form input,
+.form select {
+  flex: 1 1 140px;
+  min-width: 0;
+  height: 30px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  font-size: 13px;
+}
+
+.form select {
+  flex: 0 0 90px;
+}
+
+/* 상세설명 */
+.tab {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tabOn {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary-pressed);
+}
+
+.images {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-app);
+}
+
+.images img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

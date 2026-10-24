@@ -12,6 +12,7 @@ const toProduct = (p) => ({
   photoPath: p.photo_url || '', // BE 에 저장된 값 그대로 — 가격조사에 연결할 때 보낸다
   photoUrl: fileUrl(p.photo_url), // 화면에 띄울 주소
   addedAt: toKstDate(p.created_at), // 제품 코드 추가일
+  createdAt: p.created_at, // 제품 추가 시각 (ISO) — 리서치 시작
   surveyCount: p.survey_count ?? 0,
   // 목록에서만 오는 값 (상세 응답엔 없음)
   latestSurvey: p.latest_survey

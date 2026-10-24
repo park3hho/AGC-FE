@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { getDetailPages } from '@/api/detailPage'
+import { getListings } from '@/api/listing'
 import Icon from '@/components/Icon'
 import Thumb from '@/components/Thumb'
 import ListItem from '@/components/common/ListItem'
@@ -9,16 +10,18 @@ import PageHeader from '@/components/common/PageHeader'
 import Pager from '@/components/common/Pager'
 import Section from '@/components/common/Section'
 import { useFitRows } from '@/hooks/useFitRows'
-import { toKstDate } from '@/utils/date'
+import { PLATFORMS } from '@/constants/pricingConst'
+import { toKstDate, toKstDateTime } from '@/utils/date'
 import styles from '@/pages/design/Design.module.css'
 
 // 상품 — 섹션: 검색 · 상품 목록. 디자인(상세페이지)이 승인된 제품만 여기 보인다 (FE DESIGN.md §4.7)
-//   마켓 등록 기능은 아직 없다 — 지금은 '올릴 준비가 된 제품' 목록. 누르면 디자인(제품)에서 상세 이미지를 받는다.
+//   행을 누르면 상품 상세(가격 · 링크 · 업로드 일시 · 진행 기록 · 상세설명)로 간다. 마켓 칸 = 판매처별 올린 상품 수 · 첫 업로드
 //   검색어·페이지는 주소(?q=&page=)에 둔다
 export default function ProductsPage() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const [data, setData] = useState(null) // getDetailPages 결과
+  const [listings, setListings] = useState([]) // 마켓 등록 기록 (전체)
   const [error, setError] = useState('')
   const listRef = useRef(null)
   const pageSize = useFitRows(listRef, { fallback: 49 })
@@ -30,6 +33,9 @@ export default function ProductsPage() {
     getDetailPages()
       .then(setData)
       .catch((err) => setError(err.message))
+    getListings()
+      .then(setListings)
+      .catch(() => setListings([])) // 마켓 칸만 비고 목록은 보인다
   }, [])
 
   const set = (patch) => {
@@ -58,7 +64,17 @@ export default function ProductsPage() {
   const current = Math.min(page, pageCount)
   const rows = filtered.slice((current - 1) * pageSize, current * pageSize)
   const counts = data?.counts || {}
-  const open = (it) => navigate(`/design/${it.product.id}`)
+  const open = (it) => navigate(`/products/${it.product.id}`)
+  // 마켓 칸 — '쿠팡 3 · 10-24 18:05' (판매처별 상품 수 · 가장 이른 업로드)
+  const marketText = (productId) =>
+    PLATFORMS.map((p) => {
+      const mine = listings.filter((l) => l.productId === productId && l.platform === p.key)
+      if (!mine.length) return null
+      const first = mine.map((l) => l.listedAt).filter(Boolean).sort()[0]
+      return `${p.label} ${mine.length}${first ? ` · ${toKstDateTime(first).slice(5)}` : ''}`
+    })
+      .filter(Boolean)
+      .join(' / ') || '-'
   const approvedText = (p) => `${p.reviewedBy?.name || '-'} · ${toKstDate(p.reviewedAt)}`
 
   return (
@@ -118,6 +134,7 @@ export default function ProductsPage() {
                   <th>상품</th>
                   <th>코드</th>
                   <th>디자인 승인</th>
+                  <th>마켓</th>
                   <th>메모</th>
                 </tr>
               </thead>
@@ -139,6 +156,7 @@ export default function ProductsPage() {
                       <span className={styles.code}>{it.product.code}</span>
                     </td>
                     <td className={styles.date}>{approvedText(it.page)}</td>
+                    <td className={styles.date}>{marketText(it.product.id)}</td>
                     <td className={styles.note}>{it.page.reviewNote || ''}</td>
                   </tr>
                 ))}

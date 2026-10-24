@@ -51,6 +51,7 @@ export const SCREENS = [
     parent: '/orders',
   },
   { path: '/products', name: '상품', group: '판매' },
+  { path: '/products/:productId', name: '상품 상세', group: '판매', parent: '/products' },
   { path: '/shipping', name: '배송비', group: '설정' },
   { path: '/shipping/addresses', name: '출고지·반품지', group: '설정', parent: '/shipping' },
   {

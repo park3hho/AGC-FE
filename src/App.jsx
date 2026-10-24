@@ -19,6 +19,7 @@ const PricingListPage = lazy(() => import('@/pages/pricing/PricingListPage'))
 const PricingPage = lazy(() => import('@/pages/pricing/PricingPage'))
 const DesignListPage = lazy(() => import('@/pages/design/DesignListPage'))
 const ProductsPage = lazy(() => import('@/pages/products/ProductsPage'))
+const ProductOverviewPage = lazy(() => import('@/pages/products/ProductOverviewPage'))
 const DesignEditPage = lazy(() => import('@/pages/design/DesignEditPage'))
 const ShippingFeePage = lazy(() => import('@/pages/pricing/ShippingFeePage'))
 const ExchangeRatePage = lazy(() => import('@/pages/pricing/ExchangeRatePage'))
@@ -59,6 +60,7 @@ export default function App() {
               <Route path="/pricing/:productId" element={<PricingPage />} />
               <Route path="/design" element={<DesignListPage />} />
               <Route path="/products" element={<ProductsPage />} />
+            <Route path="/products/:productId" element={<ProductOverviewPage />} />
               <Route path="/design/:productId" element={<DesignEditPage />} />
               <Route path="/shipping" element={<ShippingFeePage />} />
               <Route path="/shipping/addresses" element={<ShippingAddressPage />} />
