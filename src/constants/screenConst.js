@@ -37,6 +37,18 @@ export const SCREENS = [
   { path: '/design', name: '디자인', group: '판매' },
   { path: '/design/:productId', name: '디자인 (제품)', group: '판매', parent: '/design' },
   { path: '/orders', name: '주문 접수', group: '판매' },
+  {
+    path: '/orders/:orderId/purchases/new',
+    name: '타오바오 구매 추가',
+    group: '판매',
+    parent: '/orders',
+  },
+  {
+    path: '/orders/purchases/:id/edit',
+    name: '타오바오 구매 수정',
+    group: '판매',
+    parent: '/orders',
+  },
   { path: '/products', name: '상품', group: '판매' },
   { path: '/shipping', name: '배송비', group: '설정' },
   { path: '/shipping/addresses', name: '출고지·반품지', group: '설정', parent: '/shipping' },

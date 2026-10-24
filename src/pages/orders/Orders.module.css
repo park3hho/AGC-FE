@@ -273,3 +273,118 @@
   font-size: 11px;
   white-space: pre-wrap;
 }
+
+/* 타오바오 구매 — 주문 상세 아래 한 줄씩 (누르면 수정 화면) */
+.purchase {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.purchase:last-child {
+  border-bottom: 0;
+}
+
+.purchase:hover {
+  background: var(--color-bg-app);
+}
+
+.pad {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-weak);
+  font-size: 13px;
+}
+
+/* 타오바오 구매 추가·수정 */
+.formFoot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.fGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fGroup + .fGroup {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.fTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.fGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.fGrid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+  gap: var(--space-3);
+}
+
+.linkRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.linkText {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemRow {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) 88px minmax(0, 1fr) var(--touch-min);
+  gap: var(--space-2);
+}
+
+.addBtn {
+  align-self: flex-start;
+}
+
+.statusPick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.statusPick .chip {
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .fGrid,
+  .fGrid2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .itemRow {
+    grid-template-columns: minmax(0, 1fr) 64px 72px var(--touch-min);
+  }
+}

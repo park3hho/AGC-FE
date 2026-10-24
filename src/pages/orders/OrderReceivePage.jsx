@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { collectOrders, getOrder, getOrders, recheckPccc } from '@/api/order'
+import { getPurchases } from '@/api/taobaoPurchase'
 import Badge from '@/components/Badge'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import {
   ACTOR,
+  CN_STATUS,
   EVENT_KIND,
   MARKET_STATUS,
   MARKETS,
@@ -99,10 +101,47 @@ function EventRow({
   )
 }
 
-// 판매 › 주문 접수 — 섹션: 수집 · 접수 목록 · 주문 상세 · 추적 기록
+// 타오바오 구매 1줄 — 상태 · 주문번호 · 판매처 · 결제 위안 · 중국 운송장 · 입고
+function PurchaseRow({
+  purchase, // object: 타오바오 구매
+  orderCount, // number: 연결된 마켓 주문 수
+  onOpen, // function
+}) {
+  const p = purchase
+  const st = CN_STATUS[p.cnStatus] || CN_STATUS.ordered
+  const when =
+    p.cnStatus === 'arrived'
+      ? `입고 ${kstTime(p.arrivedAt)}`
+      : p.shippedAt
+        ? `발송 ${kstTime(p.shippedAt)}`
+        : `구매 ${kstTime(p.purchasedAt)}`
+  return (
+    <button type="button" className={styles.purchase} onClick={onOpen}>
+      <Badge tone={st.tone}>{st.label}</Badge>
+      <span className={styles.prod}>
+        <b>{p.taobaoOrderNo || '주문번호 없음'}</b>
+        <small>
+          {[
+            p.shopName,
+            p.paidCny && `¥${p.paidCny}`,
+            p.cnTrackingNo && `${p.cnCourier || '택배'} ${p.cnTrackingNo}`,
+            orderCount > 1 && `마켓 주문 ${orderCount}개`,
+          ]
+            .filter(Boolean)
+            .join(' · ') || '내용 없음'}
+        </small>
+      </span>
+      <small className={styles.weak}>{when}</small>
+    </button>
+  )
+}
+
+// 판매 › 주문 접수 — 섹션: 수집 · 접수 목록 · 주문 상세 · 타오바오 구매 · 추적 기록
 // 마켓 주문을 가져오면 새 주문·바뀐 주문은 BE 가 바로 통관부호(UNI-PASS)를 검증한다. 모든 동작은 추적 기록에 남는다.
 export default function OrderReceivePage() {
+  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
+  const [purchases, setPurchases] = useState(null) // 고른 주문의 타오바오 구매
   const [data, setData] = useState(null) // { items, total, pcccCounts, lastRuns, pollMinutes }
   const [detail, setDetail] = useState(null) // { order, events }
   const [error, setError] = useState('')
@@ -127,10 +166,14 @@ export default function OrderReceivePage() {
   useEffect(() => {
     if (!selected) {
       setDetail(null)
+      setPurchases(null)
       return
     }
     getOrder(selected)
       .then(setDetail)
+      .catch((err) => setError(err.message))
+    getPurchases({ orderId: selected })
+      .then(setPurchases)
       .catch((err) => setError(err.message))
   }, [selected])
 
@@ -322,6 +365,39 @@ export default function OrderReceivePage() {
                 </div>
               </div>
             )}
+          </Section>
+
+          <Section
+            name="타오바오 구매"
+            id="purchase"
+            sub={purchases && (purchases.length ? `${purchases.length}건` : '아직 안 삼')}
+            flush
+            action={
+              o && (
+                <button
+                  type="button"
+                  className="btn-secondary btn-sm"
+                  onClick={() => navigate(`/orders/${o.id}/purchases/new`)}
+                >
+                  구매 추가
+                </button>
+              )
+            }
+          >
+            {!o && <p className={styles.pad}>주문을 고르면 타오바오 구매·중국 배송이 보여요.</p>}
+            {o && purchases?.length === 0 && (
+              <p className={styles.pad}>
+                타오바오에서 사면 '구매 추가'로 주문번호·운송장을 적어요.
+              </p>
+            )}
+            {(purchases || []).map((p) => (
+              <PurchaseRow
+                key={p.id}
+                purchase={p}
+                orderCount={p.orders.length}
+                onOpen={() => navigate(`/orders/purchases/${p.id}/edit?order=${o.id}`)}
+              />
+            ))}
           </Section>
 
           <Section

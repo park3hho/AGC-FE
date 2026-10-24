@@ -52,4 +52,31 @@ export const EVENT_KIND = {
   collected: '수집',
   changed: '변경',
   pccc_check: '통관부호 검증',
+  purchase_created: '타오바오 구매 추가',
+  purchase_changed: '타오바오 구매 수정',
+  purchase_linked: '타오바오 구매 연결',
+  purchase_unlinked: '타오바오 구매 연결 해제',
+  purchase_deleted: '타오바오 구매 삭제',
 }
+
+// 중국 내 배송 (타오바오 판매처 → 집운 창고) — BE core/purchase_config.CN_STATUS
+export const CN_STATUS = {
+  ordered: { label: '주문함', hint: '판매처 발송 전', tone: 'neutral' },
+  shipped: { label: '판매처 발송', hint: '집운 창고로 가는 중', tone: 'primary' },
+  arrived: { label: '창고 입고', hint: '집운 창고에 도착', tone: 'success' },
+  problem: { label: '문제', hint: '지연·누락·파손', tone: 'danger' },
+  cancelled: { label: '취소·환불', hint: '', tone: 'neutral' },
+}
+
+// 중국 택배사 — 입력칸 추천 (목록에 없어도 저장된다)
+export const CN_COURIERS = [
+  '中通 (ZTO)',
+  '圆通 (YTO)',
+  '申通 (STO)',
+  '韵达 (Yunda)',
+  '顺丰 (SF)',
+  '极兔 (J&T)',
+  '京东 (JD)',
+  '邮政 (EMS)',
+  '德邦 (Deppon)',
+]
