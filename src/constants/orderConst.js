@@ -41,6 +41,7 @@ export const ACTOR = {
 
 export const VIA = {
   poller: '자동 수집',
+  mock: '목업 데이터',
   manual: '수동',
   api_key: 'API 키',
   session: '로그인',

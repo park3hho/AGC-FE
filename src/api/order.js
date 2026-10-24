@@ -79,7 +79,7 @@ export const getOrders = async ({
 
 export const getOrder = async (id) => {
   const data = await request(`/orders/${id}`, { errorMsg: '주문을 불러오지 못했어요' })
-  return { order: toOrder(data.order), events: data.events.map(toEvent) }
+  return { order: toOrder(data.order), events: data.events.map(toEvent), raw: data.raw_masked }
 }
 
 export const collectOrders = async (markets = ['naver', 'coupang']) => {
@@ -96,5 +96,5 @@ export const recheckPccc = async (id) => {
     method: 'POST',
     errorMsg: '통관부호를 검증하지 못했어요',
   })
-  return { order: toOrder(data.order), events: data.events.map(toEvent) }
+  return { order: toOrder(data.order), events: data.events.map(toEvent), raw: data.raw_masked }
 }

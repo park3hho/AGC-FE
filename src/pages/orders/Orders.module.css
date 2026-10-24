@@ -256,3 +256,21 @@
     display: none;
   }
 }
+
+.dActs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* 마켓 원본 응답 (개인정보 가림) */
+.raw {
+  overflow: auto;
+  max-height: 340px;
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 8px;
+  background: var(--color-bg-app);
+  font-size: 11px;
+  white-space: pre-wrap;
+}

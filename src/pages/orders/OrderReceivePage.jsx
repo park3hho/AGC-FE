@@ -107,6 +107,7 @@ export default function OrderReceivePage() {
   const [detail, setDetail] = useState(null) // { order, events }
   const [error, setError] = useState('')
   const [busy, setBusy] = useState('') // 'collect' | 'recheck' | ''
+  const [showRaw, setShowRaw] = useState(false) // 마켓 원본 데이터 펼침
 
   const filter = params.get('pccc') || 'all'
   const selected = Number(params.get('id')) || null
@@ -309,7 +310,15 @@ export default function OrderReceivePage() {
                     <span className={styles.weak}> · {kst(o.pcccCheckedAt)}</span>
                   </dd>
                 </dl>
-                <div>
+                <div className={styles.dActs}>
+                  <button
+                    type="button"
+                    className="btn-secondary btn-sm"
+                    onClick={() => setShowRaw(!showRaw)}
+                    disabled={!detail.raw}
+                  >
+                    {showRaw ? '마켓 원본 닫기' : '마켓 원본 데이터'}
+                  </button>
                   <button
                     type="button"
                     className="btn-secondary btn-sm"
@@ -319,6 +328,15 @@ export default function OrderReceivePage() {
                     {busy === 'recheck' ? '검증 중…' : '통관부호 다시 검증'}
                   </button>
                 </div>
+                {showRaw && detail.raw && (
+                  <div>
+                    <p className={styles.weak}>
+                      {MARKETS[o.market].label}가 보낸 응답 그대로예요 — 이름·전화·주소·통관부호
+                      같은 개인정보만 가렸어요.
+                    </p>
+                    <pre className={styles.raw}>{JSON.stringify(detail.raw, null, 2)}</pre>
+                  </div>
+                )}
               </div>
             )}
           </Section>
