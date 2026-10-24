@@ -504,10 +504,16 @@
   font-weight: 600;
 }
 
-/* 추적 기록 — 한 줄엔 시각 · 단계 · 종류만, 마우스를 올리거나 누르면 내용 칸이 뜬다 */
+/* 추적 기록 — 한 줄엔 시각 · 단계 · 종류만. 내용 칸(.pop)은 body 위에 fixed 로 뜬다 (EventRow) */
 .event {
-  position: relative;
   outline: none;
+  cursor: default;
+}
+
+.event:hover,
+.event:focus-visible,
+.eventOn {
+  background: var(--color-bg-app);
 }
 
 .eventKind {
@@ -515,29 +521,19 @@
 }
 
 .pop {
-  display: none;
-  position: absolute;
-  top: calc(100% - 2px);
-  right: 0;
-  left: 0;
-  z-index: 5;
+  position: fixed;
+  z-index: 100;
+  display: flex;
   flex-direction: column;
   gap: 4px;
+  max-height: 60vh;
+  overflow: auto;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-bg);
+  color: var(--color-text);
   font-size: 12px;
-}
-
-.event:hover > .pop,
-.event:focus-within > .pop {
-  display: flex;
-}
-
-.event:hover,
-.event:focus-within {
-  background: var(--color-bg-app);
 }
 
 .popActs {
@@ -548,7 +544,6 @@
 .popActs :global(.btn-text) {
   font-size: 12px;
 }
-
 /* 진행 막대의 타오바오 구매 칸 — 누를 수 있음 */
 .pBtn {
   display: block;
@@ -567,5 +562,22 @@
 }
 
 .pLink {
+  font-size: 12px;
+}
+
+.rawNote {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+/* 타오바오 구매 기록 줄 — 누르면 구매 화면 */
+.eventLink {
+  cursor: pointer;
+}
+
+.go {
+  margin-left: auto;
+  color: var(--color-primary);
   font-size: 12px;
 }

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { collectOrders, getOrder, getOrders, recheckPccc } from '@/api/order'
@@ -153,12 +154,16 @@ function TraceProgress({
   )
 }
 
-// 추적 기록 1줄 — 시각 · 단계(중분류)만. 마우스를 올리면(누르면) 무슨 일이었는지 · 누가 · 출처 · 관련 번호
+// 추적 기록 1줄 — 시각 · 단계(중분류) · 종류만. 마우스를 올리면(누르면) 내용 칸이 뜬다
+// 내용 칸은 섹션 스크롤에 잘리지 않게 body 위에 fixed 로 그린다 (아래 자리가 모자라면 위로)
 function EventRow({
   event, // object: 주문 기록
   onPurchase, // function?: 타오바오 구매 기록이면 그 구매 열기
 }) {
   const [open, setOpen] = useState(false) // 보낸 값·받은 값 펼침
+  const [pos, setPos] = useState(null) // 내용 칸 위치 (null = 닫힘)
+  const rowRef = useRef(null)
+  const closeTimer = useRef(null)
   const actor = ACTOR[event.actorType] || ACTOR.system
   const d = event.data || {}
   const hasData = Object.keys(d).length > 0
@@ -169,8 +174,51 @@ function EventRow({
   const late = d.occurred_at && Math.abs(new Date(event.at) - new Date(d.occurred_at)) > 5 * 60000
   const refs = Object.entries(d.refs || {}).filter(([, v]) => v)
   const bad = event.kind === 'pccc_check' && d.result?.status && d.result.status !== 'ok'
+
+  const show = () => {
+    clearTimeout(closeTimer.current)
+    const r = rowRef.current?.getBoundingClientRect()
+    if (!r) return
+    const width = Math.max(r.width, 300)
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8))
+    const roomBelow = window.innerHeight - r.bottom
+    setPos(
+      roomBelow < 180
+        ? { left, width, bottom: window.innerHeight - r.top + 2 }
+        : { left, width, top: r.bottom - 2 },
+    )
+  }
+  const hide = () => {
+    clearTimeout(closeTimer.current)
+    closeTimer.current = setTimeout(() => setPos(null), 120) // 내용 칸으로 마우스를 옮길 틈
+  }
+
+  // 스크롤하면 자리가 어긋나니 닫는다
+  useEffect(() => {
+    if (!pos) return undefined
+    const close = () => setPos(null)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
+    return () => {
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
+  }, [pos])
+
+  useEffect(() => () => clearTimeout(closeTimer.current), [])
+
   return (
-    <li className={styles.event} tabIndex={0}>
+    <li
+      ref={rowRef}
+      className={`${styles.event} ${pos ? styles.eventOn : ''} ${onPurchase ? styles.eventLink : ''}`}
+      tabIndex={0}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+      // 타오바오 구매 기록은 누르면 바로 그 구매 화면으로, 나머지는 내용 칸 열고 닫기
+      onClick={() => (onPurchase ? onPurchase() : pos ? setPos(null) : show())}
+    >
       <div className={styles.eventHead}>
         <span className={styles.eventTime}>{kst(occurred).slice(5)}</span>
         {step && (
@@ -184,39 +232,53 @@ function EventRow({
           {bad && ' — 불일치'}
         </b>
         {event.via === 'mock' && <span className={styles.weak}>목업</span>}
-      </div>
-      <div className={styles.pop} role="tooltip">
-        <div className={styles.eventSummary}>{event.summary}</div>
-        <div className={styles.weak}>
-          {actor.label}
-          {event.actorName && ` ${event.actorName}`} ·{' '}
-          {TRACE_SOURCE[d.source] || VIA[event.via] || event.via}
-          {event.syncRunId && ` · 수집 #${event.syncRunId}`}
-          {late && ` · 기록 ${kst(event.at).slice(5)}`}
-        </div>
-        {refs.length > 0 && (
-          <div className={styles.refs}>
-            {refs.map(([k, v]) => (
-              <span key={k} className={styles.ref}>
-                {TRACE_REF[k] || k} <b>{v}</b>
-              </span>
-            ))}
-          </div>
-        )}
-        <div className={styles.popActs}>
-          {hasData && (
-            <button type="button" className="btn-text" onClick={() => setOpen(!open)}>
-              {open ? '보낸 값·받은 값 접기' : '보낸 값·받은 값'}
-            </button>
-          )}
-          {onPurchase && (
-            <button type="button" className="btn-text" onClick={onPurchase}>
-              타오바오 구매 열기
-            </button>
-          )}
-        </div>
+        {onPurchase && <span className={styles.go}>구매 보기 ›</span>}
       </div>
       {open && <pre className={styles.eventData}>{JSON.stringify(d, null, 2)}</pre>}
+      {pos &&
+        createPortal(
+          <div
+            className={styles.pop}
+            style={pos}
+            role="tooltip"
+            onMouseEnter={() => clearTimeout(closeTimer.current)}
+            onMouseLeave={hide}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.eventSummary}>{event.summary}</div>
+            <div className={styles.weak}>
+              {actor.label}
+              {event.actorName && ` ${event.actorName}`} ·{' '}
+              {TRACE_SOURCE[d.source] || VIA[event.via] || event.via}
+              {event.syncRunId && ` · 수집 #${event.syncRunId}`}
+              {late && ` · 기록 ${kst(event.at).slice(5)}`}
+            </div>
+            {refs.length > 0 && (
+              <div className={styles.refs}>
+                {refs.map(([k, v]) => (
+                  <span key={k} className={styles.ref}>
+                    {TRACE_REF[k] || k} <b>{v}</b>
+                  </span>
+                ))}
+              </div>
+            )}
+            {(hasData || onPurchase) && (
+              <div className={styles.popActs}>
+                {hasData && (
+                  <button type="button" className="btn-text" onClick={() => setOpen(!open)}>
+                    {open ? '보낸 값·받은 값 접기' : '보낸 값·받은 값'}
+                  </button>
+                )}
+                {onPurchase && (
+                  <button type="button" className="btn-text" onClick={onPurchase}>
+                    타오바오 구매 열기
+                  </button>
+                )}
+              </div>
+            )}
+          </div>,
+          document.body,
+        )}
     </li>
   )
 }
@@ -423,14 +485,7 @@ export default function OrderReceivePage() {
           <Section
             name="추적 기록"
             id="trace"
-            sub={
-              detail &&
-              (view === 'raw'
-                ? '마켓이 보낸 응답 그대로 · 개인정보만 가림'
-                : view === 'detail'
-                  ? o.code
-                  : `${o.code} · ${detail.events.length}건`)
-            }
+            sub={detail && (view !== 'trace' ? o.code : `${o.code} · ${detail.events.length}건`)}
             fill
             action={
               detail && (
@@ -461,7 +516,10 @@ export default function OrderReceivePage() {
               </p>
             )}
             {detail && view === 'raw' && (
-              <pre className={styles.raw}>{JSON.stringify(detail.raw, null, 2)}</pre>
+              <>
+                <p className={styles.rawNote}>마켓이 보낸 응답 그대로예요 — 개인정보만 가렸어요.</p>
+                <pre className={styles.raw}>{JSON.stringify(detail.raw, null, 2)}</pre>
+              </>
             )}
             {detail && view === 'detail' && (
               <div className={styles.detail}>
