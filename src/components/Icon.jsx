@@ -45,6 +45,9 @@ const PATHS = {
     </>
   ),
   exchange: <path d="M4 8h13l-3-3M20 16H7l3 3" />,
+  store: (
+    <path d="M4 9l1.5-5h13L20 9M4 9h16M4 9a2.7 2.7 0 005.3 0 2.7 2.7 0 005.4 0A2.7 2.7 0 0020 9M5 11v9h14v-9M10 20v-5h4v5" />
+  ),
   home: <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" />,
   more: (
     <>

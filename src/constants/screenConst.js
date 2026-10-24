@@ -47,6 +47,7 @@ export const SCREENS = [
     parent: '/shipping/addresses',
   },
   { path: '/exchange-rate', name: '환율', group: '설정' },
+  { path: '/markets', name: '판매처', group: '설정' },
   // 회사 정보 — 탭 3개 (기본 정보 · 로그인 계정 · API 키)
   { path: '/accounts', name: '기본 정보', group: '설정' },
   { path: '/accounts/info/new', name: '기본 정보 추가', group: '설정', parent: '/accounts' },

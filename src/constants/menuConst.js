@@ -89,6 +89,15 @@ export const MENU = [
     feature: FEATURE.RESEARCH,
   },
   {
+    key: 'markets',
+    group: 'settings',
+    label: '판매처', // 네이버·쿠팡 구매자 화면 · 관리 센터 링크
+    icon: 'store',
+    tone: 'primary',
+    path: '/markets',
+    feature: FEATURE.RESEARCH,
+  },
+  {
     key: 'account',
     group: 'settings',
     label: '회사 정보', // 탭: 기본 정보 · 로그인 계정 · API 키
