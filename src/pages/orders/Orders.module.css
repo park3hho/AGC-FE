@@ -557,3 +557,92 @@
   color: var(--color-primary);
   font-size: 12px;
 }
+
+/* 글자 탭 (DESIGN.md §4.2-9) — 테두리·배경 없이, 고른 것만 진한 글자 + 밑줄 2px */
+.tTabs {
+  display: inline-flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.tTab {
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-text-weak);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tTab:hover {
+  color: var(--color-text-sub);
+}
+
+.tOn,
+.tOn:hover {
+  border-bottom-color: var(--color-text);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+/* 필터 드롭다운 */
+.select {
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+/* 상태 — 색 점 + 글자 (배지 대신) */
+.dotText {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dotText::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dot, currentColor);
+}
+
+.dot_success {
+  --dot: var(--color-success);
+  color: var(--dot);
+}
+
+.dot_warning {
+  --dot: var(--color-warning);
+  color: var(--dot);
+}
+
+.dot_danger {
+  --dot: var(--color-danger);
+  color: var(--dot);
+}
+
+.dot_primary {
+  --dot: var(--color-primary);
+  color: var(--dot);
+}
+
+.dot_neutral {
+  --dot: var(--color-text-weak);
+  color: var(--color-text-sub);
+}
+
+/* 점만 색, 글자는 연하게 (추적 기록 단계처럼 많이 반복되는 곳) */
+.dotWeak {
+  color: var(--color-text-sub);
+  font-weight: 500;
+}

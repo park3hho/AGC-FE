@@ -10,7 +10,6 @@ import {
   recheckPccc,
 } from '@/api/order'
 import { getPurchases } from '@/api/taobaoPurchase'
-import Badge from '@/components/Badge'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import {
@@ -43,6 +42,19 @@ function MarketMark({
   return (
     <span className={`${styles.mark} ${styles[market]}`} title={MARKETS[market].label}>
       {MARKETS[market].short}
+    </span>
+  )
+}
+
+// 상태 표시 — 색 점 + 글자 (DESIGN.md §4.2-9: 둥근 배지 대신)
+function StatusDot({
+  tone = 'neutral', // 'success' | 'warning' | 'danger' | 'primary' | 'neutral'
+  weak, // boolean?: 글자는 연하게 (점만 색)
+  children,
+}) {
+  return (
+    <span className={`${styles.dotText} ${styles['dot_' + tone]} ${weak ? styles.dotWeak : ''}`}>
+      {children}
     </span>
   )
 }
@@ -201,10 +213,10 @@ function EventRow({
       <div className={styles.eventHead}>
         <span className={styles.eventTime}>{kst(occurred).slice(5)}</span>
         {step && (
-          <Badge tone={TRACE_STAGE[stage]?.tone || 'neutral'}>
+          <StatusDot tone={TRACE_STAGE[stage]?.tone || 'neutral'} weak>
             {TRACE_STAGE[stage]?.label ? `${TRACE_STAGE[stage].label} › ` : ''}
             {step}
-          </Badge>
+          </StatusDot>
         )}
         <b className={`${styles.eventKind} ${bad ? styles.bad : ''}`}>
           {EVENT_KIND[event.kind] || event.kind}
@@ -369,14 +381,14 @@ export default function OrderReceivePage() {
       <div className={`fit-row ${styles.split}`}>
         <Section name="접수 목록" id="list" sub={data && `${data.total}건`} flush fill>
           <div className={styles.toolbar}>
-            <span className={styles.stageTabs} role="tablist" aria-label="주문 단계">
+            <span className={styles.tTabs} role="tablist" aria-label="주문 단계">
               {ORDER_STAGES.map((s) => (
                 <button
                   key={s.key}
                   type="button"
                   role="tab"
                   aria-selected={stage === s.key}
-                  className={`${styles.stageTab} ${stage === s.key ? styles.stageOn : ''}`}
+                  className={`${styles.tTab} ${stage === s.key ? styles.tOn : ''}`}
                   onClick={() => set({ stage: s.key === 'received' ? null : s.key, id: null })}
                 >
                   {s.label}
@@ -390,17 +402,20 @@ export default function OrderReceivePage() {
               placeholder="OR-… · 마켓 주문번호"
               aria-label="자사 코드·마켓 주문번호 검색"
             />
-            {PCCC_FILTERS.map((k) => (
-              <button
-                key={k}
-                type="button"
-                className={`${styles.chip} ${filter === k ? styles.chipOn : ''}`}
-                onClick={() => set({ pccc: k, id: null })}
-              >
-                {k === 'all' ? '전체' : PCCC_STATUS[k].short}{' '}
-                {k === 'all' ? allCount : counts[k] || 0}
-              </button>
-            ))}
+            <select
+              className={styles.select}
+              value={filter}
+              onChange={(e) => set({ pccc: e.target.value, id: null })}
+              aria-label="통관부호 검증 결과로 거르기"
+            >
+              {PCCC_FILTERS.map((k) => (
+                <option key={k} value={k}>
+                  {k === 'all'
+                    ? `통관부호 전체 ${allCount}`
+                    : `${PCCC_STATUS[k].label} ${counts[k] || 0}`}
+                </option>
+              ))}
+            </select>
           </div>
           {error && <p className={`form-error ${styles.pad}`}>{error}</p>}
 
@@ -433,9 +448,9 @@ export default function OrderReceivePage() {
                   </small>
                 </span>
                 <span className={styles.rowState}>
-                  <Badge tone={PCCC_STATUS[it.pcccStatus].tone}>
+                  <StatusDot tone={PCCC_STATUS[it.pcccStatus].tone}>
                     {PCCC_STATUS[it.pcccStatus].short}
-                  </Badge>
+                  </StatusDot>
                   <small className={styles.weak}>
                     {MARKET_STATUS[it.marketStatus] || it.marketStatus}
                     {it.confirmed && ' · 발주확인됨'}
@@ -457,7 +472,7 @@ export default function OrderReceivePage() {
             fill
             action={
               detail && (
-                <div className={styles.chips} role="tablist" aria-label="추적 기록 보기">
+                <div className={styles.tTabs} role="tablist" aria-label="추적 기록 보기">
                   {[
                     ['trace', '기록'],
                     ['detail', '주문 상세'],
@@ -468,7 +483,7 @@ export default function OrderReceivePage() {
                       type="button"
                       role="tab"
                       aria-selected={view === k}
-                      className={`${styles.chip} ${view === k ? styles.chipOn : ''}`}
+                      className={`${styles.tTab} ${view === k ? styles.tOn : ''}`}
                       onClick={() => setView(k)}
                     >
                       {label}
@@ -530,9 +545,9 @@ export default function OrderReceivePage() {
                   <dt>통관부호</dt>
                   <dd className={styles.pccc}>
                     <span>{o.receiver.pccc || '없음'}</span>
-                    <Badge tone={PCCC_STATUS[o.pcccStatus].tone}>
+                    <StatusDot tone={PCCC_STATUS[o.pcccStatus].tone}>
                       {PCCC_STATUS[o.pcccStatus].label}
-                    </Badge>
+                    </StatusDot>
                   </dd>
                   <dt>검증 결과</dt>
                   <dd>
