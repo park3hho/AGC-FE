@@ -187,8 +187,13 @@ export default function HomePage() {
       path: '/design',
       hot: reviewWait > 0,
     },
-    // 상품 등록은 승인된 상세페이지만 받는다 (FE DESIGN.md §4.7)
-    { n: 5, label: '상품 등록', text: '준비 중' },
+    // 상품 = 디자인 승인된 제품 (마켓 등록 기능은 다음 단계)
+    {
+      n: 5,
+      label: '상품',
+      text: design ? `승인 ${design.approved || 0}개` : '디자인 승인된 제품',
+      path: '/products',
+    },
     { n: 6, label: '주문 처리', text: '준비 중' },
   ]
 

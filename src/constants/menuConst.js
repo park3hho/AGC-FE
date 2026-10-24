@@ -51,9 +51,25 @@ export const MENU = [
     path: '/design',
     feature: FEATURE.RESEARCH,
   },
-  // 상품 등록은 승인된 상세페이지만 받는다 (DESIGN.md §4.7)
-  { key: 'listing', group: 'sales', label: '상품 등록', icon: 'layout', soon: true },
-  { key: 'orders', group: 'sales', label: '주문', icon: 'bag', soon: true },
+  // 상품 — 디자인(상세페이지)이 승인된 제품만 보인다 (DESIGN.md §4.7). 마켓 등록 기능은 다음 단계
+  {
+    key: 'listing',
+    group: 'sales',
+    label: '상품',
+    icon: 'layout',
+    tone: 'success',
+    path: '/products',
+    feature: FEATURE.RESEARCH,
+  },
+  {
+    key: 'orders',
+    group: 'sales',
+    label: '주문',
+    icon: 'bag',
+    tone: 'danger',
+    path: '/orders',
+    feature: FEATURE.ORDER,
+  },
   {
     key: 'shipping',
     group: 'settings',
