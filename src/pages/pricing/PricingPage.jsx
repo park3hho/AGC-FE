@@ -699,6 +699,38 @@ export default function PricingPage() {
           </Section>
 
           <div className="fit-col">
+            <Section name="저장" id="save">
+              <div className={`${styles.status} ${statusCls}`}>● {statusText}</div>
+              {saveError && <p className={styles.hintError}>{saveError}</p>}
+              <div className={styles.saveRow}>
+                <button
+                  type="button"
+                  className="btn-secondary btn-md"
+                  onClick={revert}
+                  disabled={totalChanges === 0 || saving}
+                >
+                  되돌리기
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary btn-md"
+                  onClick={saveAll}
+                  disabled={!canSave}
+                >
+                  {saving ? '저장 중…' : '저장'}
+                </button>
+                {next && (
+                  <button
+                    type="button"
+                    className="btn-secondary btn-md"
+                    onClick={() => navigate(`/pricing/${next.id}`)}
+                    title={`다음 대기 제품: ${next.titleKo || next.titleCn}`}
+                  >
+                    다음 <Icon name="arrowRight" size={14} />
+                  </button>
+                )}
+              </div>
+            </Section>
             <Section name="요약" id="summary" sub={cur.label} className={hide('side')}>
               <div className={styles.kv}>
                 <span>평균 마진</span>
@@ -720,17 +752,28 @@ export default function PricingPage() {
                 <>
                   <div className={styles.kv}>
                     <span>네이버 상품</span>
-                    <b>{naver.groups.length}개</b>
+                    <HoverInfo
+                      content={
+                        naver.groups.length > 1 && (
+                          <>
+                            <div className={styles.tipTitle}>
+                              네이버는 상품 {naver.groups.length}개로 나눠 등록해요
+                            </div>
+                            <ul className={styles.groups}>
+                              {naver.groups.map((g) => (
+                                <li key={g.no}>
+                                  상품 {g.no} · 대표 {optionName(optionById[g.baseId])}{' '}
+                                  {formatWon(g.base)}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )
+                      }
+                    >
+                      <b>{naver.groups.length}개</b>
+                    </HoverInfo>
                   </div>
-                  {naver.groups.length > 1 && (
-                    <ul className={styles.groups}>
-                      {naver.groups.map((g) => (
-                        <li key={g.no}>
-                          상품 {g.no} · 대표 {optionName(optionById[g.baseId])} {formatWon(g.base)}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </>
               )}
             </Section>
@@ -806,39 +849,6 @@ export default function PricingPage() {
                   <span className={styles.weak}>%</span>
                 </div>
               ))}
-            </Section>
-
-            <Section name="저장" id="save">
-              <div className={`${styles.status} ${statusCls}`}>● {statusText}</div>
-              {saveError && <p className={styles.hintError}>{saveError}</p>}
-              <div className={styles.saveRow}>
-                <button
-                  type="button"
-                  className="btn-secondary btn-md"
-                  onClick={revert}
-                  disabled={totalChanges === 0 || saving}
-                >
-                  되돌리기
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary btn-md"
-                  onClick={saveAll}
-                  disabled={!canSave}
-                >
-                  {saving ? '저장 중…' : '저장'}
-                </button>
-                {next && (
-                  <button
-                    type="button"
-                    className="btn-secondary btn-md"
-                    onClick={() => navigate(`/pricing/${next.id}`)}
-                    title={`다음 대기 제품: ${next.titleKo || next.titleCn}`}
-                  >
-                    다음 <Icon name="arrowRight" size={14} />
-                  </button>
-                )}
-              </div>
             </Section>
           </div>
         </div>
