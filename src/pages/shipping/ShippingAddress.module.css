@@ -108,6 +108,7 @@
   border-radius: 8px;
   background: var(--color-bg-app);
   color: var(--color-text-sub);
+  font-size: 13px;
   white-space: pre-line;
 }
 
