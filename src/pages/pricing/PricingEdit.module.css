@@ -1,0 +1,395 @@
+/* 가격 책정 (제품) — B안 (2026-10-24): 왼쪽 판매처 탭 + 옵션 표 / 오른쪽 요약·한 번에 맞추기·수수료·저장 */
+.layout {
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+
+.weak {
+  color: var(--color-text-weak);
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* 제품 — 한 줄 */
+.product {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.productText {
+  min-width: 0;
+}
+
+.productTitle {
+  color: var(--color-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.productTitle:hover {
+  color: var(--color-primary);
+}
+
+.productMeta {
+  color: var(--color-text-weak);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fx {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.textLink {
+  color: var(--color-text-sub);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.textLink:hover {
+  color: var(--color-primary);
+}
+
+/* 판매처 탭 — 글자 탭 (DESIGN §4.2-9) */
+.tabs {
+  display: flex;
+  gap: 20px;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabs button {
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-text-weak);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tabs .tabOn {
+  border-bottom-color: var(--color-text);
+  color: var(--color-text);
+}
+
+.dot {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dot::before {
+  content: '● ';
+}
+
+.ok {
+  color: var(--color-success);
+}
+
+.warn {
+  color: var(--color-warning);
+}
+
+.bad {
+  color: var(--color-danger);
+}
+
+/* 옵션 표 */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.table th {
+  padding: 8px var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-weak);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 8px var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.optName {
+  font-weight: 700;
+}
+
+.optWarn {
+  display: block;
+  color: var(--color-danger);
+  font-size: 11px;
+}
+
+.priceInput {
+  width: 104px;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.priceInput:focus {
+  border-color: var(--color-primary);
+  outline: 0;
+}
+
+.changed {
+  border-color: var(--color-warning);
+}
+
+.invalid {
+  border-color: var(--color-danger);
+}
+
+/* 네이버 — 대표·추가금 (누르면 대표) · 상품 번호 */
+.addon {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.addon:hover:not(:disabled) {
+  color: var(--color-primary);
+}
+
+.addon:disabled {
+  cursor: default;
+}
+
+.addonBase {
+  color: var(--color-text);
+}
+
+.addonOver {
+  color: var(--color-danger);
+}
+
+.groupSelect {
+  height: 26px;
+  margin-right: 6px;
+  padding: 0 4px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.groupManual {
+  border-color: var(--color-warning);
+}
+
+/* 가격 구조 막대 — 상품 · 배송 · 수수료 · 차익 */
+.bar {
+  display: flex;
+  width: 160px;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--color-bg-sub);
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+}
+
+.barLoss {
+  box-shadow: inset 0 0 0 1px var(--color-danger);
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: center;
+  gap: 3px 8px;
+  margin-top: 8px;
+}
+
+.legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius);
+}
+
+.legend b {
+  font-variant-numeric: tabular-nums;
+}
+
+.tipTitle {
+  margin-bottom: 8px;
+  color: var(--color-text-sub);
+  font-weight: 600;
+}
+
+.tipNote {
+  margin-top: 8px;
+  color: var(--color-text-weak);
+  font-size: 11px;
+}
+
+.tipStack {
+  width: 100%;
+}
+
+/* 표 아래 안내 */
+.notice {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.notice b {
+  color: var(--color-danger);
+}
+
+.noticeBtn {
+  margin-left: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 오른쪽 — 요약 · 맞추기 · 수수료 · 저장 */
+.kv {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 2px 0;
+  font-size: var(--font-sm);
+}
+
+.kv span {
+  color: var(--color-text-sub);
+}
+
+.kv b {
+  font-variant-numeric: tabular-nums;
+}
+
+.groups {
+  margin: 4px 0 0;
+  padding: 0;
+  color: var(--color-text-weak);
+  font-size: 12px;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.select,
+.input {
+  height: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 13px;
+}
+
+.input {
+  width: 88px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.inputError {
+  border-color: var(--color-danger);
+}
+
+.hint {
+  margin: 6px 0 0;
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.hintError {
+  margin: 6px 0 0;
+  color: var(--color-danger);
+  font-size: 12px;
+}
+
+.feeLabel {
+  width: 40px;
+  color: var(--color-text-sub);
+  font-size: 13px;
+}
+
+.status {
+  margin-bottom: var(--space-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.saveRow {
+  display: flex;
+  gap: 6px;
+}
+
+.saveRow button {
+  flex: 1 1 auto;
+  white-space: nowrap;
+}
+
+.noSurvey {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  color: var(--color-text-sub);
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bar {
+    width: 90px;
+  }
+}
