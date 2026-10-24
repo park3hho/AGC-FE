@@ -4,6 +4,7 @@ import { request } from '@/api/client'
 // 수취인·통관부호는 BE 가 가린 값만 준다.
 const toOrder = (o) => ({
   id: o.id,
+  code: o.code || '', // 자사 주문 코드 OR-YYMMDD-XXXX
   market: o.market, // 'naver' | 'coupang'
   lineNo: o.line_no,
   orderNo: o.order_no,
@@ -61,12 +62,14 @@ export const getOrders = async ({
   stage = 'received',
   market,
   pccc,
+  search, // 자사 코드 · 마켓 주문번호 검색
   page = 1,
   size = 200,
 } = {}) => {
   const q = new URLSearchParams({ stage, page, size })
   if (market) q.set('market', market)
   if (pccc) q.set('pccc', pccc)
+  if (search) q.set('q', search)
   const data = await request(`/orders?${q}`, { errorMsg: '주문을 불러오지 못했어요' })
   return {
     items: data.items.map(toOrder),

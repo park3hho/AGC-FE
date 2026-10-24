@@ -52,10 +52,9 @@ export const EVENT_KIND = {
   collected: '수집',
   changed: '변경',
   pccc_check: '통관부호 검증',
-  purchase_created: '타오바오 구매 추가',
+  code_issued: '자사 코드 발급',
+  purchase_created: '타오바오 구매 등록',
   purchase_changed: '타오바오 구매 수정',
-  purchase_linked: '타오바오 구매 연결',
-  purchase_unlinked: '타오바오 구매 연결 해제',
   purchase_deleted: '타오바오 구매 삭제',
 }
 

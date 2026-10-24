@@ -388,3 +388,21 @@
     grid-template-columns: minmax(0, 1fr) 64px 72px var(--touch-min);
   }
 }
+
+/* 자사 주문 코드 OR-YYMMDD-XXXX */
+.code {
+  color: var(--color-primary);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.search {
+  width: 168px;
+  height: 26px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+  font-size: 12px;
+}

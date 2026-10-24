@@ -104,7 +104,6 @@ function EventRow({
 // 타오바오 구매 1줄 — 상태 · 주문번호 · 판매처 · 결제 위안 · 중국 운송장 · 입고
 function PurchaseRow({
   purchase, // object: 타오바오 구매
-  orderCount, // number: 연결된 마켓 주문 수
   onOpen, // function
 }) {
   const p = purchase
@@ -125,7 +124,6 @@ function PurchaseRow({
             p.shopName,
             p.paidCny && `¥${p.paidCny}`,
             p.cnTrackingNo && `${p.cnCourier || '택배'} ${p.cnTrackingNo}`,
-            orderCount > 1 && `마켓 주문 ${orderCount}개`,
           ]
             .filter(Boolean)
             .join(' · ') || '내용 없음'}
@@ -149,19 +147,25 @@ export default function OrderReceivePage() {
   const [showRaw, setShowRaw] = useState(false) // 마켓 원본 데이터 펼침
 
   const filter = params.get('pccc') || 'all'
+  const search = params.get('q') || '' // 자사 코드 · 마켓 주문번호
   const selected = Number(params.get('id')) || null
 
   const load = useCallback(
     () =>
-      getOrders({ stage: 'received', pccc: filter === 'all' ? undefined : filter })
+      getOrders({
+        stage: 'received',
+        pccc: filter === 'all' ? undefined : filter,
+        search: search.trim() || undefined,
+      })
         .then(setData)
         .catch((err) => setError(err.message)),
-    [filter],
+    [filter, search],
   )
 
   useEffect(() => {
-    load()
-  }, [load])
+    const timer = setTimeout(load, search ? 300 : 0) // 검색어 입력 중엔 잠깐 기다렸다가
+    return () => clearTimeout(timer)
+  }, [load, search])
 
   useEffect(() => {
     if (!selected) {
@@ -248,6 +252,13 @@ export default function OrderReceivePage() {
           fill
           action={
             <div className={styles.chips}>
+              <input
+                className={styles.search}
+                value={search}
+                onChange={(e) => set({ q: e.target.value || null, id: null })}
+                placeholder="OR-… · 마켓 주문번호"
+                aria-label="자사 코드·마켓 주문번호 검색"
+              />
               {PCCC_FILTERS.map((k) => (
                 <button
                   key={k}
@@ -264,9 +275,11 @@ export default function OrderReceivePage() {
         >
           {data && data.items.length === 0 && (
             <p className={styles.empty}>
-              {filter === 'all'
-                ? '접수된 주문이 없어요. "지금 가져오기"로 네이버·쿠팡 주문을 받아요.'
-                : '이 상태의 주문이 없어요'}
+              {search
+                ? '검색한 번호의 주문이 없어요'
+                : filter === 'all'
+                  ? '접수된 주문이 없어요. "지금 가져오기"로 네이버·쿠팡 주문을 받아요.'
+                  : '이 상태의 주문이 없어요'}
             </p>
           )}
           <div className={styles.rows} role="list">
@@ -280,7 +293,9 @@ export default function OrderReceivePage() {
               >
                 <MarketMark market={it.market} />
                 <span className={styles.prod}>
-                  <b>{it.productName}</b>
+                  <b>
+                    <span className={styles.code}>{it.code || '코드 없음'}</span> {it.productName}
+                  </b>
                   <small>
                     {it.optionName && `${it.optionName} · `}×{it.quantity} · {it.receiver.name} ·{' '}
                     {kstTime(it.paidAt || it.orderedAt)}
@@ -307,7 +322,7 @@ export default function OrderReceivePage() {
           <Section
             name="주문 상세"
             id="detail"
-            sub={o && `${MARKETS[o.market].label} · ${o.orderNo}`}
+            sub={o && `${o.code} · ${MARKETS[o.market].label} ${o.orderNo}`}
           >
             {!o && <p className={styles.weak}>왼쪽에서 주문을 고르면 내용과 추적 기록이 보여요.</p>}
             {o && (
@@ -317,6 +332,13 @@ export default function OrderReceivePage() {
                   <b>{o.productName}</b>
                 </div>
                 <dl className={styles.kv}>
+                  <dt>자사 코드</dt>
+                  <dd className={styles.code}>{o.code || '-'}</dd>
+                  <dt>마켓 주문번호</dt>
+                  <dd>
+                    {MARKETS[o.market].label} {o.orderNo}
+                    <span className={styles.weak}> · 줄 {o.lineNo}</span>
+                  </dd>
                   <dt>옵션 · 수량</dt>
                   <dd>
                     {o.optionName || '-'} × {o.quantity}
@@ -394,7 +416,6 @@ export default function OrderReceivePage() {
               <PurchaseRow
                 key={p.id}
                 purchase={p}
-                orderCount={p.orders.length}
                 onOpen={() => navigate(`/orders/purchases/${p.id}/edit?order=${o.id}`)}
               />
             ))}

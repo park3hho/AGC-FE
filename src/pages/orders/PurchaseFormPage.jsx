@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
-import { getOrder, getOrders } from '@/api/order'
+import { getOrder } from '@/api/order'
 import { createPurchase, deletePurchase, getPurchase, updatePurchase } from '@/api/taobaoPurchase'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
@@ -21,7 +21,6 @@ const fromLocal = (v) => (v ? `${v}:00+09:00` : '')
 const nowLocal = () => toLocal(new Date().toISOString())
 
 const EMPTY = {
-  orders: [],
   taobaoOrderNo: '',
   shopName: '',
   itemUrl: '',
@@ -33,16 +32,15 @@ const EMPTY = {
   cnCourier: '',
   cnTrackingNo: '',
   arrivedAt: '',
-  warehouseRef: '',
   memo: '',
 }
 
 const orderLabel = (o) =>
-  `${MARKETS[o.market].short} ${o.orderNo} · ${o.productName}${o.optionName ? ` (${o.optionName})` : ''} ×${o.quantity}`
+  `${o.code || '코드 없음'} · ${MARKETS[o.market].label} ${o.orderNo} · ${o.productName}${o.optionName ? ` (${o.optionName})` : ''} ×${o.quantity}`
 
 // 판매 › 주문 접수 › 타오바오 구매 추가 · 수정 — 섹션: 입력 (저장 버튼은 섹션 아래 고정)
-//   마켓 주문 여러 개를 한 타오바오 주문으로 샀거나, 한 마켓 주문을 여러 번 나눠 샀으면 연결을 늘린다.
-//   저장하면 연결된 마켓 주문마다 추적 기록이 남는다 (이전값 → 새값).
+//   타오바오 주문번호 하나 = 구매 1건, 고객 주문 1건에 붙는다. 주문번호만 필수, 나머지는 아는 만큼.
+//   저장하면 그 고객 주문의 추적 기록에 남는다 (이전값 → 새값).
 export default function PurchaseFormPage() {
   const { orderId, id } = useParams()
   const [params] = useSearchParams()
@@ -50,19 +48,13 @@ export default function PurchaseFormPage() {
   const backOrder = orderId || params.get('order') || ''
   const navigate = useNavigate()
   const [form, setForm] = useState(EMPTY)
-  const [candidates, setCandidates] = useState([]) // 연결할 수 있는 마켓 주문
+  const [order, setOrder] = useState(null) // 붙는 고객 주문
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     const load = async () => {
-      // 연결 후보: 접수·처리 중 주문
-      const [received, processing] = await Promise.all([
-        getOrders({ stage: 'received' }),
-        getOrders({ stage: 'processing' }),
-      ])
-      setCandidates([...received.items, ...processing.items])
       if (editing) {
         const p = await getPurchase(id)
         setForm({
@@ -71,16 +63,16 @@ export default function PurchaseFormPage() {
           purchasedAt: toLocal(p.purchasedAt),
           shippedAt: toLocal(p.shippedAt),
           arrivedAt: toLocal(p.arrivedAt),
-          orders: p.orders.map((o) => ({ ...o, linkQuantity: o.linkQuantity ?? '' })),
         })
+        setOrder(p.order)
       } else {
         const { order: o } = await getOrder(orderId)
         setForm({
           ...EMPTY,
           purchasedAt: nowLocal(),
           items: [{ name: o.optionName || o.productName, qty: o.quantity, priceCny: '' }],
-          orders: [{ ...o, linkQuantity: o.quantity }],
         })
+        setOrder(o)
       }
       setLoaded(true)
     }
@@ -93,11 +85,6 @@ export default function PurchaseFormPage() {
   }
   const setItem = (i, key, v) =>
     setForm({ ...form, items: form.items.map((it, j) => (j === i ? { ...it, [key]: v } : it)) })
-  const setLinkQty = (oid, v) =>
-    setForm({
-      ...form,
-      orders: form.orders.map((o) => (o.id === oid ? { ...o, linkQuantity: v } : o)),
-    })
   // 상태를 바꾸면 그 단계 시각이 비어 있을 때 지금으로 채운다 (고칠 수 있음)
   const setStatus = (s) => {
     const next = { ...form, cnStatus: s }
@@ -106,11 +93,6 @@ export default function PurchaseFormPage() {
     setForm(next)
     setError('')
   }
-  const addOrder = (oid) => {
-    const o = candidates.find((c) => String(c.id) === oid)
-    if (o) setForm({ ...form, orders: [...form.orders, { ...o, linkQuantity: '' }] })
-  }
-
   const back = () => navigate(backOrder ? `/orders?id=${backOrder}` : '/orders', { replace: true })
 
   const submit = async (e) => {
@@ -118,7 +100,7 @@ export default function PurchaseFormPage() {
     const items = form.items
       .map((it) => ({ ...it, name: it.name.trim() }))
       .filter((it) => it.name || it.priceCny)
-    if (form.orders.length === 0) return setError('마켓 주문을 하나 이상 연결해주세요')
+    if (!form.taobaoOrderNo.trim()) return setError('타오바오 주문번호를 적어주세요')
     if (items.some((it) => !it.name || !(Number(it.qty) >= 1)))
       return setError('옵션은 이름과 수량(1 이상)을 적어주세요')
     setSaving(true)
@@ -131,7 +113,7 @@ export default function PurchaseFormPage() {
         arrivedAt: fromLocal(form.arrivedAt),
       }
       if (editing) await updatePurchase(id, body)
-      else await createPurchase(body)
+      else await createPurchase(orderId, body)
       back()
     } catch (err) {
       setError(err.message)
@@ -148,9 +130,6 @@ export default function PurchaseFormPage() {
       setError(err.message)
     }
   }
-
-  const linkedIds = new Set(form.orders.map((o) => o.id))
-  const addable = candidates.filter((c) => !linkedIds.has(c.id))
 
   return (
     <form className="page-flat" onSubmit={submit}>
@@ -186,46 +165,8 @@ export default function PurchaseFormPage() {
         }
       >
         <div className={styles.fGroup}>
-          <h3 className={styles.fTitle}>연결된 마켓 주문</h3>
-          {form.orders.map((o) => (
-            <div key={o.id} className={styles.linkRow}>
-              <span className={styles.linkText}>{orderLabel(o)}</span>
-              <input
-                className={`form-input ${styles.qty}`}
-                type="number"
-                min={1}
-                placeholder="몫"
-                aria-label="이 주문 몫 수량"
-                value={o.linkQuantity}
-                onChange={(e) => setLinkQty(o.id, e.target.value)}
-              />
-              <button
-                type="button"
-                className="btn-ghost btn-sm"
-                disabled={form.orders.length === 1}
-                onClick={() =>
-                  setForm({ ...form, orders: form.orders.filter((x) => x.id !== o.id) })
-                }
-              >
-                빼기
-              </button>
-            </div>
-          ))}
-          {addable.length > 0 && (
-            <select
-              className="form-input"
-              value=""
-              onChange={(e) => addOrder(e.target.value)}
-              aria-label="마켓 주문 더 연결"
-            >
-              <option value="">+ 이 타오바오 주문으로 같이 산 마켓 주문 연결</option>
-              {addable.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {orderLabel(c)}
-                </option>
-              ))}
-            </select>
-          )}
+          <h3 className={styles.fTitle}>고객 주문</h3>
+          <p className={styles.linkText}>{order ? orderLabel(order) : '불러오는 중…'}</p>
         </div>
 
         <div className={styles.fGroup}>
@@ -233,7 +174,7 @@ export default function PurchaseFormPage() {
           <div className={styles.fGrid}>
             <div className="form-group">
               <label className="form-label" htmlFor="taobaoOrderNo">
-                타오바오 주문번호 (订单号)
+                타오바오 주문번호 (订单号) · 필수
               </label>
               <input
                 id="taobaoOrderNo"
@@ -415,19 +356,7 @@ export default function PurchaseFormPage() {
               />
             </div>
           </div>
-          <div className={styles.fGrid2}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="warehouseRef">
-                집운 입고 번호 (있으면)
-              </label>
-              <input
-                id="warehouseRef"
-                className="form-input"
-                autoComplete="off"
-                value={form.warehouseRef}
-                onChange={set('warehouseRef')}
-              />
-            </div>
+          <div>
             <div className="form-group">
               <label className="form-label" htmlFor="memo">
                 메모
