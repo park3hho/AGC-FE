@@ -192,7 +192,7 @@
   display: flex;
   height: 10px;
   overflow: hidden;
-  border-radius: 5px;
+  border-radius: var(--radius);
   background: var(--color-bg-app);
 }
 
@@ -344,7 +344,7 @@ a.mtitle:hover {
   width: 22px;
   height: 22px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: none;
   color: var(--color-text-weak);
   font-size: 11px;
@@ -380,7 +380,7 @@ a.mtitle:hover {
   height: 30px;
   padding: 0 var(--space-2);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-bg);
   font-size: 13px;
 }
