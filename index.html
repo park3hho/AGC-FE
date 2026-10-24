@@ -4,6 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AGC</title>
+    <!-- 테마를 그리기 전에 붙인다 (어두운 테마에서 흰 화면이 번쩍이지 않게) — hooks/useTheme -->
+    <script>
+      try {
+        var t = localStorage.getItem('agc.theme')
+        if (t) document.documentElement.setAttribute('data-theme', t)
+      } catch (e) {}
+    </script>
+    <!-- 넷러너 테마 영문·숫자 글꼴 (한글은 Pretendard) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&display=swap"
+    />
   </head>
   <body>
     <div id="root"></div>

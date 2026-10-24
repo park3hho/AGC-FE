@@ -23,8 +23,15 @@ function availableBodyHeight(body) {
     const used = others.reduce((sum, c) => sum + c.getBoundingClientRect().height, 0)
     avail = parent.clientHeight - padY(ps) - used - gap * others.length
   }
-  // 섹션에서 본문을 뺀 부분 (머리 · footer · 테두리)
-  const chrome = section.getBoundingClientRect().height - body.getBoundingClientRect().height
+  // 섹션에서 본문을 뺀 부분 (머리 · footer) — 칸이 늘어나 본문 아래가 비어 있어도 그 빈 곳은 빼지 않는다
+  const chrome =
+    section === body
+      ? 0
+      : [...section.children]
+          .filter(
+            (c) => c !== body && !c.contains(body) && getComputedStyle(c).position !== 'absolute',
+          )
+          .reduce((sum, c) => sum + c.getBoundingClientRect().height, 0)
   return Math.max(0, avail - chrome)
 }
 

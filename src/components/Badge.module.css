@@ -1,9 +1,8 @@
+/* 상태 표시 — 상자(배경·테두리) 없이 색 점 + 글자 (DESIGN.md §4.2-9: 배지·알약 모양 자제) */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 9px;
-  border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -11,38 +10,33 @@
 
 .badge::before {
   content: '';
+  flex-shrink: 0;
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
 }
 
+:global([data-theme='netrunner']) .badge::before {
+  border-radius: 0;
+}
+
 .success {
-  background: var(--color-success-bg);
   color: var(--color-success);
 }
 
 .warning {
-  background: var(--color-warning-bg);
   color: var(--color-warning);
 }
 
 .primary {
-  background: var(--color-primary-bg);
-  color: var(--color-primary-pressed);
+  color: var(--color-primary);
 }
 
 .neutral {
-  background: var(--color-bg-sub);
   color: var(--color-text-sub);
 }
 
 .danger {
-  background: #fdecee;
-  color: var(--color-danger);
-}
-
-.danger {
-  background: #fdecee;
   color: var(--color-danger);
 }

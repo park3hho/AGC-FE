@@ -50,7 +50,7 @@
 .active,
 .inactive {
   padding: 2px var(--space-2);
-  border-radius: 6px;
+  border-radius: var(--radius);
   font-size: 12px;
   font-weight: 600;
 }

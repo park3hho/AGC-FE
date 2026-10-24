@@ -21,7 +21,7 @@
 .chip {
   padding: 3px 10px;
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--color-bg);
   color: var(--color-text-sub);
   font-size: 12px;
@@ -31,7 +31,7 @@
 .chipOn {
   border-color: var(--color-text);
   background: var(--color-text);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .empty {

@@ -14,18 +14,18 @@
   place-items: center;
   width: 24px;
   height: 24px;
-  border-radius: 7px;
-  color: #fff;
+  border-radius: var(--radius);
+  color: var(--color-on-primary);
   font-size: 12px;
   font-weight: 800;
 }
 
 .naver {
-  background: #03c75a;
+  background: var(--color-naver);
 }
 
 .coupang {
-  background: #e52528;
+  background: var(--color-coupang);
 }
 
 /* 목록 | 상세 */
@@ -47,7 +47,7 @@
 .chip {
   padding: 2px 9px;
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--color-bg);
   color: var(--color-text-sub);
   font-size: 12px;
@@ -57,7 +57,7 @@
 .chipOn {
   border-color: var(--color-text);
   background: var(--color-text);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .empty {
@@ -213,7 +213,7 @@
   max-height: 260px;
   margin: var(--space-2) 0 0;
   padding: var(--space-2) var(--space-3);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-bg-app);
   font-size: 11px;
   white-space: pre-wrap;
@@ -244,7 +244,7 @@
   overflow: auto;
   margin: 0;
   padding: var(--space-2) var(--space-3);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-bg-app);
   font-size: 11px;
   white-space: pre-wrap;
@@ -367,8 +367,8 @@
 
 /* 자사 주문 코드 OR-YYMMDD-XXXX */
 .code {
-  color: var(--color-primary);
-  font-family: ui-monospace, Consolas, monospace;
+  color: var(--color-accent);
+  font-family: var(--font-num);
   font-size: 12px;
   font-weight: 700;
 }
@@ -378,7 +378,7 @@
   height: 26px;
   padding: 0 var(--space-2);
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--color-bg);
   font-size: 12px;
 }
@@ -388,14 +388,14 @@
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-bg-sub);
 }
 
 .stageTab {
   padding: 2px 9px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: none;
   color: var(--color-text-sub);
   font-size: 12px;
@@ -427,7 +427,7 @@
 .pSeg {
   flex: 1;
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius);
   background: var(--color-border);
 }
 
@@ -469,7 +469,7 @@
 
 .ref {
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   background: var(--color-bg-sub);
   color: var(--color-text-sub);
 }
@@ -506,7 +506,7 @@
   overflow: auto;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-bg);
   color: var(--color-text);
   font-size: 12px;
@@ -591,7 +591,7 @@
   height: 28px;
   padding: 0 var(--space-2);
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--color-bg);
   color: var(--color-text-sub);
   font-size: 12px;

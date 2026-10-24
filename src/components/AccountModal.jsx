@@ -4,15 +4,17 @@ import { useNavigate } from 'react-router-dom'
 import { ROLE_LABEL } from '@/constants/permissions'
 import { useAuth } from '@/hooks/useAuth'
 import { setDevMode, useDevMode } from '@/hooks/useDevMode'
+import { setTheme, THEMES, useTheme } from '@/hooks/useTheme'
 import styles from './AccountModal.module.css'
 
-// 공통 › 내 계정 — 왼쪽 메뉴 아래(모바일은 더보기 › 내 계정)를 누르면 뜬다. 개발자 모드 · 로그아웃
+// 공통 › 내 계정 — 왼쪽 메뉴 아래(모바일은 더보기 › 내 계정)를 누르면 뜬다. 화면 테마 · 개발자 모드 · 로그아웃
 export default function AccountModal({
   onClose, // function: 닫기
 }) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const devMode = useDevMode()
+  const theme = useTheme()
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -48,6 +50,31 @@ export default function AccountModal({
           <button type="button" className={styles.close} aria-label="닫기" onClick={onClose}>
             ✕
           </button>
+        </div>
+
+        <div className={styles.block}>
+          <span className={styles.rowText}>
+            <b>화면 테마</b>
+            <small>이 브라우저에만 저장돼요.</small>
+          </span>
+          <div className={styles.themes} role="radiogroup" aria-label="화면 테마">
+            {THEMES.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="radio"
+                aria-checked={theme === t.key}
+                className={`${styles.theme} ${theme === t.key ? styles.themeOn : ''}`}
+                onClick={() => setTheme(t.key)}
+              >
+                <span className={`${styles.swatch} ${styles[`sw_${t.key}`]}`} aria-hidden="true" />
+                <span>
+                  <b>{t.label}</b>
+                  <small>{t.hint}</small>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <label className={styles.row}>

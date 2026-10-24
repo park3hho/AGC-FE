@@ -1,26 +1,45 @@
+/* 디자인 토큰 — 테마는 <html data-theme="…"> 로 고른다 (hooks/useTheme, 내 계정 모달). DESIGN.md §4.8
+   기본(light) = :root · 넷러너(netrunner) = 아래 [data-theme='netrunner'] 가 색·글꼴·모서리만 덮어쓴다.
+   화면 CSS 에는 색을 직접 쓰지 않는다 (#fff 금지) — 반드시 이 토큰으로. */
 :root {
-  /* 색상 — 브랜드 색상 확정 전 임시값 (DESIGN.md §8) */
+  color-scheme: light;
+
+  /* 색상 */
   --color-primary: #3182f6;
   --color-primary-pressed: #1b64da;
   --color-primary-bg: #e8f3ff;
+  --color-on-primary: #ffffff; /* 주색·위험색 바탕 위 글자 */
   --color-danger: #f04452;
+  --color-danger-bg: #fdecee;
   --color-success: #0a7a3e;
   --color-success-bg: #e5f8ee;
   --color-warning: #a35c00;
   --color-warning-bg: #fff3e0;
+  --color-warning-strong: #f59f00; /* 알림 점 */
+  --color-accent: #3182f6; /* 코드·숫자 강조 (넷러너에선 시안) */
   /* 개발자 모드 전용 메뉴 (hooks/useDevMode) */
   --color-dev: #7c3aed;
   --color-dev-bg: #f3ecff;
   --color-text: #191f28;
   --color-text-sub: #4e5968;
-  --color-border: #e5e8eb;
-  --color-bg: #ffffff;
-  --color-bg-sub: #f2f4f6;
-  --color-bg-app: #f7f8fa; /* 앱 틀 바탕 — 섹션 패널(흰색) 뒤 */
   --color-text-weak: #8b95a1; /* 열 제목·날짜 같은 3순위 글자 */
+  --color-border: #e5e8eb; /* 칸 사이 선 */
+  --color-border-strong: #d9dee5;
+  --color-bg: #ffffff; /* 칸(pane) 바탕 */
+  --color-bg-sub: #f2f4f6;
+  --color-bg-app: #f7f8fa; /* 앱 틀(메뉴·위쪽 바) 바탕 */
+  --color-bg-app-glass: rgba(247, 248, 250, 0.94);
+  --color-overlay: rgba(0, 0, 0, 0.4);
+  --color-naver: #03c75a;
+  --color-coupang: #e52528;
+  --shadow-pop: 0 12px 40px rgba(0, 0, 0, 0.18); /* 모달·떠 있는 상자만 */
+  --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --glow-primary: none; /* 넷러너: 주요 버튼 빛 */
 
   /* 타이포 */
   --font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+  --font-display: var(--font-family); /* 화면·섹션 제목 */
+  --font-num: var(--font-family); /* 코드·금액·날짜 */
   --font-sm: 14px;
   --font-md: 16px;
   --font-lg: 20px;
@@ -33,7 +52,8 @@
   --space-4: 16px;
   --space-5: 24px;
 
-  --radius: 12px;
+  /* 모서리 — 둥글림은 최소 (2026-10-24 사용자 지시: 둥근 모양은 귀여워 보여서 지양) */
+  --radius: 2px;
   --touch-min: 44px;
 
   /* 앱 틀 (DESIGN.md §4.5) */
@@ -41,12 +61,51 @@
   --topbar-h: 44px;
   --tabbar-h: 56px;
   --footer-h: 28px; /* 아래 바 (데스크탑) */
-  --content-max: 1280px;
 
-  /* 공간 최대 활용 (DESIGN.md §4.2) — 머리·여백은 얇게 */
-  --page-pad-y: var(--space-3); /* 화면 위아래 여백 */
-  --page-pad-x: 20px; /* 화면 양옆 여백 */
-  --page-gap: var(--space-3); /* 섹션 사이 */
-  --section-head-h: 40px; /* 섹션 제목 줄 */
+  /* 칸(pane) 배치 (DESIGN.md §4.2) — 화면은 카드로 띄우지 않고 1px 선으로 나눈다. 바깥 여백·섹션 사이 틈 0 */
+  --page-pad-y: 0px;
+  --page-pad-x: 0px;
+  --page-gap: 0px;
+  --pane-pad-x: var(--space-4); /* 칸 안쪽 좌우 여백 (제목줄·본문) */
+  --section-head-h: 38px; /* 섹션 제목 줄 */
+  --page-head-h: 44px; /* 화면 제목 줄 */
   --fill-min: 160px; /* Section fill 의 최소 높이 — 이보다 낮아지면 화면 본문이 비상 스크롤 */
+}
+
+/* ═══ 넷러너 (사이버펑크) — 숯검정 + 빨강/시안, 각진 모서리. 목업 A안 (2026-10-24) ═══ */
+[data-theme='netrunner'] {
+  color-scheme: dark;
+
+  --color-primary: #ff4b55;
+  --color-primary-pressed: #e03a44;
+  --color-primary-bg: rgba(255, 75, 85, 0.12);
+  --color-on-primary: #0b0d10;
+  --color-danger: #ff4b55;
+  --color-danger-bg: rgba(255, 75, 85, 0.14);
+  --color-success: #43e3ff;
+  --color-success-bg: rgba(67, 227, 255, 0.12);
+  --color-warning: #f2e94e;
+  --color-warning-bg: rgba(242, 233, 78, 0.12);
+  --color-warning-strong: #f2e94e;
+  --color-accent: #43e3ff;
+  --color-dev: #c084fc;
+  --color-dev-bg: rgba(192, 132, 252, 0.14);
+  --color-text: #ecebe8;
+  --color-text-sub: #a3a9b2;
+  --color-text-weak: #6d747e;
+  --color-border: #262a31;
+  --color-border-strong: #353a43;
+  --color-bg: #12151a;
+  --color-bg-sub: #1a1e24;
+  --color-bg-app: #0b0d10;
+  --color-bg-app-glass: rgba(11, 13, 16, 0.94);
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --shadow-pop: 0 0 0 1px #353a43, 0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-knob: none;
+  --glow-primary: 0 0 14px rgba(255, 75, 85, 0.35);
+
+  --font-display: 'Chakra Petch', 'Pretendard', -apple-system, sans-serif;
+  --font-num: 'Chakra Petch', 'Pretendard', -apple-system, sans-serif;
+
+  --radius: 0px;
 }

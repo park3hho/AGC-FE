@@ -3,14 +3,14 @@
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--color-bg-sub);
   vertical-align: middle;
 }
 
 .tab {
   padding: 3px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: var(--color-text-sub);
   font-size: 13px;
   text-decoration: none;

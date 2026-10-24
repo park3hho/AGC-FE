@@ -68,17 +68,19 @@
 .kpis {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--space-2);
 }
 
+/* 칸 방식 — 상자 대신 세로 선으로만 나눔 */
 .kpi {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 10px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  padding: 10px var(--pane-pad-x);
   background: var(--color-bg);
+}
+
+.kpi + .kpi {
+  box-shadow: inset 1px 0 0 var(--color-border);
 }
 
 .kpi small {

@@ -25,7 +25,7 @@
   min-width: 0;
   padding: var(--space-1);
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: none;
   color: var(--color-text);
   cursor: pointer;
@@ -45,7 +45,7 @@
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--color-bg-sub);
   color: var(--color-text-sub);
 }
