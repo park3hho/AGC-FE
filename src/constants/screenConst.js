@@ -37,6 +37,7 @@ export const SCREENS = [
   { path: '/design', name: '디자인', group: '판매' },
   { path: '/design/:productId', name: '디자인 (제품)', group: '판매', parent: '/design' },
   { path: '/orders', name: '주문 접수', group: '판매' },
+  { path: '/purchases', name: '타오바오 구매', group: '판매' },
   {
     path: '/orders/:orderId/purchases/new',
     name: '타오바오 구매 추가',

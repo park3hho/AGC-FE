@@ -93,7 +93,12 @@ export default function PurchaseFormPage() {
     setForm(next)
     setError('')
   }
-  const back = () => navigate(backOrder ? `/orders?id=${backOrder}` : '/orders', { replace: true })
+  // 타오바오 구매 목록에서 왔으면 그 목록으로, 아니면 주문 접수의 그 고객 주문으로
+  const fromList = params.get('from') === 'purchases'
+  const back = () =>
+    navigate(fromList ? '/purchases' : backOrder ? `/orders?id=${backOrder}` : '/orders', {
+      replace: true,
+    })
 
   const submit = async (e) => {
     e.preventDefault()

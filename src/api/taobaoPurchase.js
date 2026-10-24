@@ -30,8 +30,11 @@ const toPurchase = (p) => ({
   },
 })
 
-export const getPurchases = async ({ orderId } = {}) => {
-  const q = orderId ? `?order_id=${orderId}` : ''
+export const getPurchases = async ({ orderId, limit } = {}) => {
+  const p = new URLSearchParams()
+  if (orderId) p.set('order_id', orderId)
+  if (limit) p.set('limit', limit)
+  const q = p.size ? `?${p}` : ''
   const data = await request(`/taobao-purchases${q}`, {
     errorMsg: '타오바오 구매를 불러오지 못했어요',
   })

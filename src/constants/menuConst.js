@@ -71,6 +71,15 @@ export const MENU = [
     feature: FEATURE.ORDER,
   },
   {
+    key: 'purchases',
+    group: 'sales',
+    label: '타오바오 구매', // 타오바오에서 산 것 · 판매처 → 집운 창고 배송
+    icon: 'yuan',
+    tone: 'success',
+    path: '/purchases',
+    feature: FEATURE.ORDER,
+  },
+  {
     key: 'shipping',
     group: 'settings',
     label: '배송', // 탭: 배송비 · 출고지·반품지

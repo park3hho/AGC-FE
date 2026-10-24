@@ -1,0 +1,117 @@
+/* 판매 › 타오바오 구매 (DESIGN.md §4.6 섹션: 검색·필터 · 구매 목록) */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+}
+
+.search {
+  flex: 1 1 280px;
+  max-width: 420px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  padding: 3px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.chipOn {
+  border-color: var(--color-text);
+  background: var(--color-text);
+  color: #fff;
+}
+
+.empty {
+  padding: var(--space-5);
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.5fr) minmax(0, 1fr) 120px 80px;
+  gap: var(--space-3);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  color: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:not(.head):hover {
+  background: var(--color-bg-app);
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-bg);
+  color: var(--color-text-weak);
+  font-size: 12px;
+  cursor: default;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.main b,
+.main small {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.main small {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.mono {
+  font-family: ui-monospace, monospace;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 96px;
+  }
+
+  .row > :nth-child(4),
+  .row > :nth-child(5) {
+    display: none;
+  }
+}
