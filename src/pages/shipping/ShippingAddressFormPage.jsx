@@ -3,12 +3,17 @@ import { useNavigate } from 'react-router-dom'
 
 import {
   createShippingAddress,
-  getShippingAddresses,
+  getShippingSetup,
   updateShippingAddress,
 } from '@/api/shippingAddress'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
-import { ADDRESS_USES, COUNTRY_SUGGESTIONS } from '@/constants/shippingConst'
+import {
+  ADDRESS_USES,
+  COUNTRY_SUGGESTIONS,
+  EMPTY_ROUTE,
+  TRANSPORTS,
+} from '@/constants/shippingConst'
 import { codeOf, marketsOf, pickAddress } from '@/utils/shippingAddress'
 import styles from './ShippingAddress.module.css'
 
@@ -39,19 +44,23 @@ export default function ShippingAddressFormPage() {
   const [original, setOriginal] = useState(null) // 저장된 주소 (없으면 새로 만든다)
   const [form, setForm] = useState(EMPTY)
   const [grid, setGrid] = useState(() => toGrid(null))
+  const [route, setRoute] = useState(EMPTY_ROUTE) // 배송 경로 (해외 주소일 때만 저장)
+  const [couriers, setCouriers] = useState([]) // [{ key, name, codes }]
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    getShippingAddresses()
-      .then((list) => {
-        const a = pickAddress(list)
+    getShippingSetup()
+      .then(({ items, couriers }) => {
+        const a = pickAddress(items)
         if (a) {
           setOriginal(a)
           setForm(a)
           setGrid(toGrid(a))
+          if (a.route) setRoute({ ...EMPTY_ROUTE, ...a.route })
         }
+        setCouriers(couriers)
         setLoaded(true)
       })
       .catch((err) => setError(err.message))
@@ -59,6 +68,12 @@ export default function ShippingAddressFormPage() {
 
   const set = (key) => (e) => {
     setForm({ ...form, [key]: e.target.value })
+    setError('')
+  }
+
+  const setR = (key) => (e) => {
+    const v = e.target.type === 'checkbox' ? e.target.checked : e.target.value
+    setRoute({ ...route, [key]: v })
     setError('')
   }
 
@@ -88,6 +103,7 @@ export default function ShippingAddressFormPage() {
         uses: ALL_USES,
         defaults: ALL_USES,
         marketCodes,
+        route: overseas ? route : null,
       }
       if (original) await updateShippingAddress(original.id, body)
       else await createShippingAddress(body)
@@ -229,6 +245,116 @@ export default function ShippingAddressFormPage() {
             ])}
           </div>
         </div>
+
+        {overseas && (
+          <div className="form-group">
+            <span className="form-label">
+              배송 경로 — 배대지 → 해운/항공 → 통관 → 국내 택배. 마켓 송장은 국내 택배사 + 국내
+              송장번호
+            </span>
+            <div className={styles.grid3}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="courier">
+                  국내 택배사
+                </label>
+                <select
+                  id="courier"
+                  className="form-input"
+                  value={route.courier}
+                  onChange={setR('courier')}
+                >
+                  <option value="">미정</option>
+                  {couriers.map((c) => (
+                    <option key={c.key} value={c.key}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="forwarder">
+                  국제 물류사
+                </label>
+                <input
+                  id="forwarder"
+                  className="form-input"
+                  placeholder="예: 차이냐오(菜鸟) · 르썬(日森)"
+                  value={route.forwarder}
+                  onChange={setR('forwarder')}
+                />
+              </div>
+              <div className={styles.grid3}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="transport">
+                    운송
+                  </label>
+                  <select
+                    id="transport"
+                    className="form-input"
+                    value={route.transport}
+                    onChange={setR('transport')}
+                  >
+                    {TRANSPORTS.map((t) => (
+                      <option key={t.key} value={t.key}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={`form-group ${styles.span2}`}>
+                  <label className="form-label" htmlFor="port">
+                    입항 항구
+                  </label>
+                  <input
+                    id="port"
+                    className="form-input"
+                    placeholder="예: 인천 · 평택"
+                    value={route.port}
+                    onChange={setR('port')}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className={styles.grid3}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="trackingWhen">
+                  송장 나오는 때
+                </label>
+                <input
+                  id="trackingWhen"
+                  className="form-input"
+                  placeholder="예: 웨이하이 출고·선적 후"
+                  value={route.trackingWhen}
+                  onChange={setR('trackingWhen')}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="customsRef">
+                  통관 조회 번호
+                </label>
+                <input
+                  id="customsRef"
+                  className="form-input"
+                  placeholder="예: H B/L — 확인하는 곳"
+                  value={route.customsRef}
+                  onChange={setR('customsRef')}
+                />
+              </div>
+              <label className={styles.checkLine}>
+                <input type="checkbox" checked={route.confirmed} onChange={setR('confirmed')} />
+                배대지에 확인함
+              </label>
+            </div>
+            <textarea
+              className={`form-input ${styles.memoInput}`}
+              rows={3}
+              aria-label="배송 경로 메모"
+              placeholder="배송 경로 메모 (확인 못 한 것, 물어볼 것)"
+              value={route.note}
+              onChange={setR('note')}
+            />
+          </div>
+        )}
 
         <div className="form-group">
           <label className="form-label" htmlFor="memo">

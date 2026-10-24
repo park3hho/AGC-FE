@@ -12,7 +12,25 @@ import { addressChecks, codeOf, marketsOf, pickAddress } from '@/utils/shippingA
 import ShippingTabs from './ShippingTabs'
 import styles from './ShippingAddress.module.css'
 
-// 배송 › 출고지·반품지 — 섹션: 구매대행 점검 · 주소. 출고지·반품지는 배대지 주소 하나로 쓰고, 마켓마다 주소록 번호만 다르다
+// 배송 경로 흐름 — 타오바오 판매자 → 배대지 → 해운/항공 → 입항 → 통관 → 국내 택배 → 고객
+const flowOf = (a) => {
+  const r = a.route || {}
+  return [
+    { label: '타오바오 판매자' },
+    { label: a.name },
+    { label: r.transportLabel || '해운', sub: r.forwarder || '물류사 미확인', weak: !r.forwarder },
+    { label: r.port ? `${r.port} 입항` : '입항 항구', sub: r.port ? '' : '미확인', weak: !r.port },
+    { label: '한국 통관' },
+    {
+      label: r.courierName || '국내 택배사',
+      sub: r.courierName ? '' : '미정',
+      weak: !r.courierName,
+    },
+    { label: '고객' },
+  ]
+}
+
+// 배송 › 출고지·반품지 — 섹션: 구매대행 점검 · 배송 경로 · 주소. 출고지·반품지는 배대지 주소 하나로 쓰고, 마켓마다 주소록 번호만 다르다
 export default function ShippingAddressPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -66,6 +84,54 @@ export default function ShippingAddressPage() {
           </ul>
         )}
       </Section>
+
+      {a?.overseas && (
+        <Section
+          name="배송 경로"
+          id="route"
+          title="배송 경로"
+          sub="마켓 송장 = 국내 택배사 + 국내 송장번호"
+          action={
+            <Badge tone={a.route?.confirmed ? 'success' : 'warning'}>
+              {a.route?.confirmed ? '배대지 확인됨' : '배대지 확인 전'}
+            </Badge>
+          }
+        >
+          <ol className={styles.flow}>
+            {flowOf(a).map((s, i) => (
+              <li key={i} className={s.weak ? styles.flowWeak : undefined}>
+                <b>{s.label}</b>
+                {s.sub && <span>{s.sub}</span>}
+              </li>
+            ))}
+          </ol>
+          <dl className={styles.kv}>
+            <dt>국내 택배사</dt>
+            <dd>
+              {a.route?.courierName ? (
+                <>
+                  {a.route.courierName}{' '}
+                  <span className={styles.weak}>
+                    ·{' '}
+                    {Object.entries(a.route.courierCodes)
+                      .map(([m, c]) => `${m} ${c}`)
+                      .join(' · ')}
+                  </span>
+                </>
+              ) : (
+                <span className={styles.missing}>미정 — 발송처리 전에 정해야 해요</span>
+              )}
+            </dd>
+            <dt>송장 나오는 때</dt>
+            <dd>{a.route?.trackingWhen || <span className={styles.missing}>미확인</span>}</dd>
+            <dt>국제 물류사</dt>
+            <dd>{a.route?.forwarder || <span className={styles.missing}>미확인</span>}</dd>
+            <dt>통관 조회</dt>
+            <dd>{a.route?.customsRef || <span className={styles.missing}>미확인</span>}</dd>
+          </dl>
+          {a.route?.note && <p className={styles.memo}>{a.route.note}</p>}
+        </Section>
+      )}
 
       <Section name="주소" id="address" title="출고지·반품지 주소" sub="둘 다 이 주소 하나" fill>
         {loaded && !a && <p className={styles.empty}>아직 주소가 없어요</p>}

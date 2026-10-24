@@ -14,3 +14,20 @@ export const COUNTRY_SUGGESTIONS = [
   { code: 'KR', name: '한국' },
   { code: 'CN', name: '중국' },
 ]
+
+// 배송 경로 — 국제 구간 운송 방식 (BE shipping_config.TRANSPORTS 와 같은 키)
+export const TRANSPORTS = [
+  { key: 'sea', label: '해운' },
+  { key: 'air', label: '항공' },
+]
+
+export const EMPTY_ROUTE = {
+  forwarder: '',
+  transport: 'sea',
+  port: '',
+  courier: '',
+  trackingWhen: '',
+  customsRef: '',
+  confirmed: false,
+  note: '',
+}

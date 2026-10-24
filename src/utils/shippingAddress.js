@@ -12,6 +12,23 @@ export const marketsOf = (address) => [
 export const codeOf = (address, market, use) =>
   address?.marketCodes.find((c) => c.market === market && c.use === use) || null
 
+// 배송 경로 점검 — 발송처리(송장 업로드)에 국내 택배사가 필요하다
+const routeCheck = (r) => {
+  if (!r?.courier)
+    return {
+      key: 'route',
+      tone: 'warning',
+      text: '국내 택배사 미정 — 배대지에 확인하고 배송 경로에 넣어주세요 (송장 업로드에 필요)',
+    }
+  if (!r.confirmed)
+    return {
+      key: 'route',
+      tone: 'warning',
+      text: `국내 택배사 ${r.courierName} — 아직 배대지 확인 전이에요`,
+    }
+  return { key: 'route', tone: 'success', text: `국내 택배사 ${r.courierName} (확인됨)` }
+}
+
 // 구매대행 점검 — 반환: [{ key, tone: 'success' | 'warning' | 'danger', text }]
 export const addressChecks = (address) => {
   if (!address)
@@ -29,6 +46,7 @@ export const addressChecks = (address) => {
           text: '국내 주소예요 — 구매대행은 해외(배대지) 주소가 필요해요',
         },
   ]
+  if (address.overseas) out.push(routeCheck(address.route))
   for (const m of LISTING_MARKETS) {
     for (const u of ADDRESS_USES) {
       const has = codeOf(address, m, u.key)

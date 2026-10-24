@@ -3,6 +3,22 @@ import { request } from '@/api/client'
 // 출고지·반품지 주소록. 스펙: docs/api-contract.md
 const toCode = (c) => ({ market: c.market, use: c.use, code: c.code, name: c.name || '' })
 
+// 배송 경로 — 해외 배대지 → 해운/항공 → 통관 → 국내 택배. courierCodes = 마켓별 택배사 코드 (발송처리용)
+const toRoute = (r) =>
+  r && {
+    forwarder: r.forwarder || '',
+    transport: r.transport || 'sea', // 'sea' | 'air'
+    transportLabel: r.transport_label || '',
+    port: r.port || '',
+    courier: r.courier || '', // CJGLS · HANJIN … (couriers[].key)
+    courierName: r.courier_name || '',
+    courierCodes: r.courier_codes || {}, // { 쿠팡: 'CJGLS', 네이버: 'CJGLS' }
+    trackingWhen: r.tracking_when || '',
+    customsRef: r.customs_ref || '',
+    confirmed: !!r.confirmed,
+    note: r.note || '',
+  }
+
 const toAddress = (a) => ({
   id: a.id,
   name: a.name,
@@ -15,10 +31,23 @@ const toAddress = (a) => ({
   uses: a.uses || [], // ['outbound', 'return']
   defaults: a.defaults || [],
   marketCodes: (a.market_codes || []).map(toCode),
+  route: toRoute(a.route), // null = 아직 없음
   memo: a.memo || '',
 })
 
 const orNull = (v) => (v === '' || v == null ? null : v)
+
+const routeBody = (r) =>
+  r && {
+    forwarder: orNull(r.forwarder),
+    transport: r.transport || 'sea',
+    port: orNull(r.port),
+    courier: orNull(r.courier),
+    tracking_when: orNull(r.trackingWhen),
+    customs_ref: orNull(r.customsRef),
+    confirmed: !!r.confirmed,
+    note: orNull(r.note),
+  }
 
 const toBody = (f) => ({
   name: f.name,
@@ -30,12 +59,16 @@ const toBody = (f) => ({
   uses: f.uses,
   defaults: f.defaults,
   market_codes: f.marketCodes.map((c) => ({ ...c, name: orNull(c.name) })),
+  route: routeBody(f.route),
   memo: orNull(f.memo),
 })
 
-export const getShippingAddresses = async () => {
+export const getShippingAddresses = async () => (await getShippingSetup()).items
+
+// 주소록 + 고를 수 있는 국내 택배사 [{ key, name, codes: { 쿠팡, 네이버 } }] (BE shipping_config.COURIERS)
+export const getShippingSetup = async () => {
   const data = await request('/shipping-addresses', { errorMsg: '주소록을 불러오지 못했어요' })
-  return data.items.map(toAddress)
+  return { items: data.items.map(toAddress), couriers: data.couriers || [] }
 }
 
 export const getShippingAddress = async (id) => {
