@@ -56,7 +56,87 @@ export const EVENT_KIND = {
   purchase_created: '타오바오 구매 등록',
   purchase_changed: '타오바오 구매 수정',
   purchase_deleted: '타오바오 구매 삭제',
+  market_confirmed: '발주확인',
+  dispatch_delayed: '발송지연',
+  warehouse_requested: '집운 배송 요청',
+  warehouse_dispatched: '집운 출고',
+  market_dispatched: '마켓 발송처리',
+  customs_status: '통관',
+  domestic_status: '국내 배송',
+  delivered: '배송완료',
+  purchase_decided: '구매확정',
+  settled: '정산',
 }
+
+// 추적 기록의 큰 단계 · 세부 단계 (data.stage · data.step) — 진행 막대 순서
+export const TRACE_STAGE = {
+  receive: { label: '접수', tone: 'neutral' },
+  process: { label: '처리', tone: 'primary' },
+  done: { label: '완료', tone: 'success' },
+}
+
+export const TRACE_STEPS = [
+  { step: '신규 주문', stage: 'receive' },
+  { step: '확인', stage: 'receive' },
+  { step: '발주확인', stage: 'receive' },
+  { step: '타오바오 구매', stage: 'process' },
+  { step: '중국 내 배송', stage: 'process' },
+  { step: '배대지 입고', stage: 'process' },
+  { step: '국제 발송', stage: 'process' },
+  { step: '통관', stage: 'process' },
+  { step: '국내 배송', stage: 'process' },
+  { step: '도착', stage: 'done' },
+  { step: '구매확정 · 정산', stage: 'done' },
+]
+
+// data.step 이 없는 기록 → 세부 단계
+export const KIND_STEP = {
+  collected: '신규 주문',
+  code_issued: '신규 주문',
+  pccc_check: '확인',
+  market_confirmed: '발주확인',
+  dispatch_delayed: '발주확인',
+  purchase_created: '타오바오 구매',
+  warehouse_requested: '국제 발송',
+  warehouse_dispatched: '국제 발송',
+  market_dispatched: '국제 발송',
+  customs_status: '통관',
+  domestic_status: '국내 배송',
+  delivered: '도착',
+  purchase_decided: '구매확정 · 정산',
+  settled: '구매확정 · 정산',
+}
+
+// 기록의 출처 (data.source) — 값이 어디서 왔는지
+export const TRACE_SOURCE = {
+  naver_api: '네이버 API',
+  coupang_api: '쿠팡 API',
+  unipass: '관세청 UNI-PASS',
+  jiyun: '집운',
+  taobao: '타오바오',
+  manual: '사람 입력',
+  agent: '에이전트',
+}
+
+// 관련 번호 (data.refs) 이름
+export const TRACE_REF = {
+  product_order_id: '상품주문번호',
+  taobao_order_no: '타오바오',
+  cn_courier: '중국 택배',
+  cn_tracking_no: '중국 운송장',
+  jiyun_request_no: '집운 요청',
+  hbl: 'H B/L',
+  kr_courier: '국내 택배',
+  kr_tracking_no: '국내 송장',
+}
+
+// 주문 목록 단계 탭
+export const ORDER_STAGES = [
+  { key: 'received', label: '접수' },
+  { key: 'processing', label: '처리' },
+  { key: 'done', label: '완료' },
+  { key: 'all', label: '전체' },
+]
 
 // 중국 내 배송 (타오바오 판매처 → 집운 창고) — BE core/purchase_config.CN_STATUS
 export const CN_STATUS = {

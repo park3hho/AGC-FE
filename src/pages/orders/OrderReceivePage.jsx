@@ -12,7 +12,13 @@ import {
   EVENT_KIND,
   MARKET_STATUS,
   MARKETS,
+  KIND_STEP,
+  ORDER_STAGES,
   PCCC_FILTERS,
+  TRACE_REF,
+  TRACE_SOURCE,
+  TRACE_STAGE,
+  TRACE_STEPS,
   PCCC_STATUS,
   VIA,
 } from '@/constants/orderConst'
@@ -66,23 +72,78 @@ function RunCard({
   )
 }
 
-// 추적 기록 1줄 — 누가 · 무엇을 · 보낸 값/받은 값(가린 값)
+// 기록의 세부 단계 — data.step 이 있으면 그것, 없으면 종류로 (타오바오 구매 수정은 바뀐 중국 배송 상태로)
+const stepOf = (e) => {
+  const d = e.data || {}
+  if (d.step) return d.step
+  if (e.kind === 'pccc_check') return d.result?.status === 'ok' ? '확인' : null
+  if (e.kind === 'purchase_changed') {
+    const to = d.changes?.cn_status?.to
+    return to === 'shipped' ? '중국 내 배송' : to === 'arrived' ? '배대지 입고' : null
+  }
+  return KIND_STEP[e.kind] || null
+}
+const occurredOf = (e) => e.data?.occurred_at || e.at
+
+// 추적 기록 위 진행 막대 — 세부 단계 11개, 단계마다 처음 일어난 날
+function TraceProgress({
+  events, // Array: 주문 기록
+}) {
+  const first = {}
+  for (const e of events) {
+    const s = stepOf(e)
+    if (!s) continue
+    const t = occurredOf(e)
+    if (!first[s] || t < first[s]) first[s] = t
+  }
+  const lastDone = TRACE_STEPS.reduce((n, x, i) => (first[x.step] ? i : n), -1)
+  return (
+    <ol className={styles.progress} aria-label="진행 단계">
+      {TRACE_STEPS.map((x, i) => (
+        <li
+          key={x.step}
+          className={`${styles.pStep} ${first[x.step] ? styles.pDone : i === lastDone + 1 ? styles.pNow : ''}`}
+          title={`${TRACE_STAGE[x.stage].label} › ${x.step}`}
+        >
+          <span>{x.step}</span>
+          <small>
+            {first[x.step] ? kst(first[x.step]).slice(5, 10) : i === lastDone + 1 ? '지금' : '-'}
+          </small>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+// 추적 기록 1줄 — 실제로 일어난 시각 · 단계 · 누가 · 출처 · 관련 번호 · 보낸 값/받은 값(가린 값)
 function EventRow({
   event, // object: 주문 기록
 }) {
   const [open, setOpen] = useState(false)
   const actor = ACTOR[event.actorType] || ACTOR.system
-  const hasData = Object.keys(event.data || {}).length > 0
+  const d = event.data || {}
+  const hasData = Object.keys(d).length > 0
+  const step = stepOf(event)
+  const stage = d.stage || TRACE_STEPS.find((x) => x.step === step)?.stage
+  const occurred = occurredOf(event)
+  // 실제 시각과 기록 시각이 5분 넘게 다르면 기록 시각도 보여준다
+  const late = d.occurred_at && Math.abs(new Date(event.at) - new Date(d.occurred_at)) > 5 * 60000
+  const refs = Object.entries(d.refs || {}).filter(([, v]) => v)
   return (
     <li className={styles.event}>
       <div className={styles.eventHead}>
-        <span className={styles.eventTime}>{kst(event.at)}</span>
-        <Badge tone={actor.tone}>
-          {actor.label}
-          {event.actorName && ` · ${event.actorName}`}
-        </Badge>
+        <span className={styles.eventTime}>{kst(occurred)}</span>
+        {step && (
+          <Badge tone={TRACE_STAGE[stage]?.tone || 'neutral'}>
+            {TRACE_STAGE[stage]?.label ? `${TRACE_STAGE[stage].label} › ` : ''}
+            {step}
+          </Badge>
+        )}
         <span className={styles.weak}>
-          {EVENT_KIND[event.kind] || event.kind} · {VIA[event.via] || event.via}
+          {EVENT_KIND[event.kind] || event.kind} · {actor.label}
+          {event.actorName && ` ${event.actorName}`} ·{' '}
+          {TRACE_SOURCE[d.source] || VIA[event.via] || event.via}
+          {event.via === 'mock' && ' · 목업'}
           {event.syncRunId && ` · 수집 #${event.syncRunId}`}
         </span>
         {hasData && (
@@ -96,7 +157,17 @@ function EventRow({
         )}
       </div>
       <div className={styles.eventSummary}>{event.summary}</div>
-      {open && <pre className={styles.eventData}>{JSON.stringify(event.data, null, 2)}</pre>}
+      {(refs.length > 0 || late) && (
+        <div className={styles.refs}>
+          {refs.map(([k, v]) => (
+            <span key={k} className={styles.ref}>
+              {TRACE_REF[k] || k} <b>{v}</b>
+            </span>
+          ))}
+          {late && <span className={styles.weak}>기록 {kst(event.at).slice(5)}</span>}
+        </div>
+      )}
+      {open && <pre className={styles.eventData}>{JSON.stringify(d, null, 2)}</pre>}
     </li>
   )
 }
@@ -146,6 +217,7 @@ export default function OrderReceivePage() {
   const [busy, setBusy] = useState('') // 'collect' | 'recheck' | ''
   const [showRaw, setShowRaw] = useState(false) // 마켓 원본 데이터 펼침
 
+  const stage = params.get('stage') || 'received' // 목록 단계 탭
   const filter = params.get('pccc') || 'all'
   const search = params.get('q') || '' // 자사 코드 · 마켓 주문번호
   const selected = Number(params.get('id')) || null
@@ -153,13 +225,13 @@ export default function OrderReceivePage() {
   const load = useCallback(
     () =>
       getOrders({
-        stage: 'received',
+        stage: stage === 'all' ? undefined : stage,
         pccc: filter === 'all' ? undefined : filter,
         search: search.trim() || undefined,
       })
         .then(setData)
         .catch((err) => setError(err.message)),
-    [filter, search],
+    [stage, filter, search],
   )
 
   useEffect(() => {
@@ -252,6 +324,20 @@ export default function OrderReceivePage() {
           fill
           action={
             <div className={styles.chips}>
+              <span className={styles.stageTabs} role="tablist" aria-label="주문 단계">
+                {ORDER_STAGES.map((s) => (
+                  <button
+                    key={s.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={stage === s.key}
+                    className={`${styles.stageTab} ${stage === s.key ? styles.stageOn : ''}`}
+                    onClick={() => set({ stage: s.key === 'received' ? null : s.key, id: null })}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </span>
               <input
                 className={styles.search}
                 value={search}
@@ -352,7 +438,9 @@ export default function OrderReceivePage() {
                   <dd>
                     {MARKET_STATUS[o.marketStatus] || o.marketStatus}
                     {o.confirmed ? ' · 발주확인됨' : ' · 발주확인 전'}
-                    {o.shipDueAt && ` · 발송기한 ${kst(o.shipDueAt).slice(5, 10)}`}
+                    {o.shipDueAt &&
+                      o.stage === 'received' &&
+                      ` · 발송기한 ${kst(o.shipDueAt).slice(5, 10)}`}
                   </dd>
                   <dt>판매자 코드</dt>
                   <dd>{o.sellerCode || '-'}</dd>
@@ -456,6 +544,7 @@ export default function OrderReceivePage() {
             {detail && showRaw && (
               <pre className={styles.raw}>{JSON.stringify(detail.raw, null, 2)}</pre>
             )}
+            {detail && !showRaw && <TraceProgress events={detail.events} />}
             {detail && !showRaw && (
               <ol className={styles.events}>
                 {detail.events.map((e) => (

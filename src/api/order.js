@@ -66,7 +66,8 @@ export const getOrders = async ({
   page = 1,
   size = 200,
 } = {}) => {
-  const q = new URLSearchParams({ stage, page, size })
+  const q = new URLSearchParams({ page, size })
+  if (stage) q.set('stage', stage) // 비우면 모든 단계
   if (market) q.set('market', market)
   if (pccc) q.set('pccc', pccc)
   if (search) q.set('q', search)
