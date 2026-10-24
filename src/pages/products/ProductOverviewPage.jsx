@@ -14,7 +14,14 @@ import { FEATURE, hasFeature } from '@/constants/permissions'
 import { GOOD_MARGIN_PCT, PLATFORMS } from '@/constants/pricingConst'
 import { useAuth } from '@/hooks/useAuth'
 import { toKstDateTime } from '@/utils/date'
-import { calcOption, cnyToKrw, effectiveFxRate, formatCny, formatWon } from '@/utils/pricing'
+import {
+  calcOption,
+  cnyToKrw,
+  effectiveFxRate,
+  formatCny,
+  formatFx,
+  formatWon,
+} from '@/utils/pricing'
 import styles from './ProductOverview.module.css'
 
 // 상품 상세 (2026-10-24 목업 A 채택) — 첫 화면은 숫자만, 자세한 건 다음 동작에서 (FE DESIGN.md §4.7)
@@ -106,40 +113,40 @@ export default function ProductOverviewPage() {
     loadListings().catch((err) => setError(err.message))
   }, [productId, loadListings])
 
-  // 옵션 × 판매처 계산 (지금 환율) — 원가 = (상품 위안 + 배송 위안) × 환율
+  // 옵션 × 판매처 계산 — 가격을 확정(저장)한 시점 환율 기준 (product_pricing.fx_rate · 판매처마다 다름)
+  //   원가 = (상품 위안 + 배송 위안) × 그 환율. 오늘 환율로 다시 계산한 차익(rNow)은 오버레이에서만 비교로 보여준다.
   const rows = useMemo(() => {
     if (!data) return []
     const { pricing } = data
     return pricing.options.map((o) => {
       const markets = {}
-      let fx = null
       PLATFORMS.forEach((p) => {
         const pr = pricing.pricings[p.key]
         if (!pr?.saved) return
-        const settings = {
-          fxRate: pricing.fx.cnyKrw,
+        const base = {
           fxMarkupPct: pr.fxMarkupPct,
           platformFeeRate: pr.platformFeeRate,
           paymentFeeRate: pr.paymentFeeRate,
         }
-        fx = fx ?? effectiveFxRate(settings)
+        const settings = { ...base, fxRate: pr.fxRate }
+        const fx = effectiveFxRate(settings)
+        const goods = cnyToKrw(o.priceCny, fx)
+        const ship = cnyToKrw(o.shippingCny, fx)
         const sale = pr.optionPrices.find((x) => x.optionId === o.id)?.salePrice ?? null
-        const r = sale ? calcOption(o, sale, settings) : null
-        markets[p.key] = { sale, r }
+        markets[p.key] = {
+          sale,
+          fxRate: pr.fxRate,
+          pricedAt: pr.updatedAt,
+          goods,
+          ship,
+          cost: goods != null && ship != null ? goods + ship : null,
+          r: sale ? calcOption(o, sale, settings) : null,
+          rNow: sale ? calcOption(o, sale, { ...base, fxRate: pricing.fx.cnyKrw }) : null,
+        }
       })
-      const goods = cnyToKrw(o.priceCny, fx)
-      const ship = cnyToKrw(o.shippingCny, fx)
-      return {
-        o,
-        fx,
-        goods,
-        ship,
-        cost: goods != null && ship != null ? goods + ship : null,
-        markets,
-      }
+      return { o, markets }
     })
   }, [data])
-
   const timeline = useMemo(() => {
     if (!data) return null
     const { product, surveys, pricing, design } = data
@@ -246,23 +253,31 @@ export default function ProductOverviewPage() {
   const linksOf = (optionId) =>
     listings.filter((l) => l.url && l.items.some((i) => i.optionId === optionId))
 
-  const costInfo = (x) =>
-    x.cost != null && (
+  const costOf = (x) => x.markets[mainKey] || Object.values(x.markets)[0] || null
+  const costInfo = (x) => {
+    const m = costOf(x)
+    if (m?.cost == null) return null
+    return (
       <>
-        <div className={styles.tipTitle}>원가 {formatWon(x.cost)} 구성</div>
+        <div className={styles.tipTitle}>원가 {formatWon(m.cost)} 구성</div>
         <Breakdown
-          total={x.cost}
+          total={m.cost}
           parts={[
-            { label: `상품 ${formatCny(x.o.priceCny)}`, value: x.goods, color: MIX.goods },
-            { label: `배송 ${formatCny(x.o.shippingCny)}`, value: x.ship, color: MIX.ship },
+            { label: `상품 ${formatCny(x.o.priceCny)}`, value: m.goods, color: MIX.goods },
+            { label: `배송 ${formatCny(x.o.shippingCny)}`, value: m.ship, color: MIX.ship },
           ]}
         />
-        <div className={styles.tipNote}>위안 합계 × {Number(pricing.fx.cnyKrw)}원 (오늘 환율)</div>
+        <div className={styles.tipNote}>
+          위안 합계 × {formatFx(m.fxRate)}원 ({PLATFORM_LABEL[mainKey]} 가격 확정{' '}
+          {SHORT(m.pricedAt)} 환율)
+        </div>
       </>
     )
+  }
   const saleInfo = (x, key) => {
     const m = x.markets[key]
     if (!m?.r) return null
+    const diff = m.rNow ? m.rNow.profit - m.r.profit : 0
     return (
       <>
         <div className={styles.tipTitle}>
@@ -271,16 +286,26 @@ export default function ProductOverviewPage() {
         <Breakdown
           total={m.sale}
           parts={[
-            { label: '상품', value: x.goods, color: MIX.goods },
-            { label: '배송', value: x.ship, color: MIX.ship },
+            { label: '상품', value: m.goods, color: MIX.goods },
+            { label: '배송', value: m.ship, color: MIX.ship },
             { label: '수수료', value: m.r.fee, color: MIX.fee },
             { label: '차익', value: m.r.profit, color: MIX.profit },
           ]}
         />
+        <div className={styles.tipNote}>
+          가격 확정 {SHORT(m.pricedAt)} · 환율 {formatFx(m.fxRate)}원
+          {m.rNow && Math.abs(diff) >= 1 && (
+            <>
+              <br />
+              오늘 환율 {formatFx(pricing.fx.cnyKrw)}원이면 차익 {formatWon(m.rNow.profit)} (
+              {diff > 0 ? '+' : ''}
+              {wonNum(diff)}원)
+            </>
+          )}
+        </div>
       </>
     )
   }
-
   // 진행 — 4단계 + 사이 걸린 시간
   const steps = [
     { label: '리서치', at: t.researchAt },
@@ -349,7 +374,7 @@ export default function ProductOverviewPage() {
               </div>
               <div className={styles.kpi}>
                 <div>
-                  <small>차익 (지금 환율)</small>
+                  <small>차익 (가격 확정 기준)</small>
                   <b>
                     {range(
                       mainResults.map((r) => r.profit),
@@ -444,7 +469,7 @@ export default function ProductOverviewPage() {
                         <b>{x.o.option1}</b> <span className={styles.muted}>{x.o.option2}</span>
                       </td>
                       <td className={styles.num}>
-                        <HoverInfo content={costInfo(x)}>{formatWon(x.cost)}</HoverInfo>
+                        <HoverInfo content={costInfo(x)}>{formatWon(costOf(x)?.cost)}</HoverInfo>
                       </td>
                       {PLATFORMS.map((p) => {
                         const m = x.markets[p.key]
