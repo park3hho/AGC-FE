@@ -85,9 +85,14 @@ const stepOf = (e) => {
 }
 const occurredOf = (e) => e.data?.occurred_at || e.at
 
-// 추적 기록 위 진행 막대 — 세부 단계 11개, 단계마다 처음 일어난 날
+// 타오바오 구매 쪽 세부 단계 — 누르면 구매 기록(추가·수정) 화면으로
+const PURCHASE_STEPS = ['타오바오 구매', '중국 내 배송', '배대지 입고']
+
+// 추적 기록 위 진행 막대 — 세부 단계 11칸, 단계마다 처음 일어난 날. 타오바오 구매 칸은 눌러서 기록
 function TraceProgress({
   events, // Array: 주문 기록
+  onPurchase, // function?: 타오바오 구매 기록 열기 (없으면 누를 수 없음)
+  hasPurchase, // boolean: 이미 기록한 타오바오 구매가 있는지
 }) {
   const first = {}
   for (const e of events) {
@@ -102,18 +107,28 @@ function TraceProgress({
   const start = first[TRACE_STEPS[0].step]
   const days =
     done && start ? Math.round((new Date(first[done.step]) - new Date(start)) / 86400000) : null
+  const nowIsPurchase = now && PURCHASE_STEPS.includes(now.step)
   return (
     <div className={styles.progress} aria-label="진행 단계">
       <ol className={styles.pBar}>
-        {TRACE_STEPS.map((x, i) => (
-          <li
-            key={x.step}
-            className={`${styles.pSeg} ${first[x.step] ? styles.pDone : i === lastDone + 1 ? styles.pNow : ''} ${
-              i > 0 && TRACE_STEPS[i - 1].stage !== x.stage ? styles.pGap : ''
-            }`}
-            title={`${TRACE_STAGE[x.stage].label} › ${x.step}${first[x.step] ? ` · ${kst(first[x.step])}` : ''}`}
-          />
-        ))}
+        {TRACE_STEPS.map((x, i) => {
+          const cls = `${styles.pSeg} ${first[x.step] ? styles.pDone : i === lastDone + 1 ? styles.pNow : ''} ${
+            i > 0 && TRACE_STEPS[i - 1].stage !== x.stage ? styles.pGap : ''
+          }`
+          const title = `${TRACE_STAGE[x.stage].label} › ${x.step}${first[x.step] ? ` · ${kst(first[x.step])}` : ''}`
+          return PURCHASE_STEPS.includes(x.step) && onPurchase ? (
+            <li key={x.step} className={cls}>
+              <button
+                type="button"
+                className={styles.pBtn}
+                title={`${title} — 눌러서 타오바오 구매 기록`}
+                onClick={onPurchase}
+              />
+            </li>
+          ) : (
+            <li key={x.step} className={cls} title={title} />
+          )
+        })}
       </ol>
       <div className={styles.pText}>
         {done ? (
@@ -123,18 +138,27 @@ function TraceProgress({
         ) : (
           '아직 시작 전'
         )}
-        {now && <span className={styles.weak}> · 다음 {now.step}</span>}
+        {now && !nowIsPurchase && <span className={styles.weak}> · 다음 {now.step}</span>}
+        {nowIsPurchase && onPurchase && (
+          <>
+            {' · '}
+            <button type="button" className={`btn-text ${styles.pLink}`} onClick={onPurchase}>
+              {hasPurchase ? `${now.step} 기록하기` : '타오바오에서 샀으면 기록하기'}
+            </button>
+          </>
+        )}
         {days != null && days > 0 && <span className={styles.weak}> · 주문부터 {days}일</span>}
       </div>
     </div>
   )
 }
 
-// 추적 기록 1줄 — 실제로 일어난 시각 · 단계 · 누가 · 출처 · 관련 번호 · 보낸 값/받은 값(가린 값)
+// 추적 기록 1줄 — 시각 · 단계(중분류)만. 마우스를 올리면(누르면) 무슨 일이었는지 · 누가 · 출처 · 관련 번호
 function EventRow({
   event, // object: 주문 기록
+  onPurchase, // function?: 타오바오 구매 기록이면 그 구매 열기
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false) // 보낸 값·받은 값 펼침
   const actor = ACTOR[event.actorType] || ACTOR.system
   const d = event.data || {}
   const hasData = Object.keys(d).length > 0
@@ -144,79 +168,56 @@ function EventRow({
   // 실제 시각과 기록 시각이 5분 넘게 다르면 기록 시각도 보여준다
   const late = d.occurred_at && Math.abs(new Date(event.at) - new Date(d.occurred_at)) > 5 * 60000
   const refs = Object.entries(d.refs || {}).filter(([, v]) => v)
+  const bad = event.kind === 'pccc_check' && d.result?.status && d.result.status !== 'ok'
   return (
-    <li className={styles.event}>
+    <li className={styles.event} tabIndex={0}>
       <div className={styles.eventHead}>
-        <span className={styles.eventTime}>{kst(occurred)}</span>
+        <span className={styles.eventTime}>{kst(occurred).slice(5)}</span>
         {step && (
           <Badge tone={TRACE_STAGE[stage]?.tone || 'neutral'}>
             {TRACE_STAGE[stage]?.label ? `${TRACE_STAGE[stage].label} › ` : ''}
             {step}
           </Badge>
         )}
-        <span className={styles.weak}>
-          {EVENT_KIND[event.kind] || event.kind} · {actor.label}
+        <b className={`${styles.eventKind} ${bad ? styles.bad : ''}`}>
+          {EVENT_KIND[event.kind] || event.kind}
+          {bad && ' — 불일치'}
+        </b>
+        {event.via === 'mock' && <span className={styles.weak}>목업</span>}
+      </div>
+      <div className={styles.pop} role="tooltip">
+        <div className={styles.eventSummary}>{event.summary}</div>
+        <div className={styles.weak}>
+          {actor.label}
           {event.actorName && ` ${event.actorName}`} ·{' '}
           {TRACE_SOURCE[d.source] || VIA[event.via] || event.via}
-          {event.via === 'mock' && ' · 목업'}
           {event.syncRunId && ` · 수집 #${event.syncRunId}`}
-        </span>
-        {hasData && (
-          <button
-            type="button"
-            className={`btn-text ${styles.more}`}
-            onClick={() => setOpen(!open)}
-          >
-            {open ? '접기' : '보낸 값·받은 값'}
-          </button>
-        )}
-      </div>
-      <div className={styles.eventSummary}>{event.summary}</div>
-      {(refs.length > 0 || late) && (
-        <div className={styles.refs}>
-          {refs.map(([k, v]) => (
-            <span key={k} className={styles.ref}>
-              {TRACE_REF[k] || k} <b>{v}</b>
-            </span>
-          ))}
-          {late && <span className={styles.weak}>기록 {kst(event.at).slice(5)}</span>}
+          {late && ` · 기록 ${kst(event.at).slice(5)}`}
         </div>
-      )}
+        {refs.length > 0 && (
+          <div className={styles.refs}>
+            {refs.map(([k, v]) => (
+              <span key={k} className={styles.ref}>
+                {TRACE_REF[k] || k} <b>{v}</b>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className={styles.popActs}>
+          {hasData && (
+            <button type="button" className="btn-text" onClick={() => setOpen(!open)}>
+              {open ? '보낸 값·받은 값 접기' : '보낸 값·받은 값'}
+            </button>
+          )}
+          {onPurchase && (
+            <button type="button" className="btn-text" onClick={onPurchase}>
+              타오바오 구매 열기
+            </button>
+          )}
+        </div>
+      </div>
       {open && <pre className={styles.eventData}>{JSON.stringify(d, null, 2)}</pre>}
     </li>
-  )
-}
-
-// 타오바오 구매 1줄 — 상태 · 주문번호 · 판매처 · 결제 위안 · 중국 운송장 · 입고
-function PurchaseRow({
-  purchase, // object: 타오바오 구매
-  onOpen, // function
-}) {
-  const p = purchase
-  const st = CN_STATUS[p.cnStatus] || CN_STATUS.ordered
-  const when =
-    p.cnStatus === 'arrived'
-      ? `입고 ${kstTime(p.arrivedAt)}`
-      : p.shippedAt
-        ? `발송 ${kstTime(p.shippedAt)}`
-        : `구매 ${kstTime(p.purchasedAt)}`
-  return (
-    <button type="button" className={styles.purchase} onClick={onOpen}>
-      <Badge tone={st.tone}>{st.label}</Badge>
-      <span className={styles.prod}>
-        <b>{p.taobaoOrderNo || '주문번호 없음'}</b>
-        <small>
-          {[
-            p.shopName,
-            p.paidCny && `¥${p.paidCny}`,
-            p.cnTrackingNo && `${p.cnCourier || '택배'} ${p.cnTrackingNo}`,
-          ]
-            .filter(Boolean)
-            .join(' · ') || '내용 없음'}
-        </small>
-      </span>
-      <small className={styles.weak}>{when}</small>
-    </button>
   )
 }
 
@@ -303,6 +304,12 @@ export default function OrderReceivePage() {
   const counts = data?.pcccCounts || {}
   const allCount = Object.values(counts).reduce((a, b) => a + b, 0)
   const o = detail?.order
+
+  // 타오바오 구매 기록 열기 — id 를 주면 그 구매, 아니면 이 주문의 마지막 구매 (없으면 새로)
+  const openPurchase = (purchaseId) => {
+    const id = typeof purchaseId === 'number' ? purchaseId : purchases?.[purchases.length - 1]?.id
+    navigate(id ? `/orders/purchases/${id}/edit?order=${o.id}` : `/orders/${o.id}/purchases/new`)
+  }
 
   return (
     <main className="page-flat">
@@ -486,38 +493,6 @@ export default function OrderReceivePage() {
           </Section>
 
           <Section
-            name="타오바오 구매"
-            id="purchase"
-            sub={purchases && (purchases.length ? `${purchases.length}건` : '아직 안 삼')}
-            flush
-            action={
-              o && (
-                <button
-                  type="button"
-                  className="btn-secondary btn-sm"
-                  onClick={() => navigate(`/orders/${o.id}/purchases/new`)}
-                >
-                  구매 추가
-                </button>
-              )
-            }
-          >
-            {!o && <p className={styles.pad}>주문을 고르면 타오바오 구매·중국 배송이 보여요.</p>}
-            {o && purchases?.length === 0 && (
-              <p className={styles.pad}>
-                타오바오에서 사면 '구매 추가'로 주문번호·운송장을 적어요.
-              </p>
-            )}
-            {(purchases || []).map((p) => (
-              <PurchaseRow
-                key={p.id}
-                purchase={p}
-                onOpen={() => navigate(`/orders/purchases/${p.id}/edit?order=${o.id}`)}
-              />
-            ))}
-          </Section>
-
-          <Section
             name="추적 기록"
             id="trace"
             sub={
@@ -552,11 +527,23 @@ export default function OrderReceivePage() {
             {detail && showRaw && (
               <pre className={styles.raw}>{JSON.stringify(detail.raw, null, 2)}</pre>
             )}
-            {detail && !showRaw && <TraceProgress events={detail.events} />}
+            {detail && !showRaw && (
+              <TraceProgress
+                events={detail.events}
+                hasPurchase={!!purchases?.length}
+                onPurchase={o && o.stage !== 'cancelled' ? openPurchase : undefined}
+              />
+            )}
             {detail && !showRaw && (
               <ol className={styles.events}>
                 {detail.events.map((e) => (
-                  <EventRow key={e.id} event={e} />
+                  <EventRow
+                    key={e.id}
+                    event={e}
+                    onPurchase={
+                      e.data?.purchase_id ? () => openPurchase(e.data.purchase_id) : undefined
+                    }
+                  />
                 ))}
               </ol>
             )}
