@@ -221,7 +221,7 @@ function EventRow({
   )
 }
 
-// 판매 › 주문 접수 — 섹션: 수집 · 접수 목록 · 주문 상세 · 타오바오 구매 · 추적 기록
+// 판매 › 주문 접수 — 섹션: 수집 · 접수 목록 · 추적 기록 (머리 탭: 기록 · 주문 상세 · 마켓 원본)
 // 마켓 주문을 가져오면 새 주문·바뀐 주문은 BE 가 바로 통관부호(UNI-PASS)를 검증한다. 모든 동작은 추적 기록에 남는다.
 export default function OrderReceivePage() {
   const navigate = useNavigate()
@@ -231,7 +231,7 @@ export default function OrderReceivePage() {
   const [detail, setDetail] = useState(null) // { order, events }
   const [error, setError] = useState('')
   const [busy, setBusy] = useState('') // 'collect' | 'recheck' | ''
-  const [showRaw, setShowRaw] = useState(false) // 마켓 원본 데이터 펼침
+  const [view, setView] = useState('trace') // 추적 기록 섹션 보기: trace 기록 · detail 주문 상세 · raw 마켓 원본
 
   const stage = params.get('stage') || 'received' // 목록 단계 탭
   const filter = params.get('pccc') || 'all'
@@ -421,12 +421,49 @@ export default function OrderReceivePage() {
 
         <div className={`fit-col ${styles.side}`}>
           <Section
-            name="주문 상세"
-            id="detail"
-            sub={o && `${o.code} · ${MARKETS[o.market].label} ${o.orderNo}`}
+            name="추적 기록"
+            id="trace"
+            sub={
+              detail &&
+              (view === 'raw'
+                ? '마켓이 보낸 응답 그대로 · 개인정보만 가림'
+                : view === 'detail'
+                  ? `${o.code} · ${MARKETS[o.market].label} ${o.orderNo}`
+                  : `${o.code} · ${detail.events.length}건`)
+            }
+            fill
+            action={
+              detail && (
+                <div className={styles.chips} role="tablist" aria-label="추적 기록 보기">
+                  {[
+                    ['trace', '기록'],
+                    ['detail', '주문 상세'],
+                    ...(detail.raw ? [['raw', '마켓 원본']] : []),
+                  ].map(([k, label]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      role="tab"
+                      aria-selected={view === k}
+                      className={`${styles.chip} ${view === k ? styles.chipOn : ''}`}
+                      onClick={() => setView(k)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )
+            }
           >
-            {!o && <p className={styles.weak}>왼쪽에서 주문을 고르면 내용과 추적 기록이 보여요.</p>}
-            {o && (
+            {!detail && (
+              <p className={styles.weak}>
+                왼쪽에서 주문을 고르면 수집·검증·처리 기록이 시간 순으로 보여요.
+              </p>
+            )}
+            {detail && view === 'raw' && (
+              <pre className={styles.raw}>{JSON.stringify(detail.raw, null, 2)}</pre>
+            )}
+            {detail && view === 'detail' && (
               <div className={styles.detail}>
                 <div className={styles.dTitle}>
                   <MarketMark market={o.market} />
@@ -490,51 +527,14 @@ export default function OrderReceivePage() {
                 </div>
               </div>
             )}
-          </Section>
-
-          <Section
-            name="추적 기록"
-            id="trace"
-            sub={
-              detail &&
-              (showRaw ? '마켓이 보낸 응답 그대로 · 개인정보만 가림' : `${detail.events.length}건`)
-            }
-            fill
-            action={
-              detail?.raw && (
-                <div className={styles.chips}>
-                  <button
-                    type="button"
-                    className={`${styles.chip} ${!showRaw ? styles.chipOn : ''}`}
-                    onClick={() => setShowRaw(false)}
-                  >
-                    기록
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.chip} ${showRaw ? styles.chipOn : ''}`}
-                    onClick={() => setShowRaw(true)}
-                  >
-                    마켓 원본
-                  </button>
-                </div>
-              )
-            }
-          >
-            {!detail && (
-              <p className={styles.weak}>주문을 고르면 수집·검증·처리 기록이 시간 순으로 보여요.</p>
-            )}
-            {detail && showRaw && (
-              <pre className={styles.raw}>{JSON.stringify(detail.raw, null, 2)}</pre>
-            )}
-            {detail && !showRaw && (
+            {detail && view === 'trace' && (
               <TraceProgress
                 events={detail.events}
                 hasPurchase={!!purchases?.length}
                 onPurchase={o && o.stage !== 'cancelled' ? openPurchase : undefined}
               />
             )}
-            {detail && !showRaw && (
+            {detail && view === 'trace' && (
               <ol className={styles.events}>
                 {detail.events.map((e) => (
                   <EventRow
