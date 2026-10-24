@@ -6,7 +6,7 @@ import styles from './Design.module.css'
 
 // 디자인(제품) › 미리보기 — 860px 페이지를 칸 폭에 맞게 줄여 보여준다.
 // 칸 높이는 줄인 높이만큼 잡히고, 섹션 본문(Section fill)이 그 안에서 스크롤된다.
-// ref 는 줄이지 않은 원본 페이지(.dp) — JPG 내보내기에 쓴다.
+// ref 는 줄이지 않은 원본 페이지(.dp) — 이미지 내보내기에 쓴다.
 const PreviewFrame = forwardRef(function PreviewFrame(
   {
     content, // object: DetailContent

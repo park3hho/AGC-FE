@@ -4,7 +4,7 @@ import { fileUrl } from '@/api/client'
 import RichText from './RichText'
 import { TEMPLATE_CSS } from './templateCss'
 
-// 상세페이지 템플릿 (S1~S6, 폭 860px) — 편집 미리보기와 JPG 내보내기가 같은 그림을 쓴다 (DESIGN.md §4.7)
+// 상세페이지 템플릿 (S1~S6, 폭 860px) — 편집 미리보기와 이미지 내보내기가 같은 그림을 쓴다 (DESIGN.md §4.7)
 //   content: 제품별 칸 값 (docs/api-contract.md DetailContent, snake_case 그대로)
 //   common: S6 공통 안내 + 등록번호 (모든 상세페이지가 같이 씀)
 // 칸이 비면 그 줄·블록은 그리지 않는다. [[글자]] 는 노란 확인 표시로 보인다.

@@ -1,8 +1,8 @@
 // 상세페이지 템플릿 스타일 — CSS Modules 가 아니라 문자열인 이유 (DESIGN.md §4.7):
-//   JPG 로 내보낼 때 이 페이지 DOM 을 그대로 그림(SVG foreignObject)으로 바꾸는데,
+//   이미지로 내보낼 때 이 페이지 DOM 을 그대로 그림(SVG foreignObject)으로 바꾸는데,
 //   그때 함께 들어가는 스타일은 페이지 안의 <style> 뿐이다. 그래서 모든 규칙을 .dp 아래로 묶어 페이지 안에 넣는다.
 // 기준 디자인: 2026-10-21 사용자 승인 상세페이지 (S1~S6, 폭 860px)
-// 글꼴: 앱에 실은 Pretendard 만 쓴다 (@font-face) — JPG 를 그릴 때 utils/exportJpg 가 이 주소를 data URL 로 바꿔 넣는다
+// 글꼴: 앱에 실은 Pretendard 만 쓴다 (@font-face) — 이미지를 그릴 때 utils/exportImages 가 이 주소를 data URL 로 바꿔 넣는다
 import { TEMPLATE_FONT_FAMILY, TEMPLATE_FONT_URL, TEMPLATE_WIDTH } from '@/constants/designConst'
 
 export const TEMPLATE_CSS = `

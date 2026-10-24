@@ -138,7 +138,7 @@ export const requestDetailChanges = async (productId, note) => {
   return toPage(data.page)
 }
 
-// 상세 이미지(JPG 조각) 저장 — 승인된 페이지만. contentHash: 그릴 때의 page.contentHash (그 사이 바뀌면 409)
+// 상세 이미지 조각(네이버 PNG · 쿠팡 JPG) 저장 — 승인된 페이지만. contentHash: 그릴 때의 page.contentHash (그 사이 바뀌면 409)
 //   files: [{ name, blob }] 순서대로
 export const uploadDetailExport = async (productId, platform, contentHash, files) => {
   const form = new FormData()

@@ -1,5 +1,5 @@
 // 아주 작은 ZIP 만들기 (압축 없음 · STORE) — 새 패키지 없이 (DESIGN.md §1)
-//   JPG 는 이미 압축된 파일이라 다시 압축해도 거의 줄지 않는다. 파일 이름은 UTF-8 로 적는다.
+//   PNG·JPG 는 이미 압축된 파일이라 다시 압축해도 거의 줄지 않는다. 파일 이름은 UTF-8 로 적는다.
 
 let CRC_TABLE = null
 const crcTable = () => {
