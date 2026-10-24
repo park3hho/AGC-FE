@@ -189,12 +189,6 @@ function EventRow({
     }
   }, [popOpen, onTogglePop])
 
-  return () => {
-      window.removeEventListener('scroll', close, true)
-      window.removeEventListener('resize', close)
-    }
-  }, [pos])
-
   return (
     <li
       ref={rowRef}
