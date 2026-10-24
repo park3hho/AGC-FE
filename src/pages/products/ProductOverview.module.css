@@ -1,110 +1,114 @@
-/* 상품 상세 — 왼쪽: 기본 정보 · 진행 기록 · 가격 · 마켓 등록 / 오른쪽: 상세설명 (이 섹션만 스크롤) */
+/* 상품 상세 — 왼쪽: 요약 · 정보(탭) / 오른쪽: 상세설명 (이 섹션만 스크롤) */
 .layout {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
 }
 
-/* 기본 정보 */
-.info {
+.headChips {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
+  gap: var(--space-2);
 }
 
-.infoText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+.spacer {
+  flex: 1;
 }
 
-.infoTitle {
-  font-weight: 700;
-}
-
-.cn {
+.muted {
   color: var(--color-text-weak);
-  font-size: 13px;
+  font-size: 12px;
 }
 
-.links {
-  display: flex;
-  flex-wrap: wrap;
+.linkChip {
+  display: inline-flex;
   align-items: center;
-  gap: 4px 12px;
-  margin-top: 2px;
-  font-size: 13px;
-}
-
-.links a,
-.table a {
-  color: var(--color-primary-pressed);
-  text-decoration: none;
-}
-
-.links a:hover,
-.table a:hover {
-  text-decoration: underline;
-}
-
-.code {
-  display: inline-block;
-  padding: 2px 7px;
-  border-radius: 6px;
+  height: 22px;
+  margin-left: 4px;
+  padding: 0 8px;
+  border-radius: 11px;
   background: var(--color-primary-bg);
   color: var(--color-primary-pressed);
   font-size: 12px;
   font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.muted {
+.textLink,
+.textBtn {
+  padding: 0 4px;
+  border: 0;
+  background: none;
   color: var(--color-text-sub);
-  font-size: 12px;
-}
-
-.loss {
-  color: var(--color-danger);
-  font-size: 12px;
-}
-
-/* 진행 기록 — 4단계 한 줄 */
-.steps {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.steps li {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-  padding: 4px 10px;
-  border-left: 3px solid var(--color-primary);
-  border-radius: 4px;
-  background: var(--color-bg-app);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.steps b {
   font-size: 13px;
-}
-
-.steps span {
-  color: var(--color-text-sub);
-}
-
-.steps em {
-  color: var(--color-primary-pressed);
-  font-style: normal;
   font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
 }
 
-/* 가격 · 마켓 등록 표 */
+.textLink:hover,
+.textBtn:hover:not(:disabled) {
+  color: var(--color-primary-pressed);
+}
+
+/* 요약 — 숫자 4개 */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-2);
+}
+
+.kpi {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+
+.kpi small {
+  display: block;
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.kpi b {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 정보 — 탭 머리 */
+.infoTabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.infoTabs [role='tab'] {
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-text-weak);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.infoTabs .infoTabOn {
+  border-bottom-color: var(--color-text);
+  color: var(--color-text);
+}
+
+/* 정보 › 가격 */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -112,9 +116,8 @@
 }
 
 .table th {
-  padding: 6px var(--space-4);
+  padding: 8px var(--space-4);
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-app);
   color: var(--color-text-weak);
   font-size: 12px;
   font-weight: 600;
@@ -123,7 +126,7 @@
 }
 
 .table td {
-  padding: 6px var(--space-4);
+  padding: 10px var(--space-4);
   border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
   white-space: nowrap;
@@ -133,37 +136,220 @@
   border-bottom: 0;
 }
 
-.table th.num,
-.table td.num {
+.table .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-.table td.wrap {
-  white-space: normal;
+.price {
+  font-size: 14px;
 }
 
-.date {
+.mg,
+.mgGood,
+.mgLoss {
+  display: block;
+  color: var(--color-text-weak);
+  font-size: 11px;
+}
+
+.mgGood {
+  color: var(--color-success);
+}
+
+.mgLoss {
+  color: var(--color-danger);
+}
+
+/* 오버레이 안 — 구성 막대 */
+.tipTitle {
+  margin-bottom: 8px;
   color: var(--color-text-sub);
+  font-weight: 600;
+}
+
+.tipNote {
+  margin-top: 8px;
+  color: var(--color-text-weak);
+  font-size: 11px;
+}
+
+.stack {
+  display: flex;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--color-bg-app);
+}
+
+.stack i {
+  display: block;
+  height: 100%;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 8px;
+}
+
+.legendRow {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendRow i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.legendRow b {
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-.chip {
-  display: inline-block;
-  margin-right: 4px;
-  padding: 1px 6px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+/* 정보 › 진행 */
+.flow {
+  padding: var(--space-5) var(--space-4) var(--space-4);
+}
+
+.steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps::before {
+  position: absolute;
+  top: 7px;
+  right: 12.5%;
+  left: 12.5%;
+  height: 2px;
+  background: var(--color-border);
+  content: '';
+}
+
+.steps li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.steps li i {
+  width: 16px;
+  height: 16px;
+  margin-bottom: 4px;
+  border: 3px solid var(--color-primary-bg);
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.steps li b {
+  font-size: 13px;
+}
+
+.steps li span {
+  color: var(--color-text-weak);
   font-size: 12px;
 }
 
-.empty {
-  padding: var(--space-4) var(--space-5);
-  color: var(--color-text-sub);
+.steps li.stepOff i {
+  background: var(--color-border);
+}
+
+.gaps {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr 2fr 1fr;
+  margin-top: var(--space-2);
+  color: var(--color-primary-pressed);
+  font-size: 12px;
+  font-weight: 600;
   text-align: center;
 }
 
-/* 마켓 등록 › 직접 추가 한 줄 */
+.gaps span:first-child {
+  grid-column: 2;
+}
+
+.flowNote {
+  margin: var(--space-4) 0 0;
+  color: var(--color-text-weak);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* 정보 › 마켓 */
+.mrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 9px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.chipOff {
+  color: var(--color-text-weak);
+}
+
+.mtitle {
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.mtitle:hover {
+  color: var(--color-primary-pressed);
+}
+
+.del {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-weak);
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.mrow:hover .del,
+.del:focus-visible {
+  opacity: 1;
+}
+
+.notice {
+  margin: 0;
+  padding: 8px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
 .form {
   display: flex;
   flex-wrap: wrap;
@@ -174,7 +360,7 @@
 
 .form input,
 .form select {
-  flex: 1 1 140px;
+  flex: 1 1 130px;
   min-width: 0;
   height: 30px;
   padding: 0 var(--space-2);
@@ -185,26 +371,33 @@
 }
 
 .form select {
-  flex: 0 0 90px;
+  flex: 0 0 84px;
 }
 
 /* 상세설명 */
-.tab {
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--color-border);
+.seg {
+  display: inline-flex;
+  padding: 2px;
   border-radius: 8px;
-  background: var(--color-bg);
-  color: var(--color-text-sub);
-  font-size: 13px;
+  background: var(--color-bg-app);
+}
+
+.seg button {
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-weak);
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.tabOn {
-  border-color: var(--color-primary);
-  background: var(--color-primary-bg);
-  color: var(--color-primary-pressed);
+.seg .segOn {
+  background: var(--color-bg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  color: var(--color-text);
 }
 
 .images {
@@ -219,23 +412,22 @@
   height: auto;
 }
 
+.empty {
+  padding: var(--space-5);
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .steps {
+  .kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
 
-.table td.ellipsis {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.btnLink,
-.btnLink:hover {
-  text-decoration: none;
+  .gaps {
+    font-size: 11px;
+  }
 }

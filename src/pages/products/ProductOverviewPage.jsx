@@ -7,28 +7,30 @@ import { getPricing } from '@/api/pricing'
 import { getProduct } from '@/api/product'
 import Badge from '@/components/Badge'
 import Thumb from '@/components/Thumb'
+import HoverInfo from '@/components/common/HoverInfo'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
 import { FEATURE, hasFeature } from '@/constants/permissions'
-import { PLATFORMS } from '@/constants/pricingConst'
+import { GOOD_MARGIN_PCT, PLATFORMS } from '@/constants/pricingConst'
 import { useAuth } from '@/hooks/useAuth'
 import { toKstDateTime } from '@/utils/date'
-import { calcOption, costWithShipping, formatCny, formatPct, formatWon } from '@/utils/pricing'
+import { calcOption, cnyToKrw, effectiveFxRate, formatCny, formatWon } from '@/utils/pricing'
 import styles from './ProductOverview.module.css'
 
-// 상품 상세 — 디자인 승인된 제품 하나의 전체 정보 (FE DESIGN.md §4.7)
-//   섹션: 기본 정보 · 진행 기록(리서치 → 가격 책정 → 디자인 → 업로드, 걸린 시간) · 가격(옵션 × 판매처, 지금 환율로 차익)
-//         · 마켓 등록(업로드 일시 · 링크, 쿠팡에서 불러오기 · 직접 추가) · 상세설명(승인된 상세 이미지)
-const TABS = [
-  { id: 'info', name: '기본 정보' },
-  { id: 'timeline', name: '진행 기록' },
-  { id: 'prices', name: '가격' },
-  { id: 'listings', name: '마켓 등록' },
+// 상품 상세 (2026-10-24 목업 A 채택) — 첫 화면은 숫자만, 자세한 건 다음 동작에서 (FE DESIGN.md §4.7)
+//   왼쪽: 요약(숫자 4개) · 정보(탭: 가격 / 진행 / 마켓) — 가격은 총액만, 구성은 마우스를 올리면
+//   오른쪽: 상세설명 (승인된 상세 이미지, 이 섹션만 스크롤)
+const SECTIONS = [
+  { id: 'summary', name: '요약' },
+  { id: 'info', name: '정보' },
   { id: 'detail', name: '상세설명' },
 ]
 const PLATFORM_LABEL = Object.fromEntries(PLATFORMS.map((p) => [p.key, p.label]))
 const EMPTY_FORM = { platform: 'naver', marketProductId: '', title: '', url: '', listedAt: '' }
+// 구성 막대 색 — 상품·배송은 옅은 파랑, 수수료 회색, 차익 진한 파랑 (오버레이는 body 에 그려져 CSS 변수 대신 값)
+const MIX = { goods: '#b0c4de', ship: '#7fa7d9', fee: '#d5d9de', profit: '#3182f6' }
+const SHORT = (iso) => toKstDateTime(iso).slice(5) // 'MM-DD HH:mm'
 
 // 걸린 시간 — 1시간 미만 'N분', 2일 미만 'N시간 M분', 그 이상 'N일 N시간'
 const fmtDur = (from, to) => {
@@ -44,20 +46,54 @@ const daysAgo = (date) => {
   const d = Math.floor((Date.now() - new Date(`${date}T00:00:00+09:00`)) / 86400000)
   return d <= 0 ? '오늘' : `${d}일 전`
 }
-const optionName = (o) => [o.option1, o.option2].filter(Boolean).join(' · ')
+const range = (vals, fmt) => {
+  const v = vals.filter((x) => x != null && Number.isFinite(x))
+  if (!v.length) return '-'
+  const lo = Math.min(...v)
+  const hi = Math.max(...v)
+  return lo === hi ? fmt(lo) : `${fmt(lo)}~${fmt(hi)}`
+}
+const pct = (n) => `${n.toFixed(1)}%`
+const wonNum = (n) => (Math.round(n) || 0).toLocaleString('ko-KR')
+
+// 구성 막대 — 상품 · 배송 · 수수료 · 차익 (판매가 = 합)
+function Breakdown({ parts, total }) {
+  return (
+    <>
+      <div className={styles.stack}>
+        {parts.map((p) => (
+          <i
+            key={p.label}
+            style={{ width: `${(Math.max(0, p.value) / total) * 100}%`, background: p.color }}
+          />
+        ))}
+      </div>
+      <div className={styles.legend}>
+        {parts.map((p) => (
+          <span key={p.label} className={styles.legendRow}>
+            <i style={{ background: p.color }} />
+            <span>{p.label}</span>
+            <b>{formatWon(p.value)}</b>
+          </span>
+        ))}
+      </div>
+    </>
+  )
+}
 
 export default function ProductOverviewPage() {
   const { productId } = useParams()
   const { user } = useAuth()
   const canEdit = hasFeature(user, FEATURE.LISTING)
-  const tabs = useSectionTabs(TABS)
+  const tabs = useSectionTabs(SECTIONS)
 
   const [data, setData] = useState(null) // { product, surveys, pricing, design }
   const [listings, setListings] = useState([])
   const [error, setError] = useState('')
   const [busy, setBusy] = useState('')
   const [notice, setNotice] = useState('')
-  const [form, setForm] = useState(null) // 직접 추가 입력 (null = 닫힘)
+  const [form, setForm] = useState(null) // 마켓 › 직접 추가 (null = 닫힘)
+  const [infoTab, setInfoTab] = useState('price') // 정보 탭: price · flow · market
   const [imgTab, setImgTab] = useState('coupang')
 
   const loadListings = useCallback(() => getListings(productId).then(setListings), [productId])
@@ -71,6 +107,40 @@ export default function ProductOverviewPage() {
     loadListings().catch((err) => setError(err.message))
   }, [productId, loadListings])
 
+  // 옵션 × 판매처 계산 (지금 환율) — 원가 = (상품 위안 + 배송 위안) × 환율
+  const rows = useMemo(() => {
+    if (!data) return []
+    const { pricing } = data
+    return pricing.options.map((o) => {
+      const markets = {}
+      let fx = null
+      PLATFORMS.forEach((p) => {
+        const pr = pricing.pricings[p.key]
+        if (!pr?.saved) return
+        const settings = {
+          fxRate: pricing.fx.cnyKrw,
+          fxMarkupPct: pr.fxMarkupPct,
+          platformFeeRate: pr.platformFeeRate,
+          paymentFeeRate: pr.paymentFeeRate,
+        }
+        fx = fx ?? effectiveFxRate(settings)
+        const sale = pr.optionPrices.find((x) => x.optionId === o.id)?.salePrice ?? null
+        const r = sale ? calcOption(o, sale, settings) : null
+        markets[p.key] = { sale, r }
+      })
+      const goods = cnyToKrw(o.priceCny, fx)
+      const ship = cnyToKrw(o.shippingCny, fx)
+      return {
+        o,
+        fx,
+        goods,
+        ship,
+        cost: goods != null && ship != null ? goods + ship : null,
+        markets,
+      }
+    })
+  }, [data])
+
   const timeline = useMemo(() => {
     if (!data) return null
     const { product, surveys, pricing, design } = data
@@ -80,32 +150,28 @@ export default function ProductOverviewPage() {
       .filter(Boolean)
       .sort()
     const approvals = (page?.reviews || []).filter((r) => r.action === 'approve')
-    const firstApprove = approvals.length ? approvals[approvals.length - 1].createdAt : null
-    const approvedAt = page?.status === 'approved' ? page.reviewedAt : null
     const uploads = Object.fromEntries(
-      PLATFORMS.map((p) => {
-        const ts = listings
+      PLATFORMS.map((p) => [
+        p.key,
+        listings
           .filter((l) => l.platform === p.key && l.listedAt)
           .map((l) => l.listedAt)
-          .sort()
-        return [p.key, ts[0] || null]
-      }),
+          .sort()[0] || null,
+      ]),
     )
-    const firstUpload = Object.values(uploads).filter(Boolean).sort()[0] || null
     return {
-      researchStart: product.createdAt,
-      surveyFirst: dates[0] || null,
-      surveyLast: dates[dates.length - 1] || null,
+      researchAt: product.createdAt,
       surveyCount: surveys.length,
-      priced: Object.fromEntries(
-        PLATFORMS.map((p) => [p.key, pricing.pricings[p.key]?.updatedAt || null]),
-      ),
+      surveyLast: dates[dates.length - 1] || null,
+      pricedAt:
+        PLATFORMS.map((p) => pricing.pricings[p.key]?.updatedAt)
+          .filter(Boolean)
+          .sort()[0] || null,
       designStart: page?.createdAt || null,
-      firstApprove,
-      approvedAt,
-      approvedBy: page?.reviewedBy?.name || '',
+      firstApprove: approvals.length ? approvals[approvals.length - 1].createdAt : null,
+      approvedAt: page?.status === 'approved' ? page.reviewedAt : null,
       uploads,
-      firstUpload,
+      firstUpload: Object.values(uploads).filter(Boolean).sort()[0] || null,
     }
   }, [data, listings])
 
@@ -116,8 +182,8 @@ export default function ProductOverviewPage() {
       const r = await syncCoupangListings()
       await loadListings()
       setNotice(
-        `쿠팡 상품 ${r.total}개 확인 · 새로 ${r.created} · 갱신 ${r.updated}` +
-          (r.unmatched.length ? ` · 제품을 못 찾음 ${r.unmatched.length}` : ''),
+        `쿠팡 ${r.total}개 확인 · 새로 ${r.created} · 갱신 ${r.updated}` +
+          (r.unmatched.length ? ` · 제품 못 찾음 ${r.unmatched.length}` : ''),
       )
     } catch (err) {
       setNotice(err.message)
@@ -158,43 +224,81 @@ export default function ProductOverviewPage() {
     }
   }
 
-  if (error) {
+  if (error || !data) {
     return (
       <main className="page-flat">
-        <PageHeader back title="상품 상세" />
-        <p className="form-error">{error}</p>
-      </main>
-    )
-  }
-  if (!data) {
-    return (
-      <main className="page-flat">
-        <PageHeader back title="상품 상세" sub="불러오는 중…" />
+        <PageHeader back title="상품 상세" sub={error ? '' : '불러오는 중…'} />
+        {error && <p className="form-error">{error}</p>}
       </main>
     )
   }
 
   const { product, surveys, pricing, design } = data
-  const survey = surveys[0] || null // 최근 조사
+  const survey = surveys[0] || null
   const page = design.page
   const exp = page?.exports?.[imgTab] || null
-  const optionLinks = (optionId) =>
-    listings.filter((l) => l.url && l.items.some((i) => i.optionId === optionId))
   const t = timeline
+  // 요약 숫자는 마켓에 올린 판매처 기준 (없으면 판매가를 저장한 첫 판매처)
+  const mainKey =
+    PLATFORMS.find((p) => listings.some((l) => l.platform === p.key))?.key ||
+    PLATFORMS.find((p) => pricing.pricings[p.key]?.saved)?.key ||
+    PLATFORMS[0].key
+  const mainResults = rows.map((x) => x.markets[mainKey]?.r).filter(Boolean)
+  const linksOf = (optionId) =>
+    listings.filter((l) => l.url && l.items.some((i) => i.optionId === optionId))
 
-  const settingsOf = (key) => {
-    const pr = pricing.pricings[key]
-    if (!pr?.saved) return null
-    return {
-      fxRate: pricing.fx.cnyKrw,
-      fxMarkupPct: pr.fxMarkupPct,
-      platformFeeRate: pr.platformFeeRate,
-      paymentFeeRate: pr.paymentFeeRate,
-    }
+  const costInfo = (x) =>
+    x.cost != null && (
+      <>
+        <div className={styles.tipTitle}>원가 {formatWon(x.cost)} 구성</div>
+        <Breakdown
+          total={x.cost}
+          parts={[
+            { label: `상품 ${formatCny(x.o.priceCny)}`, value: x.goods, color: MIX.goods },
+            { label: `배송 ${formatCny(x.o.shippingCny)}`, value: x.ship, color: MIX.ship },
+          ]}
+        />
+        <div className={styles.tipNote}>위안 합계 × {Number(pricing.fx.cnyKrw)}원 (오늘 환율)</div>
+      </>
+    )
+  const saleInfo = (x, key) => {
+    const m = x.markets[key]
+    if (!m?.r) return null
+    return (
+      <>
+        <div className={styles.tipTitle}>
+          {PLATFORM_LABEL[key]} {formatWon(m.sale)} 구성
+        </div>
+        <Breakdown
+          total={m.sale}
+          parts={[
+            { label: '상품', value: x.goods, color: MIX.goods },
+            { label: '배송', value: x.ship, color: MIX.ship },
+            { label: '수수료', value: m.r.fee, color: MIX.fee },
+            { label: '차익', value: m.r.profit, color: MIX.profit },
+          ]}
+        />
+      </>
+    )
   }
-  const salePriceOf = (key, optionId) =>
-    pricing.pricings[key]?.optionPrices.find((o) => o.optionId === optionId)?.salePrice ?? null
-  const costSettings = settingsOf('coupang') || settingsOf('naver')
+
+  // 진행 — 4단계 + 사이 걸린 시간
+  const steps = [
+    { label: '리서치', at: t.researchAt },
+    { label: '가격 책정', at: t.pricedAt },
+    { label: '디자인 승인', at: t.approvedAt },
+    { label: '첫 업로드', at: t.firstUpload },
+  ]
+  const gaps = [
+    fmtDur(t.researchAt, t.pricedAt),
+    [
+      fmtDur(t.pricedAt, t.approvedAt),
+      t.designStart && t.firstApprove && `디자인 ${fmtDur(t.designStart, t.firstApprove)}`,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    fmtDur(t.approvedAt, t.firstUpload),
+  ]
 
   return (
     <main className="page-flat">
@@ -203,162 +307,186 @@ export default function ProductOverviewPage() {
         title={product.titleKo || product.titleCn}
         sub={
           <>
-            {product.code} ·{' '}
+            {product.code} · {product.titleCn}
+          </>
+        }
+        action={
+          <div className={styles.headChips}>
             {page?.status === 'approved' ? (
               <Badge tone="success">디자인 승인</Badge>
             ) : (
               <Badge tone="warning">디자인 승인 전</Badge>
             )}
-            {listings.length > 0 && ` · 마켓 상품 ${listings.length}개`}
-          </>
+            {survey?.taobaoUrl && (
+              <a
+                className={styles.linkChip}
+                href={survey.taobaoUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                타오바오 ↗
+              </a>
+            )}
+          </div>
         }
       />
       <SectionTabs {...tabs} />
 
       <div className={`fit-row ${styles.layout}`}>
         <div className="fit-col">
-          <Section name="기본 정보" id="info" className={tabs.hide('info')}>
-            <div className={styles.info}>
-              <Thumb src={product.photoUrl} size={56} />
-              <div className={styles.infoText}>
-                <div className={styles.infoTitle}>{product.titleKo || '-'}</div>
-                <div className={styles.cn}>{product.titleCn}</div>
-                <div className={styles.links}>
-                  <span className={styles.code}>{product.code}</span>
-                  {survey?.taobaoUrl && (
-                    <a href={survey.taobaoUrl} target="_blank" rel="noreferrer">
-                      타오바오 원본 ↗
-                    </a>
-                  )}
-                  {survey?.coupangMinPrice != null && (
-                    <span className={styles.muted}>
-                      국내 쿠팡 최저 {formatWon(survey.coupangMinPrice)}
-                    </span>
-                  )}
-                  {survey?.naverMinPrice != null && (
-                    <span className={styles.muted}>
-                      국내 네이버 최저 {formatWon(survey.naverMinPrice)}
-                    </span>
-                  )}
+          <Section name="요약" id="summary" title={false} plain className={tabs.hide('summary')}>
+            <div className={styles.kpis}>
+              <div className={styles.kpi}>
+                <Thumb src={product.photoUrl} size={40} />
+                <div>
+                  <small>{PLATFORM_LABEL[mainKey]} 판매가</small>
+                  <b>
+                    {range(
+                      rows.map((x) => x.markets[mainKey]?.sale),
+                      wonNum,
+                    )}
+                    원
+                  </b>
+                </div>
+              </div>
+              <div className={styles.kpi}>
+                <div>
+                  <small>차익 (지금 환율)</small>
+                  <b>
+                    {range(
+                      mainResults.map((r) => r.profit),
+                      wonNum,
+                    )}
+                    원
+                  </b>
+                </div>
+              </div>
+              <div className={styles.kpi}>
+                <div>
+                  <small>마진</small>
+                  <b>
+                    {range(
+                      mainResults.map((r) => r.marginPct),
+                      pct,
+                    )}
+                  </b>
+                </div>
+              </div>
+              <div className={styles.kpi}>
+                <div>
+                  <small>제품 추가 → 업로드</small>
+                  <b>{t.firstUpload ? fmtDur(t.researchAt, t.firstUpload) : '아직 안 올림'}</b>
                 </div>
               </div>
             </div>
           </Section>
 
           <Section
-            name="진행 기록"
-            id="timeline"
-            sub={
-              t.firstUpload
-                ? `제품 추가 → 첫 업로드 ${fmtDur(t.researchStart, t.firstUpload)}`
-                : '아직 마켓에 올리지 않았어요'
-            }
-            className={tabs.hide('timeline')}
-          >
-            <ol className={styles.steps}>
-              <li>
-                <b>리서치</b>
-                <span>제품 추가 {toKstDateTime(t.researchStart)}</span>
-                <span>
-                  조사 {t.surveyCount}회
-                  {t.surveyFirst &&
-                    ` · ${t.surveyFirst === t.surveyLast ? t.surveyFirst : `${t.surveyFirst} ~ ${t.surveyLast}`}`}
-                </span>
-                {t.surveyLast && <em>마지막 조사 {daysAgo(t.surveyLast)}</em>}
-              </li>
-              <li>
-                <b>가격 책정</b>
-                {PLATFORMS.map((p) => (
-                  <span key={p.key}>
-                    {p.label} {t.priced[p.key] ? toKstDateTime(t.priced[p.key]) : '-'}
-                  </span>
-                ))}
-              </li>
-              <li>
-                <b>디자인</b>
-                <span>시작 {t.designStart ? toKstDateTime(t.designStart) : '-'}</span>
-                <span>
-                  승인 {t.approvedAt ? toKstDateTime(t.approvedAt) : '-'}
-                  {t.approvedBy && t.approvedAt && ` · ${t.approvedBy}`}
-                </span>
-                {t.designStart && t.firstApprove && (
-                  <em>디자인 시간 {fmtDur(t.designStart, t.firstApprove)}</em>
-                )}
-              </li>
-              <li>
-                <b>업로드</b>
-                {PLATFORMS.map((p) => (
-                  <span key={p.key}>
-                    {p.label} {t.uploads[p.key] ? toKstDateTime(t.uploads[p.key]) : '-'}
-                  </span>
-                ))}
-                {t.approvedAt && t.firstUpload && (
-                  <em>승인 → 업로드 {fmtDur(t.approvedAt, t.firstUpload)}</em>
-                )}
-              </li>
-            </ol>
-          </Section>
-
-          <Section
-            name="가격"
-            id="prices"
-            sub={`지금 환율 ${pricing.fx.cnyKrw ? Number(pricing.fx.cnyKrw) : '-'}원으로 계산 · 판매가는 저장한 값`}
+            name="정보"
+            id="info"
+            title={false}
             flush
-            className={tabs.hide('prices')}
-            action={
-              <Link
-                className={`btn-secondary btn-sm ${styles.btnLink}`}
-                to={`/pricing/${product.id}`}
-              >
-                가격 책정 열기
-              </Link>
-            }
+            fill="stretch"
+            className={tabs.hide('info')}
           >
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>옵션</th>
-                  <th className={styles.num}>타오바오 + 배송</th>
-                  <th className={styles.num}>원가</th>
-                  {PLATFORMS.map((p) => (
-                    <th key={p.key} className={styles.num}>
-                      {p.label} 판매가 · 차익
-                    </th>
-                  ))}
-                  <th>올린 곳</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pricing.options.map((o) => {
-                  const cost = costSettings ? costWithShipping(o, costSettings) : null
-                  return (
-                    <tr key={o.id}>
-                      <td>{optionName(o)}</td>
-                      <td className={styles.num}>
-                        {formatCny(o.priceCny)} + {formatCny(o.shippingCny)}
+            <div className={styles.infoTabs} role="tablist">
+              {[
+                ['price', '가격'],
+                ['flow', '진행'],
+                ['market', `마켓 ${listings.length}`],
+              ].map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="tab"
+                  className={infoTab === k ? styles.infoTabOn : ''}
+                  onClick={() => setInfoTab(k)}
+                >
+                  {label}
+                </button>
+              ))}
+              <span className={styles.spacer} />
+              {infoTab === 'price' && (
+                <Link className={styles.textLink} to={`/pricing/${product.id}`}>
+                  가격 책정 열기
+                </Link>
+              )}
+              {infoTab === 'market' && canEdit && (
+                <>
+                  <button
+                    type="button"
+                    className={styles.textBtn}
+                    onClick={syncCoupang}
+                    disabled={!!busy}
+                  >
+                    {busy === 'sync' ? '불러오는 중…' : '쿠팡에서 불러오기'}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.textBtn}
+                    onClick={() => setForm(form ? null : { ...EMPTY_FORM })}
+                  >
+                    {form ? '닫기' : '직접 추가'}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {infoTab === 'price' && (
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>옵션</th>
+                    <th className={styles.num}>원가</th>
+                    {PLATFORMS.map((p) => (
+                      <th key={p.key} className={styles.num}>
+                        {p.label}
+                      </th>
+                    ))}
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((x) => (
+                    <tr key={x.o.id}>
+                      <td>
+                        <b>{x.o.option1}</b> <span className={styles.muted}>{x.o.option2}</span>
                       </td>
-                      <td className={styles.num}>{formatWon(cost)}</td>
+                      <td className={styles.num}>
+                        <HoverInfo content={costInfo(x)}>{formatWon(x.cost)}</HoverInfo>
+                      </td>
                       {PLATFORMS.map((p) => {
-                        const sale = salePriceOf(p.key, o.id)
-                        const settings = settingsOf(p.key)
-                        const r = settings && sale ? calcOption(o, sale, settings) : null
+                        const m = x.markets[p.key]
                         return (
                           <td key={p.key} className={styles.num}>
-                            <b>{sale ? formatWon(sale) : '-'}</b>
-                            {r && (
-                              <span className={r.profit < 0 ? styles.loss : styles.muted}>
-                                {' '}
-                                {formatWon(r.profit)} ({formatPct(r.marginPct)})
+                            {m?.sale ? (
+                              <HoverInfo content={saleInfo(x, p.key)}>
+                                <b className={styles.price}>{formatWon(m.sale)}</b>
+                              </HoverInfo>
+                            ) : (
+                              '-'
+                            )}
+                            {m?.r && (
+                              <span
+                                className={
+                                  m.r.profit < 0
+                                    ? styles.mgLoss
+                                    : m.r.marginPct >= GOOD_MARGIN_PCT
+                                      ? styles.mgGood
+                                      : styles.mg
+                                }
+                              >
+                                {pct(m.r.marginPct)}
                               </span>
                             )}
                           </td>
                         )
                       })}
-                      <td>
-                        {optionLinks(o.id).map((l) => (
+                      <td className={styles.num}>
+                        {linksOf(x.o.id).map((l) => (
                           <a
                             key={l.id}
-                            className={styles.chip}
+                            className={styles.linkChip}
                             href={l.url}
                             target="_blank"
                             rel="noreferrer"
@@ -368,145 +496,131 @@ export default function ProductOverviewPage() {
                         ))}
                       </td>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </Section>
-
-          <Section
-            name="마켓 등록"
-            id="listings"
-            sub={notice || `${listings.length}개`}
-            flush
-            fill
-            className={tabs.hide('listings')}
-            action={
-              canEdit && (
-                <>
-                  <button
-                    type="button"
-                    className="btn-secondary btn-sm"
-                    onClick={syncCoupang}
-                    disabled={!!busy}
-                  >
-                    {busy === 'sync' ? '불러오는 중…' : '쿠팡에서 불러오기'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-secondary btn-sm"
-                    onClick={() => setForm(form ? null : { ...EMPTY_FORM })}
-                    disabled={!!busy && busy !== 'save'}
-                  >
-                    {form ? '닫기' : '직접 추가'}
-                  </button>
-                </>
-              )
-            }
-          >
-            {form && (
-              <div className={styles.form}>
-                <select
-                  value={form.platform}
-                  onChange={(e) => setForm({ ...form, platform: e.target.value })}
-                >
-                  {PLATFORMS.map((p) => (
-                    <option key={p.key} value={p.key}>
-                      {p.label}
-                    </option>
                   ))}
-                </select>
-                <input
-                  placeholder="마켓 상품번호 *"
-                  value={form.marketProductId}
-                  onChange={(e) => setForm({ ...form, marketProductId: e.target.value })}
-                />
-                <input
-                  placeholder="상품명"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                />
-                <input
-                  placeholder="상품 링크"
-                  value={form.url}
-                  onChange={(e) => setForm({ ...form, url: e.target.value })}
-                />
-                <input
-                  type="datetime-local"
-                  title="업로드 일시"
-                  value={form.listedAt}
-                  onChange={(e) => setForm({ ...form, listedAt: e.target.value })}
-                />
-                <button
-                  type="button"
-                  className="btn-primary btn-sm"
-                  onClick={saveForm}
-                  disabled={!form.marketProductId.trim() || busy === 'save'}
-                >
-                  저장
-                </button>
+                </tbody>
+              </table>
+            )}
+
+            {infoTab === 'flow' && (
+              <div className={styles.flow}>
+                <ol className={styles.steps}>
+                  {steps.map((s) => (
+                    <li key={s.label} className={s.at ? '' : styles.stepOff}>
+                      <i />
+                      <b>{s.label}</b>
+                      <span>{s.at ? SHORT(s.at) : '-'}</span>
+                    </li>
+                  ))}
+                </ol>
+                <div className={styles.gaps}>
+                  {gaps.map((g, i) => (
+                    <span key={i}>{g}</span>
+                  ))}
+                </div>
+                <p className={styles.flowNote}>
+                  조사 {t.surveyCount}회{t.surveyLast && ` · 마지막 조사 ${daysAgo(t.surveyLast)}`}
+                  {PLATFORMS.map(
+                    (p) =>
+                      ` · ${p.label} ${t.uploads[p.key] ? `${SHORT(t.uploads[p.key])} 업로드` : '안 올림'}`,
+                  ).join('')}
+                </p>
               </div>
             )}
-            {listings.length === 0 && !form ? (
-              <p className={styles.empty}>
-                아직 기록이 없어요.{canEdit && ' 쿠팡에 올렸다면 쿠팡에서 불러오기를 눌러 주세요'}
-              </p>
-            ) : (
-              listings.length > 0 && (
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>판매처</th>
-                      <th>상품명</th>
-                      <th>상품번호</th>
-                      <th>옵션 · 가격</th>
-                      <th>업로드 일시</th>
-                      <th>상태</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {listings.map((l) => (
-                      <tr key={l.id}>
-                        <td>{PLATFORM_LABEL[l.platform]}</td>
-                        <td className={styles.ellipsis} title={l.title}>
-                          {l.url ? (
-                            <a href={l.url} target="_blank" rel="noreferrer">
-                              {l.title || '(상품명 없음)'} ↗
-                            </a>
-                          ) : (
-                            l.title || '(상품명 없음)'
-                          )}
-                        </td>
-                        <td
-                          className={styles.muted}
-                          title={l.source === 'api' ? '마켓에서 불러옴' : '직접 입력'}
-                        >
-                          {l.marketProductId}
-                        </td>
-                        <td className={styles.ellipsis}>
-                          {l.items.map((i) => `${i.name} ${formatWon(i.salePrice)}`).join(' / ') ||
-                            '-'}
-                        </td>
-                        <td className={styles.date}>{toKstDateTime(l.listedAt) || '-'}</td>
-                        <td>{l.status ? <Badge tone="success">{l.status}</Badge> : '-'}</td>
-                        <td>
-                          {canEdit && (
-                            <button
-                              type="button"
-                              className="btn-text btn-sm"
-                              onClick={() => remove(l)}
-                              disabled={!!busy}
-                            >
-                              지우기
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )
+
+            {infoTab === 'market' && (
+              <div>
+                {notice && <p className={styles.notice}>{notice}</p>}
+                {form && (
+                  <div className={styles.form}>
+                    <select
+                      value={form.platform}
+                      onChange={(e) => setForm({ ...form, platform: e.target.value })}
+                    >
+                      {PLATFORMS.map((p) => (
+                        <option key={p.key} value={p.key}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      placeholder="마켓 상품번호 *"
+                      value={form.marketProductId}
+                      onChange={(e) => setForm({ ...form, marketProductId: e.target.value })}
+                    />
+                    <input
+                      placeholder="상품명"
+                      value={form.title}
+                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    />
+                    <input
+                      placeholder="상품 링크"
+                      value={form.url}
+                      onChange={(e) => setForm({ ...form, url: e.target.value })}
+                    />
+                    <input
+                      type="datetime-local"
+                      title="업로드 일시"
+                      value={form.listedAt}
+                      onChange={(e) => setForm({ ...form, listedAt: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      className="btn-primary btn-sm"
+                      onClick={saveForm}
+                      disabled={!form.marketProductId.trim() || busy === 'save'}
+                    >
+                      저장
+                    </button>
+                  </div>
+                )}
+                {listings.map((l) => (
+                  <div key={l.id} className={styles.mrow}>
+                    <span className={styles.chip}>{PLATFORM_LABEL[l.platform]}</span>
+                    <HoverInfo
+                      content={
+                        <>
+                          <div className={styles.tipTitle}>{l.title || '(상품명 없음)'}</div>
+                          <div>상품번호 {l.marketProductId}</div>
+                          {l.status && <div>상태 {l.status}</div>}
+                          <div>{l.source === 'api' ? '마켓에서 불러옴' : '직접 입력'}</div>
+                        </>
+                      }
+                    >
+                      {l.url ? (
+                        <a className={styles.mtitle} href={l.url} target="_blank" rel="noreferrer">
+                          {l.items.map((i) => i.name).join(' / ') || l.title || l.marketProductId} ↗
+                        </a>
+                      ) : (
+                        <span className={styles.mtitle}>{l.title || l.marketProductId}</span>
+                      )}
+                    </HoverInfo>
+                    <span className={styles.spacer} />
+                    <span className={styles.muted}>
+                      {l.items.map((i) => wonNum(i.salePrice)).join(' / ')}
+                      {l.items.length > 0 && '원'}
+                    </span>
+                    <span className={styles.muted}>{l.listedAt ? SHORT(l.listedAt) : '-'}</span>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        className={styles.del}
+                        onClick={() => remove(l)}
+                        disabled={!!busy}
+                        aria-label="기록 지우기"
+                        title="기록 지우기 (마켓 상품은 그대로)"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {PLATFORMS.filter((p) => !listings.some((l) => l.platform === p.key)).map((p) => (
+                  <div key={p.key} className={styles.mrow}>
+                    <span className={`${styles.chip} ${styles.chipOff}`}>{p.label}</span>
+                    <span className={styles.muted}>아직 안 올림</span>
+                  </div>
+                ))}
+              </div>
             )}
           </Section>
         </div>
@@ -515,29 +629,26 @@ export default function ProductOverviewPage() {
           name="상세설명"
           id="detail"
           sub={
-            exp
-              ? `v${exp.version} · ${exp.files.length}장${exp.current ? '' : ' (예전 내용)'}`
-              : '저장된 상세 이미지 없음'
+            exp ? `v${exp.version} · ${exp.files.length}장${exp.current ? '' : ' (예전 내용)'}` : ''
           }
           flush
           fill="stretch"
           className={tabs.hide('detail')}
           action={
             <>
-              {PLATFORMS.map((p) => (
-                <button
-                  key={p.key}
-                  type="button"
-                  className={`${styles.tab} ${imgTab === p.key ? styles.tabOn : ''}`}
-                  onClick={() => setImgTab(p.key)}
-                >
-                  {p.label}
-                </button>
-              ))}
-              <Link
-                className={`btn-secondary btn-sm ${styles.btnLink}`}
-                to={`/design/${product.id}`}
-              >
+              <span className={styles.seg}>
+                {PLATFORMS.map((p) => (
+                  <button
+                    key={p.key}
+                    type="button"
+                    className={imgTab === p.key ? styles.segOn : ''}
+                    onClick={() => setImgTab(p.key)}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </span>
+              <Link className={styles.textLink} to={`/design/${product.id}`}>
                 디자인 열기
               </Link>
             </>
@@ -557,9 +668,7 @@ export default function ProductOverviewPage() {
               ))}
             </div>
           ) : (
-            <p className={styles.empty}>
-              디자인에서 확인(승인)하면 상세 이미지가 저장돼 여기 보여요
-            </p>
+            <p className={styles.empty}>디자인에서 확인(승인)하면 상세 이미지가 여기 보여요</p>
           )}
         </Section>
       </div>
