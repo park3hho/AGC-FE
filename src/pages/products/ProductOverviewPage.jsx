@@ -6,7 +6,6 @@ import { createListing, deleteListing, getListings, syncCoupangListings } from '
 import { getPricing } from '@/api/pricing'
 import { getProduct } from '@/api/product'
 import Badge from '@/components/Badge'
-import Thumb from '@/components/Thumb'
 import HoverInfo from '@/components/common/HoverInfo'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
@@ -337,7 +336,6 @@ export default function ProductOverviewPage() {
           <Section name="요약" id="summary" title={false} plain className={tabs.hide('summary')}>
             <div className={styles.kpis}>
               <div className={styles.kpi}>
-                <Thumb src={product.photoUrl} size={40} />
                 <div>
                   <small>{PLATFORM_LABEL[mainKey]} 판매가</small>
                   <b>
@@ -381,14 +379,7 @@ export default function ProductOverviewPage() {
             </div>
           </Section>
 
-          <Section
-            name="정보"
-            id="info"
-            title={false}
-            flush
-            fill="stretch"
-            className={tabs.hide('info')}
-          >
+          <Section name="정보" id="info" title={false} flush fill className={tabs.hide('info')}>
             <div className={styles.infoTabs} role="tablist">
               {[
                 ['price', '가격'],
@@ -588,7 +579,7 @@ export default function ProductOverviewPage() {
                     >
                       {l.url ? (
                         <a className={styles.mtitle} href={l.url} target="_blank" rel="noreferrer">
-                          {l.items.map((i) => i.name).join(' / ') || l.title || l.marketProductId} ↗
+                          {l.title || l.items.map((i) => i.name).join(' / ') || l.marketProductId} ↗
                         </a>
                       ) : (
                         <span className={styles.mtitle}>{l.title || l.marketProductId}</span>

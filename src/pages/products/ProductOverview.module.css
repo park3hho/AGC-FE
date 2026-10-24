@@ -315,10 +315,15 @@
 }
 
 .mtitle {
+  display: inline-block;
+  max-width: 360px;
+  overflow: hidden;
   color: var(--color-text);
   font-weight: 600;
   text-decoration: none;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 a.mtitle:hover {
