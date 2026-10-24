@@ -135,7 +135,7 @@ export default function PurchaseFormPage() {
     <form className="page-flat" onSubmit={submit}>
       <PageHeader
         title={editing ? '타오바오 구매를 고쳐요' : '타오바오에서 산 내용을 적어요'}
-        sub="저장하면 연결된 주문마다 추적 기록에 남아요"
+        sub="저장하면 이 고객 주문의 추적 기록에 남아요"
         back
         action={
           editing && (
