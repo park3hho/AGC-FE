@@ -40,6 +40,7 @@
   --sidebar-w: 216px;
   --topbar-h: 44px;
   --tabbar-h: 56px;
+  --footer-h: 28px; /* 아래 바 (데스크탑) */
   --content-max: 1280px;
 
   /* 공간 최대 활용 (DESIGN.md §4.2) — 머리·여백은 얇게 */

@@ -4,12 +4,13 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { findScreen } from '@/constants/screenConst'
 import { ScreenContext } from '@/contexts/ScreenContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import Footer from './Footer'
 import Sidebar from './Sidebar'
 import TabBar from './TabBar'
 import Topbar from './Topbar'
 import styles from './AppLayout.module.css'
 
-// 로그인 후 모든 화면의 공통 틀 — 왼쪽 메뉴 · 위쪽 바 · (모바일) 아래 탭 (DESIGN.md §4.5)
+// 로그인 후 모든 화면의 공통 틀 — 왼쪽 메뉴 · 위쪽 바 · 아래 바(데스크탑) · (모바일) 아래 탭 (DESIGN.md §4.5)
 // 틀은 브라우저 창 높이에 고정 — 페이지 전체는 스크롤되지 않는다 (DESIGN.md §4.4).
 // 화면(본문)은 content 안에서 남은 높이를 쓰고, 넘치면 fill 섹션 하나만 스크롤한다.
 export default function AppLayout() {
@@ -30,6 +31,7 @@ export default function AppLayout() {
               </Suspense>
             </ErrorBoundary>
           </div>
+          <Footer />
         </div>
         <TabBar />
       </div>

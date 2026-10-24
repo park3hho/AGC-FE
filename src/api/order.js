@@ -102,3 +102,18 @@ export const recheckPccc = async (id) => {
   })
   return { order: toOrder(data.order), events: data.events.map(toEvent), raw: data.raw_masked }
 }
+
+// 앱 아래 바 — 마켓별 마지막 수집 + 자동 수집 주기 (가벼운 조회)
+export const getCollectStatus = async () => {
+  const data = await request('/orders/collect-status', {
+    errorMsg: '수집 상태를 불러오지 못했어요',
+    authRedirect: false,
+  })
+  return {
+    lastRuns: { naver: toRun(data.last_runs.naver), coupang: toRun(data.last_runs.coupang) },
+    pollMinutes: data.poll_minutes,
+  }
+}
+
+// 주문을 가져온 뒤 아래 바가 바로 다시 읽게 알리는 이벤트 이름
+export const ORDERS_COLLECTED_EVENT = 'agc:orders-collected'

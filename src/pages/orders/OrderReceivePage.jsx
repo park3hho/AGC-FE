@@ -2,7 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { collectOrders, getOrder, getOrders, recheckPccc } from '@/api/order'
+import {
+  collectOrders,
+  getOrder,
+  getOrders,
+  ORDERS_COLLECTED_EVENT,
+  recheckPccc,
+} from '@/api/order'
 import { getPurchases } from '@/api/taobaoPurchase'
 import Badge from '@/components/Badge'
 import PageHeader from '@/components/common/PageHeader'
@@ -38,30 +44,6 @@ function MarketMark({
     <span className={`${styles.mark} ${styles[market]}`} title={MARKETS[market].label}>
       {MARKETS[market].short}
     </span>
-  )
-}
-
-// 수집 칸 1개 — 마켓별 마지막으로 가져온 시각만. 그때 받은·새·변경·검증 건수는 마우스를 올리면 (실패면 그대로 보임)
-function RunCard({
-  market, // 'naver' | 'coupang'
-  run, // object | null: 마지막 수집
-}) {
-  const detail =
-    run &&
-    `마지막 가져오기 결과 — 받은 ${run.fetched} · 새 주문 ${run.created} · 변경 ${run.changed} · 통관부호 검증 ${run.checked}`
-  return (
-    <div className={styles.run} title={run?.ok ? detail : undefined}>
-      <MarketMark market={market} />
-      <b>{MARKETS[market].label}</b>
-      {!run && <span className={styles.weak}>아직 안 가져왔어요</span>}
-      {run && (
-        <span className={styles.weak}>
-          {kstTime(run.finishedAt || run.startedAt)} · {run.trigger === 'poller' ? '자동' : '수동'}
-          {run.ok === null && ' · 가져오는 중'}
-        </span>
-      )}
-      {run?.ok === false && <span className={styles.bad}>실패 — {run.error}</span>}
-    </div>
   )
 }
 
@@ -336,6 +318,7 @@ export default function OrderReceivePage() {
     setError('')
     try {
       await collectOrders()
+      window.dispatchEvent(new Event(ORDERS_COLLECTED_EVENT)) // 아래 바도 바로 다시 읽게
       await load()
       if (selected) setDetail(await getOrder(selected))
     } catch (err) {
@@ -377,20 +360,6 @@ export default function OrderReceivePage() {
         }
       />
 
-      <Section name="수집" id="collect" title={false}>
-        <div className={styles.runs}>
-          <RunCard market="naver" run={data?.lastRuns.naver} />
-          <RunCard market="coupang" run={data?.lastRuns.coupang} />
-          <div className={styles.poll}>
-            <b>자동 수집</b>
-            <span className={styles.weak}>
-              {data?.pollMinutes ? `${data.pollMinutes}분마다` : '꺼짐 — 주기는 나중에 정해요'}
-            </span>
-          </div>
-        </div>
-        {error && <p className="form-error">{error}</p>}
-      </Section>
-
       <div className={`fit-row ${styles.split}`}>
         <Section name="접수 목록" id="list" sub={data && `${data.total}건`} flush fill>
           <div className={styles.toolbar}>
@@ -427,6 +396,7 @@ export default function OrderReceivePage() {
               </button>
             ))}
           </div>
+          {error && <p className={`form-error ${styles.pad}`}>{error}</p>}
 
           {data && data.items.length === 0 && (
             <p className={styles.empty}>
