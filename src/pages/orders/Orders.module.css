@@ -480,10 +480,10 @@
   font-weight: 600;
 }
 
-/* 추적 기록 — 한 줄엔 시각 · 단계 · 종류만. 내용 칸(.pop)은 body 위에 fixed 로 뜬다 (EventRow) */
+/* 추적 기록 — 한 줄엔 시각 · 단계 · 종류만. 누르면 내용 칸(.pop)이 body 위에 fixed 로 뜬다 (EventRow) */
 .event {
   outline: none;
-  cursor: default;
+  cursor: pointer;
 }
 
 .event:hover,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
@@ -128,16 +128,18 @@ function TraceProgress({
   )
 }
 
-// 추적 기록 1줄 — 시각 · 단계(중분류) · 종류만. 마우스를 올리면(누르면) 내용 칸이 뜬다
+// 추적 기록 1줄 — 시각 · 단계(중분류) · 종류만. 누르면 내용 칸이 뜬다 (한 번에 하나, 바깥 누르기·스크롤·Esc 로 닫힘)
 // 내용 칸은 섹션 스크롤에 잘리지 않게 body 위에 fixed 로 그린다 (아래 자리가 모자라면 위로)
 function EventRow({
   event, // object: 주문 기록
-  onPurchase, // function?: 타오바오 구매 기록이면 그 구매 열기
+  onPurchase, // function?: 타오바오 구매 기록이면 그 구매 열기 (누르면 바로 이동)
+  popOpen, // boolean: 내용 칸이 열려 있는지 (한 번에 하나 — 부모가 정함)
+  onTogglePop, // function(open: boolean): 내용 칸 열기·닫기
 }) {
   const [open, setOpen] = useState(false) // 보낸 값·받은 값 펼침
-  const [pos, setPos] = useState(null) // 내용 칸 위치 (null = 닫힘)
+  const [pos, setPos] = useState(null) // 내용 칸 위치
   const rowRef = useRef(null)
-  const closeTimer = useRef(null)
+  const popRef = useRef(null)
   const actor = ACTOR[event.actorType] || ACTOR.system
   const d = event.data || {}
   const hasData = Object.keys(d).length > 0
@@ -149,49 +151,58 @@ function EventRow({
   const refs = Object.entries(d.refs || {}).filter(([, v]) => v)
   const bad = event.kind === 'pccc_check' && d.result?.status && d.result.status !== 'ok'
 
-  const show = () => {
-    clearTimeout(closeTimer.current)
+  // 열릴 때 줄 위치에 맞춰 칸 자리를 잡는다 (아래 자리가 모자라면 위로)
+  useLayoutEffect(() => {
+    if (!popOpen) {
+      setPos(null)
+      return
+    }
     const r = rowRef.current?.getBoundingClientRect()
     if (!r) return
     const width = Math.max(r.width, 300)
     const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8))
-    const roomBelow = window.innerHeight - r.bottom
     setPos(
-      roomBelow < 180
+      window.innerHeight - r.bottom < 180
         ? { left, width, bottom: window.innerHeight - r.top + 2 }
         : { left, width, top: r.bottom - 2 },
     )
-  }
-  const hide = () => {
-    clearTimeout(closeTimer.current)
-    closeTimer.current = setTimeout(() => setPos(null), 120) // 내용 칸으로 마우스를 옮길 틈
-  }
+  }, [popOpen])
 
-  // 스크롤하면 자리가 어긋나니 닫는다
+  // 바깥을 누르거나 스크롤·창 크기 바꿈·Esc 면 닫는다
   useEffect(() => {
-    if (!pos) return undefined
-    const close = () => setPos(null)
+    if (!popOpen) return undefined
+    const close = () => onTogglePop(false)
+    const outside = (e) => {
+      if (rowRef.current?.contains(e.target) || popRef.current?.contains(e.target)) return
+      close()
+    }
+    const esc = (e) => e.key === 'Escape' && close()
+    document.addEventListener('mousedown', outside)
     window.addEventListener('scroll', close, true)
     window.addEventListener('resize', close)
+    window.addEventListener('keydown', esc)
     return () => {
+      document.removeEventListener('mousedown', outside)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+      window.removeEventListener('keydown', esc)
+    }
+  }, [popOpen, onTogglePop])
+
+  return () => {
       window.removeEventListener('scroll', close, true)
       window.removeEventListener('resize', close)
     }
   }, [pos])
 
-  useEffect(() => () => clearTimeout(closeTimer.current), [])
-
   return (
     <li
       ref={rowRef}
-      className={`${styles.event} ${pos ? styles.eventOn : ''} ${onPurchase ? styles.eventLink : ''}`}
+      className={`${styles.event} ${popOpen ? styles.eventOn : ''} ${onPurchase ? styles.eventLink : ''}`}
       tabIndex={0}
-      onMouseEnter={show}
-      onMouseLeave={hide}
-      onFocus={show}
-      onBlur={hide}
       // 타오바오 구매 기록은 누르면 바로 그 구매 화면으로, 나머지는 내용 칸 열고 닫기
-      onClick={() => (onPurchase ? onPurchase() : pos ? setPos(null) : show())}
+      onClick={() => (onPurchase ? onPurchase() : onTogglePop(!popOpen))}
+      onKeyDown={(e) => e.key === 'Enter' && (onPurchase ? onPurchase() : onTogglePop(!popOpen))}
     >
       <div className={styles.eventHead}>
         <span className={styles.eventTime}>{kst(occurred).slice(5)}</span>
@@ -209,14 +220,14 @@ function EventRow({
         {onPurchase && <span className={styles.go}>구매 보기 ›</span>}
       </div>
       {open && <pre className={styles.eventData}>{JSON.stringify(d, null, 2)}</pre>}
-      {pos &&
+      {popOpen &&
+        pos &&
         createPortal(
           <div
             className={styles.pop}
             style={pos}
             role="tooltip"
-            onMouseEnter={() => clearTimeout(closeTimer.current)}
-            onMouseLeave={hide}
+            ref={popRef}
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.eventSummary}>{event.summary}</div>
@@ -267,6 +278,7 @@ export default function OrderReceivePage() {
   const [detail, setDetail] = useState(null) // { order, events }
   const [error, setError] = useState('')
   const [busy, setBusy] = useState('') // 'collect' | 'recheck' | ''
+  const [popId, setPopId] = useState(null) // 내용 칸이 열린 추적 기록 줄 (한 번에 하나)
   const [view, setView] = useState('trace') // 추적 기록 섹션 보기: trace 기록 · detail 주문 상세 · raw 마켓 원본
 
   const stage = params.get('stage') || 'received' // 목록 단계 탭
@@ -560,6 +572,8 @@ export default function OrderReceivePage() {
                   <EventRow
                     key={e.id}
                     event={e}
+                    popOpen={popId === e.id}
+                    onTogglePop={(open) => setPopId(open ? e.id : null)}
                     onPurchase={
                       e.data?.purchase_id ? () => openPurchase(e.data.purchase_id) : undefined
                     }
