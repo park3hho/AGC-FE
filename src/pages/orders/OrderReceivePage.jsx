@@ -96,6 +96,8 @@ const stepOf = (e) => {
   const d = e.data || {}
   if (d.step) return d.step
   if (e.kind === 'pccc_check') return d.result?.status === 'ok' ? '확인' : null
+  // 마켓에서 발주확인된 걸 수집으로 알게 된 경우 (AGC 버튼으로 보낸 게 아님) — 주문 변경의 발주확인 false→true
+  if (e.kind === 'changed') return d.diff?.confirmed?.[1] === true ? '발주확인' : null
   if (e.kind === 'purchase_changed') {
     const to = d.changes?.cn_status?.to
     return to === 'shipped' ? '중국 내 배송' : to === 'arrived' ? '배대지 입고' : null
