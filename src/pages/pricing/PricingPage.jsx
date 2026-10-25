@@ -185,7 +185,6 @@ export default function PricingPage() {
   const [data, setData] = useState(null) // { product, survey, fx, options }
   const [saved, setSaved] = useState(null) // { [platform]: Pricing } — 마지막으로 서버에서 받은 값
   const [forms, setForms] = useState(null) // { [platform]: form }
-  const [tab, setTab] = useState(null) // 지금 보는 판매처 key
   const [error, setError] = useState('')
   const [bulk, setBulk] = useState({
     mode: BULK_MODES[0].key, // 기본 = 목표 차익
@@ -235,7 +234,6 @@ export default function PricingPage() {
 
   const { product, survey, fx, options } = data
   const platforms = PLATFORMS.filter((p) => saved[p.key])
-  const cur = platforms.find((p) => p.key === tab) || platforms[0]
   const hide = (id) => (survey ? tabs.hide(id) : '')
   const states = survey
     ? Object.fromEntries(
@@ -258,8 +256,6 @@ export default function PricingPage() {
       ...f,
       [platformKey]: { ...f[platformKey], prices: { ...f[platformKey].prices, [optionId]: value } },
     }))
-  const setFee = (platformKey, field, value) =>
-    setForms((f) => ({ ...f, [platformKey]: { ...f[platformKey], [field]: value } }))
   // 대표 옵션 고르기 (네이버) — 같은 상품의 다른 직접 대표는 풀고, 직접 고른 대표를 다시 누르면 자동으로
   const setBase = (platformKey, optionId) =>
     setForms((f) => {
@@ -398,16 +394,16 @@ export default function PricingPage() {
     statusCls = styles.weak
   }
 
-  const st = survey ? states[cur.key] : null
-  const fxNow = st ? effectiveFxRate(st.settings) : null
-  const isAddon = cur?.key === naverKey
   const bulkMode = BULK_MODES.find((m) => m.key === bulk.mode) || BULK_MODES[0]
   const bulkWon = bulkMode.unit === '원'
+  // 원가 표시는 첫 판매처 환율 설정 기준 (판매처 모두 같은 환율)
+  const costSettings = survey ? states[platforms[0].key].settings : null
 
-  // 옵션 1개의 구성 (지금 판매처)
-  const partsOf = (o, r) => {
-    const goods = cnyToKrw(o.priceCny, fxNow)
-    const ship = cnyToKrw(o.shippingCny, fxNow)
+  // 옵션 1개 · 판매처 1곳의 구성 — 판매가 = 상품 + 배송 + 수수료 + 차익
+  const partsOf = (o, r, settings) => {
+    const fxRate = effectiveFxRate(settings)
+    const goods = cnyToKrw(o.priceCny, fxRate)
+    const ship = cnyToKrw(o.shippingCny, fxRate)
     return [
       { label: `상품 ${formatCny(o.priceCny)}`, value: goods, color: MIX.goods },
       {
@@ -474,45 +470,29 @@ export default function PricingPage() {
             fill="stretch"
             className={hide('prices')}
           >
-            <div className={styles.tabs} role="tablist" aria-label="판매처">
-              {platforms.map((p) => {
-                const ts = tabStatus(p)
-                return (
-                  <button
-                    key={p.key}
-                    type="button"
-                    role="tab"
-                    aria-selected={cur.key === p.key}
-                    className={cur.key === p.key ? styles.tabOn : ''}
-                    onClick={() => setTab(p.key)}
-                  >
-                    {p.label}
-                    <span className={`${styles.dot} ${ts.cls}`}>{ts.text}</span>
-                  </button>
-                )
-              })}
-            </div>
-
             <table className={styles.table}>
               <thead>
                 <tr>
                   <th>옵션</th>
                   <th className={styles.num}>원가</th>
-                  <th className={styles.num}>판매가</th>
-                  {isAddon && <th>대표·추가금</th>}
-                  <th>가격 구조</th>
-                  <th className={styles.num}>차익</th>
-                  <th className={styles.num}>마진</th>
+                  {platforms.map((p) => {
+                    const ts = tabStatus(p)
+                    const fee = totalFeeRate(states[p.key].settings)
+                    return (
+                      <th key={p.key} className={styles.platHead}>
+                        {p.label}
+                        <span className={`${styles.dot} ${ts.cls}`}>{ts.text}</span>
+                        <span className={styles.feeNote}>
+                          수수료 {trimDecimal(fee.toFixed(2))}%
+                        </span>
+                      </th>
+                    )
+                  })}
                 </tr>
               </thead>
               <tbody>
                 {options.map((o) => {
-                  const r = st.results[o.id]
-                  const cost = costWithShipping(o, st.settings)
-                  const value = forms[cur.key].prices[o.id]
-                  const addon = isAddon && naver ? naver.byId[o.id] : null
-                  const parts = r ? partsOf(o, r) : null
-                  const total = r ? Math.max(r.totalCost + r.fee, toNum(value)) : 0
+                  const cost = costSettings ? costWithShipping(o, costSettings) : null
                   return (
                     <tr key={o.id}>
                       <td>
@@ -533,7 +513,12 @@ export default function PricingPage() {
                             content={
                               <>
                                 <div className={styles.tipTitle}>원가 {formatWon(cost)}</div>
-                                <Legend parts={partsOf(o, { fee: 0, profit: 0 }).slice(0, 2)} />
+                                <Legend
+                                  parts={partsOf(o, { fee: 0, profit: 0 }, costSettings).slice(
+                                    0,
+                                    2,
+                                  )}
+                                />
                                 <div className={styles.tipNote}>
                                   위안 × {formatFx(fx.cnyKrw)}원 (오늘 환율)
                                 </div>
@@ -544,147 +529,158 @@ export default function PricingPage() {
                           </HoverInfo>
                         )}
                       </td>
-                      <td className={styles.num}>
-                        <input
-                          className={`${styles.priceInput} ${
-                            invalidPrice(value)
-                              ? styles.invalid
-                              : st.changedIds.has(o.id)
-                                ? styles.changed
-                                : ''
-                          }`}
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="판매가"
-                          aria-label={`${optionName(o)} ${cur.label} 판매가`}
-                          value={withCommas(value)}
-                          onChange={(e) => setPrice(cur.key, o.id, digitsOnly(e.target.value))}
-                        />
-                      </td>
-                      {isAddon && (
-                        <td>
-                          {addon && (naver.groups.length > 1 || addon.manualGroup) && (
-                            <select
-                              className={`${styles.groupSelect} ${
-                                addon.manualGroup ? styles.groupManual : ''
-                              }`}
-                              value={addon.manualGroup ? String(addon.group) : ''}
-                              title={
-                                addon.manualGroup
-                                  ? '직접 정한 상품 번호'
-                                  : '자동으로 나눈 상품 번호'
-                              }
-                              aria-label={`${optionName(o)} 네이버 상품 번호`}
-                              onChange={(e) =>
-                                setGroup(
-                                  cur.key,
-                                  o.id,
-                                  e.target.value === '' ? null : Number(e.target.value),
-                                )
-                              }
-                            >
-                              <option value="">
-                                상품 {addon.manualGroup ? '자동' : addon.group}
-                              </option>
-                              {Array.from({ length: naver.groups.length + 1 }, (_, i) => i + 1).map(
-                                (n) => (
-                                  <option key={n} value={n}>
-                                    {n > naver.groups.length ? `상품 ${n} (새로)` : `상품 ${n}`}
-                                  </option>
-                                ),
-                              )}
-                            </select>
-                          )}
-                          {addon && (
-                            <button
-                              type="button"
-                              className={`${styles.addon} ${addon.isBase ? styles.addonBase : ''} ${
-                                addon.over ? styles.addonOver : ''
-                              }`}
-                              title={
-                                addon.isBase
-                                  ? addon.autoBase
-                                    ? '자동으로 고른 대표 옵션'
-                                    : '직접 고른 대표 — 누르면 자동으로'
-                                  : addon.over
-                                    ? '추가금 한도를 넘어요 — 누르면 이 옵션을 대표로'
-                                    : '누르면 이 옵션을 대표로'
-                              }
-                              onClick={() => setBase(cur.key, o.id)}
-                              disabled={addon.isBase && addon.autoBase}
-                            >
-                              {addon.isBase
-                                ? addon.autoBase
-                                  ? '대표(자동)'
-                                  : '대표'
-                                : formatAddon(addon.amount)}
-                            </button>
-                          )}
-                        </td>
-                      )}
-                      <td>
-                        {r ? (
-                          <HoverInfo
-                            content={
-                              <>
-                                <div className={styles.tipTitle}>
-                                  {cur.label} {formatWon(toNum(value))} 구성
-                                </div>
-                                <PriceBar parts={parts} total={total} loss={r.profit < 0} wide />
-                                <Legend
-                                  parts={
-                                    r.profit < 0
-                                      ? [
-                                          ...parts,
-                                          {
-                                            label: '손해',
-                                            value: r.profit,
-                                            color: 'var(--color-danger)',
-                                          },
-                                        ]
-                                      : parts
+                      {platforms.map((p) => {
+                        const s = states[p.key]
+                        const r = s.results[o.id]
+                        const value = forms[p.key].prices[o.id]
+                        const addon = p.key === naverKey && naver ? naver.byId[o.id] : null
+                        const parts = r ? partsOf(o, r, s.settings) : null
+                        const total = r ? Math.max(r.totalCost + r.fee, toNum(value)) : 0
+                        return (
+                          <td key={p.key} className={styles.platCell}>
+                            <div className={styles.cellTop}>
+                              <input
+                                className={`${styles.priceInput} ${
+                                  invalidPrice(value)
+                                    ? styles.invalid
+                                    : s.changedIds.has(o.id)
+                                      ? styles.changed
+                                      : ''
+                                }`}
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="판매가"
+                                aria-label={`${optionName(o)} ${p.label} 판매가`}
+                                value={withCommas(value)}
+                                onChange={(e) => setPrice(p.key, o.id, digitsOnly(e.target.value))}
+                              />
+                              {addon && (naver.groups.length > 1 || addon.manualGroup) && (
+                                <select
+                                  className={`${styles.groupSelect} ${
+                                    addon.manualGroup ? styles.groupManual : ''
+                                  }`}
+                                  value={addon.manualGroup ? String(addon.group) : ''}
+                                  title={
+                                    addon.manualGroup
+                                      ? '직접 정한 상품 번호'
+                                      : '자동으로 나눈 상품 번호'
                                   }
-                                />
-                              </>
-                            }
-                          >
-                            <PriceBar parts={parts} total={total} loss={r.profit < 0} />
-                          </HoverInfo>
-                        ) : (
-                          <span className={styles.weak}>-</span>
-                        )}
-                      </td>
-                      <td className={`${styles.num} ${r && r.profit < 0 ? styles.bad : ''}`}>
-                        <b>{r ? formatWon(r.profit) : '-'}</b>
-                      </td>
-                      <td className={`${styles.num} ${marginClass(r)}`}>
-                        {r ? formatPct(r.marginPct) : '-'}
-                      </td>
+                                  aria-label={`${optionName(o)} 네이버 상품 번호`}
+                                  onChange={(e) =>
+                                    setGroup(
+                                      p.key,
+                                      o.id,
+                                      e.target.value === '' ? null : Number(e.target.value),
+                                    )
+                                  }
+                                >
+                                  <option value="">
+                                    상품 {addon.manualGroup ? '자동' : addon.group}
+                                  </option>
+                                  {Array.from(
+                                    { length: naver.groups.length + 1 },
+                                    (_, k) => k + 1,
+                                  ).map((n) => (
+                                    <option key={n} value={n}>
+                                      {n > naver.groups.length ? `상품 ${n} (새로)` : `상품 ${n}`}
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
+                              {addon && (
+                                <button
+                                  type="button"
+                                  className={`${styles.addon} ${addon.isBase ? styles.addonBase : ''} ${
+                                    addon.over ? styles.addonOver : ''
+                                  }`}
+                                  title={
+                                    addon.isBase
+                                      ? addon.autoBase
+                                        ? '자동으로 고른 대표 옵션'
+                                        : '직접 고른 대표 — 누르면 자동으로'
+                                      : addon.over
+                                        ? '추가금 한도를 넘어요 — 누르면 이 옵션을 대표로'
+                                        : '누르면 이 옵션을 대표로'
+                                  }
+                                  onClick={() => setBase(p.key, o.id)}
+                                  disabled={addon.isBase && addon.autoBase}
+                                >
+                                  {addon.isBase
+                                    ? addon.autoBase
+                                      ? '대표(자동)'
+                                      : '대표'
+                                    : formatAddon(addon.amount)}
+                                </button>
+                              )}
+                            </div>
+                            <div className={styles.cellBottom}>
+                              {r ? (
+                                <>
+                                  <HoverInfo
+                                    content={
+                                      <>
+                                        <div className={styles.tipTitle}>
+                                          {p.label} {formatWon(toNum(value))} 구성
+                                        </div>
+                                        <PriceBar
+                                          parts={parts}
+                                          total={total}
+                                          loss={r.profit < 0}
+                                          wide
+                                        />
+                                        <Legend
+                                          parts={
+                                            r.profit < 0
+                                              ? [
+                                                  ...parts,
+                                                  {
+                                                    label: '손해',
+                                                    value: r.profit,
+                                                    color: 'var(--color-danger)',
+                                                  },
+                                                ]
+                                              : parts
+                                          }
+                                        />
+                                      </>
+                                    }
+                                  >
+                                    <PriceBar parts={parts} total={total} loss={r.profit < 0} />
+                                  </HoverInfo>
+                                  <span className={r.profit < 0 ? styles.bad : ''}>
+                                    {formatWon(r.profit)}
+                                  </span>
+                                  <span className={marginClass(r)}>{formatPct(r.marginPct)}</span>
+                                </>
+                              ) : (
+                                <span className={styles.weak}>판매가를 넣어 주세요</span>
+                              )}
+                            </div>
+                          </td>
+                        )
+                      })}
                     </tr>
                   )
                 })}
               </tbody>
             </table>
 
-            {st.stale && (
-              <p className={styles.notice}>
-                {cur.label}: 새 가격 조사가 있어요. 판매가를 다시 넣고 저장하세요
-              </p>
-            )}
-            {st.feeTooHigh && (
-              <p className={styles.notice}>
-                <b>수수료 합계가 100% 이상이에요</b>
-              </p>
-            )}
+            {platforms
+              .filter((p) => states[p.key].stale)
+              .map((p) => (
+                <p key={p.key} className={styles.notice}>
+                  {p.label}: 새 가격 조사가 있어요. 판매가를 다시 넣고 저장하세요
+                </p>
+              ))}
             {/* 네이버 — 직접 정한 묶음·대표 때문에 한도를 넘는 상품 */}
-            {isAddon &&
-              naver &&
+            {naver &&
               naver.groups
                 .filter((g) => g.overIds.length > 0)
                 .map((g) => (
                   <p key={g.no} className={styles.notice}>
                     <b>
-                      {naver.groups.length > 1 ? `상품 ${g.no} ` : ''}등록 불가 {g.overIds.length}건
+                      네이버{naver.groups.length > 1 ? ` 상품 ${g.no}` : ''} 등록 불가{' '}
+                      {g.overIds.length}건
                     </b>{' '}
                     · 대표가 {formatWon(g.base)} 기준 추가금은 {formatAddon(g.range.min)} ~{' '}
                     {formatAddon(g.range.max)}원까지예요
@@ -768,7 +764,11 @@ export default function PricingPage() {
               </div>
             </Section>
 
-            <Section name="한 번에 맞추기" id="bulk" className={hide('side')}>
+            <Section
+              name="한 번에 맞추기"
+              id="bulk"
+              className={`${styles.bottomGroup} ${hide('side')}`}
+            >
               <div className={styles.row}>
                 <span className={styles.gridLabel}>방식</span>
                 <select
@@ -820,9 +820,16 @@ export default function PricingPage() {
                   />
                 ))}
               </div>
+              {bulkMsg.text && (
+                <p className={bulkMsg.error ? styles.hintError : styles.hint}>{bulkMsg.text}</p>
+              )}
+            </Section>
+
+            {/* 저장 · 다음 — 오른쪽 열 맨 아래 */}
+            <Section name="저장" id="save" sub={<span className={statusCls}>● {statusText}</span>}>
               <button
                 type="button"
-                className={`btn-secondary btn-sm ${styles.applyBtn}`}
+                className={`btn-secondary btn-md ${styles.applyBtn}`}
                 onClick={applyBulk}
                 title={
                   bulk.mode === 'sale'
@@ -832,43 +839,7 @@ export default function PricingPage() {
               >
                 쿠팡·네이버 한 번에 적용
               </button>
-              {bulkMsg.text && (
-                <p className={bulkMsg.error ? styles.hintError : styles.hint}>{bulkMsg.text}</p>
-              )}
-            </Section>
 
-            <Section name="수수료" id="fees" className={hide('side')}>
-              <div className={styles.grid} style={{ '--cols': platforms.length }}>
-                <span />
-                {platforms.map((p) => (
-                  <span key={p.key} className={styles.gridHead}>
-                    {p.label}
-                  </span>
-                ))}
-                {FEE_FIELDS.map((f) => (
-                  <Fragment key={f.key}>
-                    <span className={styles.gridLabel}>{f.label} %</span>
-                    {platforms.map((p) => (
-                      <input
-                        key={p.key}
-                        className={`${styles.input} ${states[p.key].errors[f.key] ? styles.inputError : ''}`}
-                        type="text"
-                        inputMode="decimal"
-                        aria-label={`${p.label} ${f.label} 수수료 (%)`}
-                        value={forms[p.key][f.key]}
-                        onChange={(e) =>
-                          setFee(p.key, f.key, e.target.value.replace(/[^0-9.]/g, ''))
-                        }
-                      />
-                    ))}
-                  </Fragment>
-                ))}
-              </div>
-            </Section>
-
-            {/* 저장 · 다음 — 오른쪽 열 맨 아래 */}
-            <Section name="저장" id="save" className={styles.saveSection}>
-              <div className={`${styles.status} ${statusCls}`}>● {statusText}</div>
               {saveError && <p className={styles.hintError}>{saveError}</p>}
               <div className={styles.saveRow}>
                 <button

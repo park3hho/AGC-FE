@@ -389,7 +389,7 @@
   min-height: 0;
 }
 
-.saveSection {
+.bottomGroup {
   margin-top: auto;
 }
 
@@ -438,7 +438,41 @@
 
 .applyBtn {
   width: 100%;
-  margin-top: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+/* 쿠팡·네이버 나란히 — 칸마다 판매가(+네이버 대표·추가금) 위, 구조 막대·차익·마진 아래 */
+.platHead {
+  min-width: 260px;
+}
+
+.feeNote {
+  margin-left: 8px;
+  color: var(--color-text-weak);
+  font-weight: 400;
+}
+
+.platCell {
+  border-left: 1px solid var(--color-border);
+}
+
+.cellTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cellBottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cellBottom .bar {
+  width: 120px;
 }
 
 @media (max-width: 768px) {
