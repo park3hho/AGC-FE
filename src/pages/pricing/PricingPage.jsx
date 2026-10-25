@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { getPricing, savePricing } from '@/api/pricing'
@@ -11,7 +11,6 @@ import Section from '@/components/common/Section'
 import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
 import {
   BULK_MODES,
-  BULK_TARGET_ALL,
   FX_SOURCE_LABEL,
   GOOD_MARGIN_PCT,
   LOW_MARGIN_PCT,
@@ -190,8 +189,8 @@ export default function PricingPage() {
   const [error, setError] = useState('')
   const [bulk, setBulk] = useState({
     mode: BULK_MODES[0].key, // 기본 = 목표 차익
-    amount: BULK_MODES[0].initial,
-    target: 'tab', // 'tab' = 지금 탭의 판매처 · BULK_TARGET_ALL = 모든 판매처
+    // 판매처별 값 — 쿠팡·네이버를 나란히 넣고 '적용' 한 번에 둘 다 바꾼다 (비우면 그 판매처는 그대로)
+    amounts: Object.fromEntries(PLATFORMS.map((p) => [p.key, BULK_MODES[0].initial])),
   })
   const [bulkMsg, setBulkMsg] = useState(EMPTY_MSG)
   const [saving, setSaving] = useState(false)
@@ -283,8 +282,8 @@ export default function PricingPage() {
     })
 
   const applyBulk = () => {
-    if (bulk.amount === '') return setBulkMsg({ text: '값을 입력하세요', error: true })
-    const targets = bulk.target === BULK_TARGET_ALL ? platforms : [cur]
+    const targets = platforms.filter((p) => (bulk.amounts[p.key] ?? '') !== '')
+    if (!targets.length) return setBulkMsg({ text: '값을 입력하세요', error: true })
     const nextForms = { ...forms }
     let skipped = 0
     for (const p of targets) {
@@ -292,11 +291,12 @@ export default function PricingPage() {
       if (bulk.mode !== 'sale' && !st.feeReady) {
         return setBulkMsg({ text: `${p.label} 수수료를 먼저 확인해 주세요`, error: true })
       }
+      const amount = bulk.amounts[p.key]
       const prices = { ...forms[p.key].prices }
       for (const o of options) {
         let price
         if (bulk.mode === 'sale') {
-          price = Math.round(toNum(bulk.amount))
+          price = Math.round(toNum(amount))
           if (!(price >= 1)) {
             return setBulkMsg({ text: '판매가는 1원 이상으로 입력하세요', error: true })
           }
@@ -307,10 +307,13 @@ export default function PricingPage() {
           }
           price =
             bulk.mode === 'profit'
-              ? salePriceForProfit(o, bulk.amount, st.settings)
-              : salePriceForMargin(o, bulk.amount, st.settings)
+              ? salePriceForProfit(o, amount, st.settings)
+              : salePriceForMargin(o, amount, st.settings)
           if (price == null) {
-            return setBulkMsg({ text: '이 값으로는 판매가를 계산할 수 없어요', error: true })
+            return setBulkMsg({
+              text: `${p.label}: 이 값으로는 판매가를 계산할 수 없어요`,
+              error: true,
+            })
           }
         }
         prices[o.id] = String(price)
@@ -379,6 +382,9 @@ export default function PricingPage() {
     if (s.changeCount > 0) return { cls: styles.warn, text: `변경 ${s.changeCount}` }
     if (s.stale) return { cls: styles.warn, text: '새 조사' }
     if (!saved[p.key].saved) return { cls: styles.weak, text: '저장 안 됨' }
+    if (options.every((o) => forms[p.key].prices[o.id] === '')) {
+      return { cls: styles.warn, text: '판매가 없음' }
+    }
     return { cls: styles.ok, text: '저장됨' }
   }
 
@@ -698,8 +704,164 @@ export default function PricingPage() {
                 ))}
           </Section>
 
-          <div className="fit-col">
-            <Section name="저장" id="save">
+          <div className={`fit-col ${styles.side}`}>
+            {/* 요약 · 맞추기 · 수수료는 쿠팡·네이버를 나란히 (열 = 판매처) */}
+            <Section name="요약" id="summary" className={hide('side')}>
+              <div className={styles.grid} style={{ '--cols': platforms.length }}>
+                <span />
+                {platforms.map((p) => (
+                  <span key={p.key} className={styles.gridHead}>
+                    {p.label}
+                  </span>
+                ))}
+                <span className={styles.gridLabel}>평균 마진</span>
+                {platforms.map((p) => (
+                  <b key={p.key}>{formatPct(states[p.key].summary.avgMarginPct)}</b>
+                ))}
+                <span className={styles.gridLabel}>최저 차익</span>
+                {platforms.map((p) => (
+                  <b key={p.key} className={states[p.key].summary.minProfit < 0 ? styles.bad : ''}>
+                    {formatWon(states[p.key].summary.minProfit)}
+                  </b>
+                ))}
+                <span className={styles.gridLabel}>손해 옵션</span>
+                {platforms.map((p) => (
+                  <b key={p.key} className={states[p.key].summary.lossCount > 0 ? styles.bad : ''}>
+                    {states[p.key].summary.lossCount}개
+                  </b>
+                ))}
+                {naver && (
+                  <>
+                    <span className={styles.gridLabel}>등록 상품</span>
+                    {platforms.map((p) =>
+                      p.key === naverKey ? (
+                        <HoverInfo
+                          key={p.key}
+                          content={
+                            naver.groups.length > 1 && (
+                              <>
+                                <div className={styles.tipTitle}>
+                                  네이버는 상품 {naver.groups.length}개로 나눠 등록해요
+                                </div>
+                                <ul className={styles.groups}>
+                                  {naver.groups.map((g) => (
+                                    <li key={g.no}>
+                                      상품 {g.no} · 대표 {optionName(optionById[g.baseId])}{' '}
+                                      {formatWon(g.base)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            )
+                          }
+                        >
+                          <b>{naver.groups.length}개</b>
+                        </HoverInfo>
+                      ) : (
+                        <b key={p.key} className={styles.weak}>
+                          옵션별
+                        </b>
+                      ),
+                    )}
+                  </>
+                )}
+              </div>
+            </Section>
+
+            <Section name="한 번에 맞추기" id="bulk" className={hide('side')}>
+              <div className={styles.grid} style={{ '--cols': platforms.length }}>
+                <select
+                  className={styles.select}
+                  value={bulk.mode}
+                  aria-label="맞추는 방식"
+                  onChange={(e) => {
+                    const m = BULK_MODES.find((x) => x.key === e.target.value)
+                    setBulk({
+                      mode: m.key,
+                      amounts: Object.fromEntries(platforms.map((p) => [p.key, m.initial])),
+                    })
+                    setBulkMsg(EMPTY_MSG)
+                  }}
+                >
+                  {BULK_MODES.map((m) => (
+                    <option key={m.key} value={m.key}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+                {platforms.map((p) => (
+                  <span key={p.key} className={styles.gridHead}>
+                    {p.label} ({bulkMode.unit})
+                  </span>
+                ))}
+                <span />
+                {platforms.map((p) => (
+                  <input
+                    key={p.key}
+                    className={styles.input}
+                    type="text"
+                    inputMode={bulkWon ? 'numeric' : 'decimal'}
+                    placeholder="그대로"
+                    aria-label={`${p.label} ${bulkMode.label}`}
+                    value={
+                      bulkWon ? withCommas(bulk.amounts[p.key] ?? '') : (bulk.amounts[p.key] ?? '')
+                    }
+                    onChange={(e) => {
+                      const v = bulkWon
+                        ? digitsOnly(e.target.value)
+                        : e.target.value.replace(/[^0-9.]/g, '')
+                      setBulk((b) => ({ ...b, amounts: { ...b.amounts, [p.key]: v } }))
+                      setBulkMsg(EMPTY_MSG)
+                    }}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                className={`btn-secondary btn-sm ${styles.applyBtn}`}
+                onClick={applyBulk}
+              >
+                쿠팡·네이버 한 번에 적용
+              </button>
+              <p className={bulkMsg.error ? styles.hintError : styles.hint}>
+                {bulkMsg.text ||
+                  (bulk.mode === 'sale'
+                    ? '모든 옵션에 같은 판매가 · 비운 판매처는 그대로'
+                    : '100원 단위로 올림 · 비운 판매처는 그대로')}
+              </p>
+            </Section>
+
+            <Section name="수수료" id="fees" className={hide('side')}>
+              <div className={styles.grid} style={{ '--cols': platforms.length }}>
+                <span />
+                {platforms.map((p) => (
+                  <span key={p.key} className={styles.gridHead}>
+                    {p.label}
+                  </span>
+                ))}
+                {FEE_FIELDS.map((f) => (
+                  <Fragment key={f.key}>
+                    <span className={styles.gridLabel}>{f.label} %</span>
+                    {platforms.map((p) => (
+                      <input
+                        key={p.key}
+                        className={`${styles.input} ${states[p.key].errors[f.key] ? styles.inputError : ''}`}
+                        type="text"
+                        inputMode="decimal"
+                        aria-label={`${p.label} ${f.label} 수수료 (%)`}
+                        value={forms[p.key][f.key]}
+                        onChange={(e) =>
+                          setFee(p.key, f.key, e.target.value.replace(/[^0-9.]/g, ''))
+                        }
+                      />
+                    ))}
+                  </Fragment>
+                ))}
+              </div>
+            </Section>
+
+            {/* 저장 · 다음 — 오른쪽 열 맨 아래 */}
+            <Section name="저장" id="save" className={styles.saveSection}>
               <div className={`${styles.status} ${statusCls}`}>● {statusText}</div>
               {saveError && <p className={styles.hintError}>{saveError}</p>}
               <div className={styles.saveRow}>
@@ -730,125 +892,6 @@ export default function PricingPage() {
                   </button>
                 )}
               </div>
-            </Section>
-            <Section name="요약" id="summary" sub={cur.label} className={hide('side')}>
-              <div className={styles.kv}>
-                <span>평균 마진</span>
-                <b>{formatPct(st.summary.avgMarginPct)}</b>
-              </div>
-              <div className={styles.kv}>
-                <span>최저 차익</span>
-                <b className={st.summary.minProfit < 0 ? styles.bad : ''}>
-                  {formatWon(st.summary.minProfit)}
-                </b>
-              </div>
-              <div className={styles.kv}>
-                <span>손해 옵션</span>
-                <b className={st.summary.lossCount > 0 ? styles.bad : ''}>
-                  {st.summary.lossCount}개
-                </b>
-              </div>
-              {isAddon && naver && (
-                <>
-                  <div className={styles.kv}>
-                    <span>네이버 상품</span>
-                    <HoverInfo
-                      content={
-                        naver.groups.length > 1 && (
-                          <>
-                            <div className={styles.tipTitle}>
-                              네이버는 상품 {naver.groups.length}개로 나눠 등록해요
-                            </div>
-                            <ul className={styles.groups}>
-                              {naver.groups.map((g) => (
-                                <li key={g.no}>
-                                  상품 {g.no} · 대표 {optionName(optionById[g.baseId])}{' '}
-                                  {formatWon(g.base)}
-                                </li>
-                              ))}
-                            </ul>
-                          </>
-                        )
-                      }
-                    >
-                      <b>{naver.groups.length}개</b>
-                    </HoverInfo>
-                  </div>
-                </>
-              )}
-            </Section>
-
-            <Section name="한 번에 맞추기" id="bulk" className={hide('side')}>
-              <div className={styles.row}>
-                <select
-                  className={styles.select}
-                  value={bulk.mode}
-                  aria-label="맞추는 방식"
-                  onChange={(e) => {
-                    const m = BULK_MODES.find((x) => x.key === e.target.value)
-                    setBulk((b) => ({ ...b, mode: m.key, amount: m.initial }))
-                    setBulkMsg(EMPTY_MSG)
-                  }}
-                >
-                  {BULK_MODES.map((m) => (
-                    <option key={m.key} value={m.key}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  className={styles.input}
-                  type="text"
-                  inputMode={bulkWon ? 'numeric' : 'decimal'}
-                  aria-label={`${bulkMode.label} 값`}
-                  value={bulkWon ? withCommas(bulk.amount) : bulk.amount}
-                  onChange={(e) => {
-                    const v = bulkWon
-                      ? digitsOnly(e.target.value)
-                      : e.target.value.replace(/[^0-9.]/g, '')
-                    setBulk((b) => ({ ...b, amount: v }))
-                    setBulkMsg(EMPTY_MSG)
-                  }}
-                />
-                <span className={styles.weak}>{bulkMode.unit}</span>
-              </div>
-              <div className={styles.row}>
-                <select
-                  className={styles.select}
-                  value={bulk.target}
-                  aria-label="맞출 판매처"
-                  onChange={(e) => setBulk((b) => ({ ...b, target: e.target.value }))}
-                >
-                  <option value="tab">{cur.label}만</option>
-                  <option value={BULK_TARGET_ALL}>모든 판매처</option>
-                </select>
-                <button type="button" className="btn-secondary btn-sm" onClick={applyBulk}>
-                  적용
-                </button>
-              </div>
-              <p className={bulkMsg.error ? styles.hintError : styles.hint}>
-                {bulkMsg.text ||
-                  (bulk.mode === 'sale'
-                    ? '모든 옵션에 같은 판매가를 넣어요'
-                    : '100원 단위로 올려서 계산해요')}
-              </p>
-            </Section>
-
-            <Section name="수수료" id="fees" sub={cur.label} className={hide('side')}>
-              {FEE_FIELDS.map((f) => (
-                <div key={f.key} className={styles.row}>
-                  <span className={styles.feeLabel}>{f.label}</span>
-                  <input
-                    className={`${styles.input} ${st.errors[f.key] ? styles.inputError : ''}`}
-                    type="text"
-                    inputMode="decimal"
-                    aria-label={`${cur.label} ${f.label} 수수료 (%)`}
-                    value={forms[cur.key][f.key]}
-                    onChange={(e) => setFee(cur.key, f.key, e.target.value.replace(/[^0-9.]/g, ''))}
-                  />
-                  <span className={styles.weak}>%</span>
-                </div>
-              ))}
             </Section>
           </div>
         </div>

@@ -29,7 +29,7 @@ export const SALE_PRICE_UNIT = 100
 
 // 일괄 적용 방식 — unit: 입력칸 단위, initial: 방식을 바꿀 때 넣어 주는 값
 export const BULK_MODES = [
-  { key: 'profit', label: '목표 차익', unit: '원', initial: '3000' },
+  { key: 'profit', label: '목표 차익', unit: '원', initial: '2000' },
   { key: 'margin', label: '목표 마진', unit: '%', initial: '10' },
   { key: 'sale', label: '판매가', unit: '원', initial: '' },
 ]
