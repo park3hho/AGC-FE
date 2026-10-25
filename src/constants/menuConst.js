@@ -74,11 +74,21 @@ export const MENU = [
   {
     key: 'purchases',
     group: 'sales',
-    label: '타오바오 구매', // 타오바오에서 산 것 · 판매처 → 집운 창고 배송
+    label: '타오바오 구매기록', // 타오바오에서 산 것 · 판매처 → 집운 창고 배송
     dev: true,
     icon: 'yuan',
     tone: 'success',
     path: '/purchases',
+    feature: FEATURE.ORDER,
+  },
+  {
+    key: 'jiyun',
+    group: 'sales',
+    label: '집운 기록', // 집운 배송 요청 · 배송비 결제 · 출고 · 국내 송장
+    dev: true,
+    icon: 'truck',
+    tone: 'primary',
+    path: '/jiyun',
     feature: FEATURE.ORDER,
   },
   {

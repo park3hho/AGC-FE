@@ -34,6 +34,8 @@ const ShippingAddressPage = lazy(() => import('@/pages/shipping/ShippingAddressP
 const OrderReceivePage = lazy(() => import('@/pages/orders/OrderReceivePage'))
 const PurchaseListPage = lazy(() => import('@/pages/purchases/PurchaseListPage'))
 const PurchaseFormPage = lazy(() => import('@/pages/orders/PurchaseFormPage'))
+const JiyunListPage = lazy(() => import('@/pages/jiyun/JiyunListPage'))
+const JiyunFormPage = lazy(() => import('@/pages/jiyun/JiyunFormPage'))
 const ShippingAddressFormPage = lazy(() => import('@/pages/shipping/ShippingAddressFormPage'))
 const UserListPage = lazy(() => import('@/pages/admin/users/UserListPage'))
 const UserNewPage = lazy(() => import('@/pages/admin/users/UserNewPage'))
@@ -68,6 +70,9 @@ export default function App() {
               <Route path="/purchases" element={<PurchaseListPage />} />
               <Route path="/orders/:orderId/purchases/new" element={<PurchaseFormPage />} />
               <Route path="/orders/purchases/:id/edit" element={<PurchaseFormPage />} />
+              <Route path="/jiyun" element={<JiyunListPage />} />
+              <Route path="/orders/:orderId/jiyun/new" element={<JiyunFormPage />} />
+              <Route path="/orders/jiyun/:id/edit" element={<JiyunFormPage />} />
               <Route path="/shipping/addresses/edit" element={<ShippingAddressFormPage />} />
               <Route path="/exchange-rate" element={<ExchangeRatePage />} />
               <Route path="/markets" element={<MarketsPage />} />

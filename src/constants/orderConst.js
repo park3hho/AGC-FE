@@ -53,9 +53,12 @@ export const EVENT_KIND = {
   changed: '변경',
   pccc_check: '통관부호 검증',
   code_issued: '자사 코드 발급',
-  purchase_created: '타오바오 구매 등록',
-  purchase_changed: '타오바오 구매 수정',
-  purchase_deleted: '타오바오 구매 삭제',
+  purchase_created: '타오바오 구매기록 등록',
+  purchase_changed: '타오바오 구매기록 수정',
+  purchase_deleted: '타오바오 구매기록 삭제',
+  jiyun_created: '집운 기록 등록',
+  jiyun_changed: '집운 기록 수정',
+  jiyun_deleted: '집운 기록 삭제',
   market_confirmed: '발주확인',
   market_confirm_failed: '발주확인 실패',
   dispatch_delayed: '발송지연',
@@ -99,6 +102,7 @@ export const KIND_STEP = {
   market_confirm_failed: '발주확인',
   dispatch_delayed: '발주확인',
   purchase_created: '타오바오 구매',
+  jiyun_created: '국제 발송',
   warehouse_requested: '국제 발송',
   warehouse_dispatched: '국제 발송',
   market_dispatched: '국제 발송',
@@ -175,3 +179,22 @@ export const CHARGED_STATUS = {
   approved: { label: '승인 금액', tone: 'primary' },
   settled: { label: '청구 확정', tone: 'success' },
 }
+
+// 집운 기록 — BE core/jiyun_config.JIYUN_STATUS
+export const JIYUN_STATUS = {
+  requested: { label: '배송 요청', hint: '집운에 배송 요청·배송비 결제', tone: 'primary' },
+  dispatched: { label: '집운 출고', hint: '한국으로 출발', tone: 'success' },
+  problem: { label: '문제', hint: '지연·누락·파손', tone: 'danger' },
+  cancelled: { label: '취소', hint: '', tone: 'neutral' },
+}
+
+// 국내 택배사 — BE core/shipping_config.COURIERS (마켓 발송처리 코드)
+export const KR_COURIERS = {
+  CJGLS: 'CJ대한통운',
+  HANJIN: '한진택배',
+  LOTTE: '롯데택배',
+  EPOST: '우체국택배',
+  KGB: '로젠택배',
+}
+
+export const TRANSPORTS = { sea: '해운', air: '항공' }

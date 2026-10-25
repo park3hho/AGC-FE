@@ -9,6 +9,7 @@ import {
   ORDERS_COLLECTED_EVENT,
   recheckPccc,
 } from '@/api/order'
+import { getJiyunList } from '@/api/jiyun'
 import { getPurchases } from '@/api/taobaoPurchase'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
@@ -112,8 +113,10 @@ const PURCHASE_STEPS = ['타오바오 구매', '중국 내 배송', '배대지 �
 // 추적 기록 위 진행 막대 — 세부 단계 11칸, 단계마다 처음 일어난 날. 타오바오 구매 칸은 눌러서 기록
 function TraceProgress({
   events, // Array: 주문 기록
-  onPurchase, // function?: 타오바오 구매 기록 열기 (없으면 누를 수 없음)
+  onPurchase, // function?: 타오바오 구매기록 열기 (없으면 누를 수 없음)
   hasPurchase, // boolean: 이미 기록한 타오바오 구매가 있는지
+  onJiyun, // function?: 집운 기록 열기 — 국제 발송 칸
+  hasJiyun, // boolean: 이미 적은 집운 기록이 있는지
 }) {
   const first = {}
   for (const e of events) {
@@ -137,13 +140,20 @@ function TraceProgress({
             i > 0 && TRACE_STEPS[i - 1].stage !== x.stage ? styles.pGap : ''
           }`
           const title = `${TRACE_STAGE[x.stage].label} › ${x.step}${first[x.step] ? ` · ${kst(first[x.step])}` : ''}`
-          return PURCHASE_STEPS.includes(x.step) && onPurchase ? (
+          // 타오바오 구매 쪽 칸 → 타오바오 구매기록, 국제 발송 칸 → 집운 기록
+          const go = PURCHASE_STEPS.includes(x.step)
+            ? onPurchase
+            : x.step === '국제 발송'
+              ? onJiyun
+              : null
+          const goName = PURCHASE_STEPS.includes(x.step) ? '타오바오 구매기록' : '집운 기록'
+          return go ? (
             <li key={x.step} className={cls}>
               <button
                 type="button"
                 className={styles.pBtn}
-                title={`${title} — 눌러서 타오바오 구매 기록`}
-                onClick={onPurchase}
+                title={`${title} — 눌러서 ${goName}`}
+                onClick={go}
               />
             </li>
           ) : (
@@ -159,12 +169,22 @@ function TraceProgress({
         ) : (
           '아직 시작 전'
         )}
-        {now && !nowIsPurchase && <span className={styles.weak}> · 다음 {now.step}</span>}
+        {now && !nowIsPurchase && !(now.step === '국제 발송' && onJiyun) && (
+          <span className={styles.weak}> · 다음 {now.step}</span>
+        )}
+        {now?.step === '국제 발송' && onJiyun && (
+          <>
+            {' · '}
+            <button type="button" className={`btn-text ${styles.pLink}`} onClick={onJiyun}>
+              {hasJiyun ? '집운 기록 이어서 적기' : '집운 배송 요청했으면 기록하기'}
+            </button>
+          </>
+        )}
         {nowIsPurchase && onPurchase && (
           <>
             {' · '}
             <button type="button" className={`btn-text ${styles.pLink}`} onClick={onPurchase}>
-              {hasPurchase ? `${now.step} 기록하기` : '타오바오에서 샀으면 기록하기'}
+              {hasPurchase ? `${now.step} 기록하기` : '타오바오에서 샀으면 구매기록 적기'}
             </button>
           </>
         )}
@@ -178,7 +198,8 @@ function TraceProgress({
 // 내용 칸은 섹션 스크롤에 잘리지 않게 body 위에 fixed 로 그린다 (아래 자리가 모자라면 위로)
 function EventRow({
   event, // object: 주문 기록
-  onPurchase, // function?: 타오바오 구매 기록이면 그 구매 열기 (누르면 바로 이동)
+  onPurchase, // function?: 타오바오 구매기록이면 그 구매 열기 (누르면 바로 이동)
+  onJiyun, // function?: 집운 기록이면 그 집운 기록 열기 (누르면 바로 이동)
   popOpen, // boolean: 내용 칸이 열려 있는지 (한 번에 하나 — 부모가 정함)
   onTogglePop, // function(open: boolean): 내용 칸 열기·닫기
 }) {
@@ -188,6 +209,9 @@ function EventRow({
   const popRef = useRef(null)
   const actor = ACTOR[event.actorType] || ACTOR.system
   const d = event.data || {}
+  // 누르면 바로 넘어갈 기록 (타오바오 구매기록 · 집운 기록)
+  const goTo = onPurchase || onJiyun
+  const goLabel = onPurchase ? '구매기록 보기 ›' : '집운 기록 보기 ›'
   const hasData = Object.keys(d).length > 0
   const step = stepOf(event)
   const stage = d.stage || TRACE_STEPS.find((x) => x.step === step)?.stage
@@ -238,11 +262,11 @@ function EventRow({
   return (
     <li
       ref={rowRef}
-      className={`${styles.event} ${popOpen ? styles.eventOn : ''} ${onPurchase ? styles.eventLink : ''}`}
+      className={`${styles.event} ${popOpen ? styles.eventOn : ''} ${goTo ? styles.eventLink : ''}`}
       tabIndex={0}
       // 타오바오 구매 기록은 누르면 바로 그 구매 화면으로, 나머지는 내용 칸 열고 닫기
-      onClick={() => (onPurchase ? onPurchase() : onTogglePop(!popOpen))}
-      onKeyDown={(e) => e.key === 'Enter' && (onPurchase ? onPurchase() : onTogglePop(!popOpen))}
+      onClick={() => (goTo ? goTo() : onTogglePop(!popOpen))}
+      onKeyDown={(e) => e.key === 'Enter' && (goTo ? goTo() : onTogglePop(!popOpen))}
     >
       <div className={styles.eventHead}>
         <span className={styles.eventTime}>{kst(occurred).slice(5)}</span>
@@ -257,7 +281,7 @@ function EventRow({
           {bad && ' — 불일치'}
         </b>
         {event.via === 'mock' && <span className={styles.weak}>목업</span>}
-        {onPurchase && <span className={styles.go}>구매 보기 ›</span>}
+        {goTo && <span className={styles.go}>{goLabel}</span>}
       </div>
       {open && <pre className={styles.eventData}>{JSON.stringify(d, null, 2)}</pre>}
       {popOpen &&
@@ -287,16 +311,16 @@ function EventRow({
                 ))}
               </div>
             )}
-            {(hasData || onPurchase) && (
+            {(hasData || goTo) && (
               <div className={styles.popActs}>
                 {hasData && (
                   <button type="button" className="btn-text" onClick={() => setOpen(!open)}>
                     {open ? '보낸 값·받은 값 접기' : '보낸 값·받은 값'}
                   </button>
                 )}
-                {onPurchase && (
-                  <button type="button" className="btn-text" onClick={onPurchase}>
-                    타오바오 구매 열기
+                {goTo && (
+                  <button type="button" className="btn-text" onClick={goTo}>
+                    {onPurchase ? '타오바오 구매기록 열기' : '집운 기록 열기'}
                   </button>
                 )}
               </div>
@@ -313,7 +337,8 @@ function EventRow({
 export default function OrderReceivePage() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
-  const [purchases, setPurchases] = useState(null) // 고른 주문의 타오바오 구매
+  const [purchases, setPurchases] = useState(null)
+  const [jiyuns, setJiyuns] = useState(null) // 고른 주문의 집운 기록 // 고른 주문의 타오바오 구매
   const [data, setData] = useState(null) // { items, total, pcccCounts, lastRuns, pollMinutes }
   const [detail, setDetail] = useState(null) // { order, events }
   const [error, setError] = useState('')
@@ -347,6 +372,7 @@ export default function OrderReceivePage() {
     if (!selected) {
       setDetail(null)
       setPurchases(null)
+      setJiyuns(null)
       return
     }
     getOrder(selected)
@@ -354,6 +380,9 @@ export default function OrderReceivePage() {
       .catch((err) => setError(err.message))
     getPurchases({ orderId: selected })
       .then(setPurchases)
+      .catch((err) => setError(err.message))
+    getJiyunList({ orderId: selected })
+      .then(setJiyuns)
       .catch((err) => setError(err.message))
   }, [selected])
 
@@ -399,6 +428,11 @@ export default function OrderReceivePage() {
   const openPurchase = (purchaseId) => {
     const id = typeof purchaseId === 'number' ? purchaseId : purchases?.[purchases.length - 1]?.id
     navigate(id ? `/orders/purchases/${id}/edit?order=${o.id}` : `/orders/${o.id}/purchases/new`)
+  }
+  // 집운 기록 열기 — id 를 주면 그 기록, 아니면 이 주문의 마지막 집운 기록 (없으면 새로)
+  const openJiyun = (jiyunId) => {
+    const id = typeof jiyunId === 'number' ? jiyunId : jiyuns?.[0]?.id
+    navigate(id ? `/orders/jiyun/${id}/edit?order=${o.id}` : `/orders/${o.id}/jiyun/new`)
   }
 
   return (
@@ -632,6 +666,8 @@ export default function OrderReceivePage() {
                 events={detail.events}
                 hasPurchase={!!purchases?.length}
                 onPurchase={o && o.stage !== 'cancelled' ? openPurchase : undefined}
+                hasJiyun={!!jiyuns?.length}
+                onJiyun={o && o.stage !== 'cancelled' ? openJiyun : undefined}
               />
             )}
             {detail && view === 'trace' && (
@@ -645,6 +681,7 @@ export default function OrderReceivePage() {
                     onPurchase={
                       e.data?.purchase_id ? () => openPurchase(e.data.purchase_id) : undefined
                     }
+                    onJiyun={e.data?.jiyun_id ? () => openJiyun(e.data.jiyun_id) : undefined}
                   />
                 ))}
               </ol>

@@ -170,7 +170,7 @@ export default function PurchaseFormPage() {
   const needsConfirm = !editing && order && !order.confirmed
 
   const remove = async () => {
-    if (!window.confirm('이 타오바오 구매를 삭제할까요? (추적 기록은 남아요)')) return
+    if (!window.confirm('이 타오바오 구매기록을 삭제할까요? (추적 기록은 남아요)')) return
     try {
       await deletePurchase(id)
       back()
@@ -182,7 +182,7 @@ export default function PurchaseFormPage() {
   return (
     <form className="page-flat" onSubmit={submit}>
       <PageHeader
-        title={editing ? '타오바오 구매를 고쳐요' : '타오바오에서 산 내용을 적어요'}
+        title={editing ? '타오바오 구매기록을 고쳐요' : '타오바오 구매기록을 적어요'}
         sub="저장하면 이 고객 주문의 추적 기록에 남아요"
         back
         action={

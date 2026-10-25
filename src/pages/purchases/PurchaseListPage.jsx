@@ -14,7 +14,7 @@ const kst = (iso) =>
 
 const FILTERS = ['all', ...Object.keys(CN_STATUS)]
 
-// 판매 › 타오바오 구매 — 섹션: 검색·필터 · 구매 목록
+// 판매 › 타오바오 구매기록 — 섹션: 검색·필터 · 구매 목록
 // 우리가 타오바오에서 산 것 전체와 중국 내 배송(판매처 → 집운 창고) 상태. 구매 추가는 주문 접수의 고객 주문에서 한다
 export default function PurchaseListPage() {
   const navigate = useNavigate()
@@ -63,7 +63,7 @@ export default function PurchaseListPage() {
   return (
     <main className="page-flat">
       <PageHeader
-        title="타오바오 구매"
+        title="타오바오 구매기록"
         sub="타오바오에서 산 것과 판매처 → 집운 창고 배송 상태"
         action={
           <button className="btn-secondary btn-md" onClick={() => navigate('/orders')}>
