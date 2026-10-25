@@ -15,7 +15,7 @@ import {
 // 섹션 안에서라도 자를 수 있는 줄 — 섹션 하나가 3000px 를 넘을 때만 쓴다.
 //   사진 카드·구성 사진·라벨 사진은 요소 위쪽에서 자르므로 사진 한가운데가 잘리지 않는다
 const ROW_SELECTOR =
-  '.dp-point, .dp-flavor, .dp-gallery, .dp-gal-item, .dp-label-photo, .dp-info, .dp-info tr, .dp-nutri, .dp-how, .dp-s6 li, .dp-note, h2, .dp-lead'
+  '.dp-point, .dp-flavor, .dp-gallery, .dp-gal, .dp-gal-item, .dp-label-photo, .dp-info, .dp-info tr, .dp-nutri, .dp-how, .dp-s6 li, .dp-note, h2, .dp-lead'
 const MIN_SLICE = 300 // 이보다 짧은 조각이 생기지 않게 (섹션 경계를 고를 때)
 const MAX_RENDER_SCALE = 2
 const MAX_CANVAS_SIDE = 32000 // 브라우저 canvas 한 변 한도(32767) 안쪽
@@ -51,6 +51,35 @@ export async function waitTemplateFont() {
   if (!document.fonts.check(`800 20px "${TEMPLATE_FONT_FAMILY}"`, '가')) {
     throw new Error('템플릿 글꼴(Pretendard)을 불러오지 못했어요')
   }
+}
+
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()))
+
+// 사진이 다 들어오고 비율별 배치(data-ratio)까지 끝났는지 — 배치가 바뀌면 높이가 바뀐다 (DESIGN §4.7 no-crop)
+export async function waitTemplateImages(node, timeoutMs = 8000) {
+  const imgs = [...node.querySelectorAll('img')]
+  await Promise.all(
+    imgs.map((img) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise((r) => {
+            img.addEventListener('load', r, { once: true })
+            img.addEventListener('error', r, { once: true })
+          }),
+    ),
+  )
+  await Promise.all(imgs.map((img) => (img.decode ? img.decode().catch(() => {}) : null)))
+  const until = Date.now() + timeoutMs
+  // 비율을 재는 사진(data-ratio 속성이 있는 것)이 모두 값을 가질 때까지
+  while (Date.now() < until) {
+    const pending = [...node.querySelectorAll('img[data-ratio]')].filter(
+      (img) => !img.getAttribute('data-ratio') && img.naturalWidth > 0,
+    )
+    if (pending.length === 0) break
+    await nextFrame()
+  }
+  await nextFrame()
+  await nextFrame()
 }
 
 // 자르는 위치 (860px 기준 y) — [0, …, 전체 높이]. 섹션 경계 → 줄 경계 → 강제 순으로 고른다
@@ -134,6 +163,7 @@ const toBlob = (canvas, pf) =>
 // → { cuts, sets: { naver: [{ name, blob, width, height }], coupang: [...] } }
 export async function renderDetailImages(node, code) {
   await waitTemplateFont()
+  await waitTemplateImages(node)
   const cuts = planCuts(node)
   const height = cuts[cuts.length - 1]
   const scale = Math.min(MAX_RENDER_SCALE, MAX_CANVAS_SIDE / height)

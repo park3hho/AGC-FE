@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { fileUrl } from '@/api/client'
 import Pager from '@/components/common/Pager'
+import { ratioKind } from '@/components/DetailTemplate'
 import { EDITOR_GROUPS, HOW_ICONS, LIMITS } from '@/constants/designConst'
 import styles from './Design.module.css'
 
@@ -48,6 +49,37 @@ function Text({
   )
 }
 
+const RATIO_LABEL = { land: '가로', port: '세로', square: '정사각' }
+
+// 사진 하나 — 통째로 보여주고(contain) 비율 종류를 표시해 사람이 칸에 맞는 사진을 고르게 한다
+function PhotoThumb({
+  p, // { url, label }
+  on, // boolean: 골랐는지
+  onClick, // function()
+}) {
+  const [ratio, setRatio] = useState(null)
+  const kind = ratioKind(ratio)
+  const size = ratio ? `${Math.round(ratio * 100) / 100}:1` : ''
+  return (
+    <button
+      type="button"
+      title={`${p.label}${kind ? ` · ${RATIO_LABEL[kind]} ${size}` : ''}`}
+      className={`${styles.photo} ${on ? styles.photoOn : ''}`}
+      onClick={onClick}
+    >
+      <img
+        src={fileUrl(p.url)}
+        alt={p.label}
+        onLoad={(e) => {
+          const i = e.currentTarget
+          if (i.naturalWidth && i.naturalHeight) setRatio(i.naturalWidth / i.naturalHeight)
+        }}
+      />
+      {kind && <span className={styles.photoRatio}>{RATIO_LABEL[kind]}</span>}
+    </button>
+  )
+}
+
 function PhotoPick({
   photos, // Array<{ url, label }>: 고를 수 있는 사진
   value, // string?: 지금 사진
@@ -56,15 +88,7 @@ function PhotoPick({
   return (
     <div className={styles.photos}>
       {photos.map((p) => (
-        <button
-          key={p.url}
-          type="button"
-          title={p.label}
-          className={`${styles.photo} ${p.url === value ? styles.photoOn : ''}`}
-          onClick={() => onChange(p.url)}
-        >
-          <img src={fileUrl(p.url)} alt={p.label} />
-        </button>
+        <PhotoThumb key={p.url} p={p} on={p.url === value} onClick={() => onChange(p.url)} />
       ))}
       <button
         type="button"

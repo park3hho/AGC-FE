@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useState } from 'react'
 
 import { fileUrl } from '@/api/client'
 import RichText from './RichText'
@@ -20,6 +20,128 @@ const HOW_ICON_PATHS = {
 }
 
 const has = (v) => (typeof v === 'string' ? v.trim() !== '' : !!v)
+
+// 사진 비율 — 사진은 절대 자르지 않는다 (DESIGN §4.7 no-crop). 비율로 배치만 고른다.
+//   가로(w/h ≥ 1.2) · 세로(≤ 0.83) · 정사각. 불러오기 전에는 null — 이미지 내보내기는 다 불러온 뒤에 잰다
+export const LANDSCAPE_MIN = 1.2
+export const PORTRAIT_MAX = 0.83
+export const ratioKind = (r) =>
+  r == null ? null : r >= LANDSCAPE_MIN ? 'land' : r <= PORTRAIT_MAX ? 'port' : 'square'
+
+function useRatio() {
+  const [ratio, setRatio] = useState(null)
+  const onLoad = (e) => {
+    const img = e.currentTarget
+    if (img.naturalWidth && img.naturalHeight) setRatio(img.naturalWidth / img.naturalHeight)
+  }
+  return [ratio, onLoad]
+}
+
+// 사진 하나 — 원본 비율 그대로(contain), 잘리지 않음. data-ratio 는 내보내기 확인용
+function Photo({
+  url, // string: 사진 주소
+  onRatio, // function(event)?: 비율 알림
+  ratio, // number?: 잰 비율
+}) {
+  return (
+    <img
+      src={fileUrl(url)}
+      alt=""
+      onLoad={onRatio}
+      data-ratio={ratio ? ratio.toFixed(3) : ''}
+    />
+  )
+}
+
+function PointCard({
+  p, // object: 포인트
+  i, // number: 순서
+}) {
+  const [ratio, onLoad] = useRatio()
+  const kind = p.photo_url ? ratioKind(ratio) || 'land' : null
+  // 가로 사진 → 위에 전체 폭 · 세로/정사각 → 옆에 나란히 (좌우 번갈아)
+  const cls = !p.photo_url
+    ? 'dp-point'
+    : kind === 'land'
+      ? 'dp-point dp-point-photo dp-point-land'
+      : `dp-point dp-point-photo dp-point-side${i % 2 ? ' dp-point-rev' : ''}`
+  const text = (
+    <div className="dp-point-row">
+      <div className="dp-num">{String(i + 1).padStart(2, '0')}</div>
+      <div className="dp-point-tx">
+        <h3>
+          <RichText text={p.title} />
+        </h3>
+        {has(p.desc) && (
+          <p>
+            <RichText text={p.desc} />
+          </p>
+        )}
+      </div>
+      {has(p.big) && (
+        <div className="dp-big">
+          <RichText text={p.big} />
+          {has(p.big_unit) && (
+            <small>
+              <RichText text={p.big_unit} />
+            </small>
+          )}
+        </div>
+      )}
+    </div>
+  )
+  return (
+    <div className={cls}>
+      {p.photo_url && (
+        <div className="dp-point-img">
+          <Photo url={p.photo_url} onRatio={onLoad} ratio={ratio} />
+        </div>
+      )}
+      {text}
+    </div>
+  )
+}
+
+function FlavorCard({
+  f, // object: 맛
+  i, // number: 순서
+}) {
+  const [ratio, onLoad] = useRatio()
+  const kind = f.photo_url ? ratioKind(ratio) || 'port' : null
+  // 사진 없는 맛은 글만 있는 카드 — 고객 이미지에 '사진 없음' 을 절대 넣지 않는다
+  // 가로 사진은 위에 전체 폭, 세로·정사각은 왼쪽 칸 — 카드 높이는 내용에 맞춘다
+  const cls = !f.photo_url ? 'dp-flavor dp-flavor-text' : kind === 'land' ? 'dp-flavor dp-flavor-land' : 'dp-flavor'
+  return (
+    <div className={cls}>
+      {f.photo_url && (
+        <div className="dp-ph">
+          <Photo url={f.photo_url} onRatio={onLoad} ratio={ratio} />
+        </div>
+      )}
+      <div className="dp-tx">
+        <div className="dp-opt">옵션 {i + 1}</div>
+        <h3>
+          <RichText text={f.name} />
+        </h3>
+        {has(f.name_cn) && <div className="dp-cn">{f.name_cn}</div>}
+        {has(f.desc) && (
+          <p>
+            <RichText text={f.desc} />
+          </p>
+        )}
+        {(f.chips || []).filter(has).length > 0 && (
+          <div className="dp-chips">
+            {f.chips.filter(has).map((c, j) => (
+              <span key={j} className="dp-chip">
+                <RichText text={c} />
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 function HowIcon({
   name, // string: HOW_ICON_PATHS 키
@@ -120,7 +242,7 @@ const DetailTemplate = forwardRef(function DetailTemplate(
         )}
         {hero.photo_url ? (
           <div className="dp-hero-img">
-            {/* 원래 비율 그대로 860 폭 — 1100px 를 넘는 세로 사진만 위 기준으로 자른다 */}
+            {/* 원래 비율 그대로 — 가로는 860 폭, 세로는 높이 1100 안으로 줄여 가운데 (자르지 않는다) */}
             <img src={fileUrl(hero.photo_url)} alt="" />
           </div>
         ) : (
@@ -142,37 +264,7 @@ const DetailTemplate = forwardRef(function DetailTemplate(
           )}
           <div className="dp-points">
             {pointItems.map((p, i) => (
-              <div key={i} className={p.photo_url ? 'dp-point dp-point-photo' : 'dp-point'}>
-                {/* 사진이 있으면 사진 카드 — 사진 위, 번호·글 아래 */}
-                {p.photo_url && (
-                  <div className="dp-point-img">
-                    <img src={fileUrl(p.photo_url)} alt="" />
-                  </div>
-                )}
-                <div className="dp-point-row">
-                  <div className="dp-num">{String(i + 1).padStart(2, '0')}</div>
-                  <div>
-                    <h3>
-                      <RichText text={p.title} />
-                    </h3>
-                    {has(p.desc) && (
-                      <p>
-                        <RichText text={p.desc} />
-                      </p>
-                    )}
-                  </div>
-                  {has(p.big) && (
-                    <div className="dp-big">
-                      <RichText text={p.big} />
-                      {has(p.big_unit) && (
-                        <small>
-                          <RichText text={p.big_unit} />
-                        </small>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <PointCard key={i} p={p} i={i} />
             ))}
           </div>
         </section>
@@ -192,35 +284,7 @@ const DetailTemplate = forwardRef(function DetailTemplate(
           )}
           <div className="dp-flavors">
             {flavorItems.map((f, i) => (
-              <div key={i} className={f.photo_url ? 'dp-flavor' : 'dp-flavor dp-flavor-text'}>
-                {/* 사진 없는 맛은 글만 있는 카드 — 고객 이미지에 '사진 없음' 을 절대 넣지 않는다 (DESIGN §4.7) */}
-                {f.photo_url && (
-                  <div className="dp-ph">
-                    <img src={fileUrl(f.photo_url)} alt="" />
-                  </div>
-                )}
-                <div className="dp-tx">
-                  <div className="dp-opt">옵션 {i + 1}</div>
-                  <h3>
-                    <RichText text={f.name} />
-                  </h3>
-                  {has(f.name_cn) && <div className="dp-cn">{f.name_cn}</div>}
-                  {has(f.desc) && (
-                    <p>
-                      <RichText text={f.desc} />
-                    </p>
-                  )}
-                  {(f.chips || []).filter(has).length > 0 && (
-                    <div className="dp-chips">
-                      {f.chips.filter(has).map((c, j) => (
-                        <span key={j} className="dp-chip">
-                          <RichText text={c} />
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <FlavorCard key={i} f={f} i={i} />
             ))}
           </div>
           {galleryItems.length > 0 && (
