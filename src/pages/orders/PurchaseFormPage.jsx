@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
-import { getOrder } from '@/api/order'
+import { confirmOrder, getOrder } from '@/api/order'
 import { createPurchase, deletePurchase, getPurchase, updatePurchase } from '@/api/taobaoPurchase'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
-import { CN_COURIERS, CN_STATUS, MARKETS } from '@/constants/orderConst'
+import { CN_COURIERS, CN_STATUS, MARKETS, PCCC_STATUS } from '@/constants/orderConst'
 import styles from './Orders.module.css'
 
 // ISO → <input type="datetime-local"> 값 (KST)
@@ -49,6 +49,9 @@ export default function PurchaseFormPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState(EMPTY)
   const [order, setOrder] = useState(null) // 붙는 고객 주문
+  const [receiver, setReceiver] = useState(null) // 배송지 원본 (발주확인 전 재확인용)
+  const [confirming, setConfirming] = useState(false)
+  const [confirmError, setConfirmError] = useState('')
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -66,7 +69,8 @@ export default function PurchaseFormPage() {
         })
         setOrder(p.order)
       } else {
-        const { order: o } = await getOrder(orderId)
+        const { order: o, receiverFull } = await getOrder(orderId)
+        setReceiver(receiverFull)
         setForm({
           ...EMPTY,
           purchasedAt: nowLocal(),
@@ -126,6 +130,28 @@ export default function PurchaseFormPage() {
     }
   }
 
+  // 발주확인 — 마켓에 '주문 확인'을 보내 고객 화면을 상품준비중으로 (즉시 취소 막힘). 성공해야 구매를 저장할 수 있다
+  const confirm = async () => {
+    if (
+      !window.confirm(
+        '배송지·통관부호를 확인했나요? 마켓에 발주확인을 보내면 고객 화면이 상품준비중으로 바뀌어요',
+      )
+    )
+      return
+    setConfirming(true)
+    setConfirmError('')
+    try {
+      const d = await confirmOrder(order.id)
+      setOrder(d.order)
+      setReceiver(d.receiverFull)
+    } catch (err) {
+      setConfirmError(err.message)
+    } finally {
+      setConfirming(false)
+    }
+  }
+  const needsConfirm = !editing && order && !order.confirmed
+
   const remove = async () => {
     if (!window.confirm('이 타오바오 구매를 삭제할까요? (추적 기록은 남아요)')) return
     try {
@@ -162,9 +188,15 @@ export default function PurchaseFormPage() {
             <button
               className="btn-primary btn-md btn-full"
               type="submit"
-              disabled={saving || !loaded}
+              disabled={saving || !loaded || needsConfirm}
             >
-              {saving ? '저장 중…' : editing ? '수정 저장' : '구매 저장'}
+              {saving
+                ? '저장 중…'
+                : editing
+                  ? '수정 저장'
+                  : needsConfirm
+                    ? '발주확인을 먼저 보내 주세요'
+                    : '구매 저장'}
             </button>
           </div>
         }
@@ -172,7 +204,55 @@ export default function PurchaseFormPage() {
         <div className={styles.fGroup}>
           <h3 className={styles.fTitle}>고객 주문</h3>
           <p className={styles.linkText}>{order ? orderLabel(order) : '불러오는 중…'}</p>
+          {order && !editing && (
+            <p className={order.confirmed ? styles.confirmOk : styles.confirmWait}>
+              {order.confirmed
+                ? '● 발주확인됨 — 고객 화면 상품준비중'
+                : '● 발주확인 전 — 결제완료 상태라 고객이 바로 취소할 수 있어요'}
+            </p>
+          )}
         </div>
+
+        {needsConfirm && (
+          <div className={styles.fGroup}>
+            <h3 className={styles.fTitle}>발주확인 (배송지 재확인)</h3>
+            <dl className={styles.confirmList}>
+              <dt>받는 사람</dt>
+              <dd>{receiver?.name || '-'}</dd>
+              <dt>주소</dt>
+              <dd>
+                {receiver?.zip && `(${receiver.zip}) `}
+                {receiver?.address || '-'}
+              </dd>
+              <dt>통관용 전화</dt>
+              <dd>{receiver?.customsPhone || '-'}</dd>
+              <dt>통관부호</dt>
+              <dd>
+                {receiver?.pccc || '-'}{' '}
+                <span
+                  className={
+                    order.pcccStatus === 'ok'
+                      ? styles.confirmOk
+                      : order.pcccStatus === 'mismatch'
+                        ? styles.bad
+                        : styles.confirmWait
+                  }
+                >
+                  ● {PCCC_STATUS[order.pcccStatus]?.label || order.pcccStatus}
+                </span>
+              </dd>
+            </dl>
+            {confirmError && <p className="form-error">{confirmError}</p>}
+            <button
+              type="button"
+              className="btn-primary btn-md"
+              onClick={confirm}
+              disabled={confirming}
+            >
+              {confirming ? '보내는 중…' : `${MARKETS[order.market].label}에 발주확인 보내기`}
+            </button>
+          </div>
+        )}
 
         <div className={styles.fGroup}>
           <h3 className={styles.fTitle}>타오바오 구매</h3>

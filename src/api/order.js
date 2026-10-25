@@ -135,3 +135,13 @@ export const getCollectStatus = async () => {
 
 // 주문을 가져온 뒤 아래 바가 바로 다시 읽게 알리는 이벤트 이름
 export const ORDERS_COLLECTED_EVENT = 'agc:orders-collected'
+
+// 발주확인 — 마켓에 '주문 확인했어요'를 보낸다 (쿠팡 상품준비중 · 네이버 발주 확인). 타오바오 구매 등록 전에 한다.
+//   이미 확인된 주문이면 마켓에 다시 보내지 않고 already: true
+export const confirmOrder = async (id) => {
+  const data = await request(`/orders/${id}/confirm`, {
+    method: 'POST',
+    errorMsg: '발주확인을 보내지 못했어요',
+  })
+  return { ...toDetail(data), already: !!data.already }
+}
