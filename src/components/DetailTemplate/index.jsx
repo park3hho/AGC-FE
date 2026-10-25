@@ -1,7 +1,6 @@
 import { forwardRef, useState } from 'react'
 
 import { fileUrl } from '@/api/client'
-import { FREE_SHIPPING_LINE, FREE_SHIPPING_TAG } from '@/constants/designConst'
 import RichText from './RichText'
 import { TEMPLATE_CSS } from './templateCss'
 
@@ -241,6 +240,11 @@ const DetailTemplate = forwardRef(function DetailTemplate(
             ))}
           </div>
         )}
+        {/* 전 상품 무료배송 — 판매가에 국제배송비·국내 택배비 포함 (공통, 상품별 입력 없음) */}
+        <div className="dp-free">
+          <b>무료배송</b>
+          <span>국제배송비 · 국내 택배비 모두 포함된 가격이에요</span>
+        </div>
         {hero.photo_url ? (
           <div className="dp-hero-img">
             {/* 원래 비율 그대로 — 가로는 860 폭, 세로는 높이 1100 안으로 줄여 가운데 (자르지 않는다) */}
@@ -249,11 +253,6 @@ const DetailTemplate = forwardRef(function DetailTemplate(
         ) : (
           <div className="dp-hero-pad" />
         )}
-        {/* 전 상품 무료배송 — 대표 사진 바로 아래 전체 폭 띠 (공통, 상품별 입력 없음). S1 안에 있어 사진과 띠 사이는 자르지 않는다 */}
-        <div className="dp-free">
-          <b>{FREE_SHIPPING_TAG}</b>
-          <span>{FREE_SHIPPING_LINE}</span>
-        </div>
       </div>
 
       {/* S2 포인트 */}
