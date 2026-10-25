@@ -120,7 +120,7 @@ function HeroFields({ c, set, photos }) {
   )
 }
 
-function PointsFields({ c, set }) {
+function PointsFields({ c, set, photos }) {
   return (
     <>
       <Row label="제목">
@@ -153,9 +153,63 @@ function PointsFields({ c, set }) {
           <Row label="설명">
             <Text multi value={p.desc} onChange={(v) => set(['items', i, 'desc'], v)} />
           </Row>
+          <Row label="사진 카드">
+            <PhotoPick
+              photos={photos}
+              value={p.photo_url}
+              onChange={(v) => set(['items', i, 'photo_url'], v)}
+            />
+          </Row>
         </div>
       ))}
     </>
+  )
+}
+
+// S3 끝 구성·포장 사진 (0~4장) — 사진을 고른 칸만 그린다
+function GalleryFields({ g, set, photos }) {
+  const items = g.items || []
+  return (
+    <div className={styles.block}>
+      <Row label="구성 사진 제목">
+        <Text value={g.title} onChange={(v) => set(['title'], v)} placeholder="예: 이렇게 보내드려요" />
+      </Row>
+      {items.map((it, i) => (
+        <div key={i} className={styles.block}>
+          <Row label={`구성 ${i + 1}`}>
+            <PhotoPick
+              photos={photos}
+              value={it.photo_url}
+              onChange={(v) => set(['items', i, 'photo_url'], v)}
+            />
+          </Row>
+          <div className={styles.rowWithX}>
+            <Text
+              value={it.caption}
+              onChange={(v) => set(['items', i, 'caption'], v)}
+              placeholder="설명 (선택)"
+            />
+            <button
+              type="button"
+              className={styles.x}
+              aria-label="구성 사진 빼기"
+              onClick={() => set(['items'], items.filter((_, j) => j !== i))}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      ))}
+      {items.length < LIMITS.gallery && (
+        <button
+          type="button"
+          className="btn-text"
+          onClick={() => set(['items'], [...items, { photo_url: null, caption: '' }])}
+        >
+          + 구성 사진 추가
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -226,11 +280,16 @@ function FlavorsFields({ c, set, photos }) {
       ) : (
         <p className={styles.hint}>가격조사 옵션이 없어 맛 카드가 없어요</p>
       )}
+      <GalleryFields
+        g={c.gallery || {}}
+        set={(path, v) => set(['gallery', ...path], v)}
+        photos={photos}
+      />
     </>
   )
 }
 
-function InfoFields({ c, set }) {
+function InfoFields({ c, set, photos }) {
   const rows = c.rows || []
   const nutrition = c.nutrition || []
   return (
@@ -238,6 +297,22 @@ function InfoFields({ c, set }) {
       <Row label="제목">
         <Text value={c.title} onChange={(v) => set(['title'], v)} />
       </Row>
+      <Row label="라벨 원본">
+        <PhotoPick
+          photos={photos}
+          value={c.label_photo_url}
+          onChange={(v) => set(['label_photo_url'], v)}
+        />
+      </Row>
+      {c.label_photo_url && (
+        <Row label="라벨 설명">
+          <Text
+            value={c.label_caption}
+            onChange={(v) => set(['label_caption'], v)}
+            placeholder="예: 중국 현지 포장 라벨이에요 (선택)"
+          />
+        </Row>
+      )}
       {rows.map((r, i) => (
         <div key={i} className={styles.rowWithX}>
           <span className={styles.pairWide}>
@@ -449,11 +524,13 @@ export default function DetailEditor({
       </div>
       <div className={styles.fields}>
         {group === 'hero' && <HeroFields c={c.hero || {}} set={sub('hero')} photos={photos} />}
-        {group === 'points' && <PointsFields c={c.points || {}} set={sub('points')} />}
+        {group === 'points' && (
+          <PointsFields c={c.points || {}} set={sub('points')} photos={photos} />
+        )}
         {group === 'flavors' && (
           <FlavorsFields c={c.flavors || {}} set={sub('flavors')} photos={photos} />
         )}
-        {group === 'info' && <InfoFields c={c.info || {}} set={sub('info')} />}
+        {group === 'info' && <InfoFields c={c.info || {}} set={sub('info')} photos={photos} />}
         {group === 'howto' && <HowToFields c={c.howto || {}} set={sub('howto')} />}
         {group === 'common' && (
           <CommonFields common={common} setCommon={setCommon} {...commonProps} />

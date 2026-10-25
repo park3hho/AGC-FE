@@ -70,6 +70,8 @@ const DetailTemplate = forwardRef(function DetailTemplate(
   const nutrition = (info.nutrition || []).filter((n) => has(n.value) || has(n.label))
   const howItems = (howto.items || []).filter((h) => has(h.title) || has(h.desc))
   const notes = (flavors.notes || []).filter(has)
+  const gallery = flavors.gallery || {}
+  const galleryItems = (gallery.items || []).filter((g) => has(g.photo_url))
   const notice = (common?.notice || []).filter((n) => has(n.title) || has(n.body))
 
   return (
@@ -118,6 +120,7 @@ const DetailTemplate = forwardRef(function DetailTemplate(
         )}
         {hero.photo_url ? (
           <div className="dp-hero-img">
+            {/* 원래 비율 그대로 860 폭 — 1100px 를 넘는 세로 사진만 위 기준으로 자른다 */}
             <img src={fileUrl(hero.photo_url)} alt="" />
           </div>
         ) : (
@@ -139,28 +142,36 @@ const DetailTemplate = forwardRef(function DetailTemplate(
           )}
           <div className="dp-points">
             {pointItems.map((p, i) => (
-              <div key={i} className="dp-point">
-                <div className="dp-num">{String(i + 1).padStart(2, '0')}</div>
-                <div>
-                  <h3>
-                    <RichText text={p.title} />
-                  </h3>
-                  {has(p.desc) && (
-                    <p>
-                      <RichText text={p.desc} />
-                    </p>
-                  )}
-                </div>
-                {has(p.big) && (
-                  <div className="dp-big">
-                    <RichText text={p.big} />
-                    {has(p.big_unit) && (
-                      <small>
-                        <RichText text={p.big_unit} />
-                      </small>
-                    )}
+              <div key={i} className={p.photo_url ? 'dp-point dp-point-photo' : 'dp-point'}>
+                {/* 사진이 있으면 사진 카드 — 사진 위, 번호·글 아래 */}
+                {p.photo_url && (
+                  <div className="dp-point-img">
+                    <img src={fileUrl(p.photo_url)} alt="" />
                   </div>
                 )}
+                <div className="dp-point-row">
+                  <div className="dp-num">{String(i + 1).padStart(2, '0')}</div>
+                  <div>
+                    <h3>
+                      <RichText text={p.title} />
+                    </h3>
+                    {has(p.desc) && (
+                      <p>
+                        <RichText text={p.desc} />
+                      </p>
+                    )}
+                  </div>
+                  {has(p.big) && (
+                    <div className="dp-big">
+                      <RichText text={p.big} />
+                      {has(p.big_unit) && (
+                        <small>
+                          <RichText text={p.big_unit} />
+                        </small>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -168,7 +179,7 @@ const DetailTemplate = forwardRef(function DetailTemplate(
       )}
 
       {/* S3 맛 선택 */}
-      {flavorItems.length > 0 && (
+      {(flavorItems.length > 0 || galleryItems.length > 0) && (
         <section className="dp-sec dp-s3">
           <div className="dp-label">FLAVOR</div>
           <h2>
@@ -212,6 +223,29 @@ const DetailTemplate = forwardRef(function DetailTemplate(
               </div>
             ))}
           </div>
+          {galleryItems.length > 0 && (
+            <div className="dp-gallery">
+              {has(gallery.title) && (
+                <h3 className="dp-gallery-title">
+                  <RichText text={gallery.title} />
+                </h3>
+              )}
+              <div className={galleryItems.length === 1 ? 'dp-gal dp-gal-1' : 'dp-gal'}>
+                {galleryItems.map((g, i) => (
+                  <figure key={i} className="dp-gal-item">
+                    <div className="dp-gal-img">
+                      <img src={fileUrl(g.photo_url)} alt="" />
+                    </div>
+                    {has(g.caption) && (
+                      <figcaption>
+                        <RichText text={g.caption} />
+                      </figcaption>
+                    )}
+                  </figure>
+                ))}
+              </div>
+            </div>
+          )}
           {notes.length > 0 && (
             <p className="dp-note">
               {notes.map((n, i) => (
@@ -225,12 +259,25 @@ const DetailTemplate = forwardRef(function DetailTemplate(
       )}
 
       {/* S4 제품 정보 */}
-      {(rows.length > 0 || nutrition.length > 0) && (
+      {(rows.length > 0 || nutrition.length > 0 || has(info.label_photo_url)) && (
         <section className="dp-sec">
           <div className="dp-label">INFO</div>
           <h2>
             <RichText text={info.title} />
           </h2>
+          {has(info.label_photo_url) && (
+            <figure className="dp-label-photo">
+              <span className="dp-label-tag">현지 라벨 원본</span>
+              <div className="dp-label-img">
+                <img src={fileUrl(info.label_photo_url)} alt="" />
+              </div>
+              {has(info.label_caption) && (
+                <figcaption>
+                  <RichText text={info.label_caption} />
+                </figcaption>
+              )}
+            </figure>
+          )}
           {rows.length > 0 && (
             <table className="dp-info">
               <tbody>

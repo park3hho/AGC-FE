@@ -12,9 +12,10 @@ import {
   TEMPLATE_WIDTH,
 } from '@/constants/designConst'
 
-// 섹션 안에서라도 자를 수 있는 줄 — 섹션 하나가 3000px 를 넘을 때만 쓴다
+// 섹션 안에서라도 자를 수 있는 줄 — 섹션 하나가 3000px 를 넘을 때만 쓴다.
+//   사진 카드·구성 사진·라벨 사진은 요소 위쪽에서 자르므로 사진 한가운데가 잘리지 않는다
 const ROW_SELECTOR =
-  '.dp-point, .dp-flavor, .dp-info tr, .dp-nutri, .dp-how, .dp-s6 li, .dp-note, h2, .dp-lead'
+  '.dp-point, .dp-flavor, .dp-gallery, .dp-gal-item, .dp-label-photo, .dp-info, .dp-info tr, .dp-nutri, .dp-how, .dp-s6 li, .dp-note, h2, .dp-lead'
 const MIN_SLICE = 300 // 이보다 짧은 조각이 생기지 않게 (섹션 경계를 고를 때)
 const MAX_RENDER_SCALE = 2
 const MAX_CANVAS_SIDE = 32000 // 브라우저 canvas 한 변 한도(32767) 안쪽
