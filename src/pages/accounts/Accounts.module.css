@@ -301,3 +301,13 @@ a.site {
 a.site:hover {
   text-decoration: underline;
 }
+
+/* 로그인 계정 — 비고 (용도 태그 옆, 한 줄) */
+.memo {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -12,4 +12,4 @@ export const PLATFORM_SUGGESTIONS = [
   { name: '배송대행지', url: '' },
 ]
 
-export const USAGES = ['소싱', '판매', '정산', '배송', '통관', '인허가', 'API', '관리자']
+export const USAGES = ['소싱', '판매', '정산', '배송', '통관', '인허가', 'API', '관리자', '기타']

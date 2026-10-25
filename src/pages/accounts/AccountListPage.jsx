@@ -107,6 +107,11 @@ function AccountCard({
             {u}
           </span>
         ))}
+        {account.memo && (
+          <span className={styles.memo} title={account.memo}>
+            {account.memo}
+          </span>
+        )}
       </div>
       {canEdit && (
         <div className={styles.actions}>

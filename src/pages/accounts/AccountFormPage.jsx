@@ -7,7 +7,7 @@ import Section from '@/components/common/Section'
 import { PLATFORM_SUGGESTIONS, USAGES } from '@/constants/accountConst'
 import styles from './Accounts.module.css'
 
-const EMPTY = { platform: '', url: '', loginId: '', password: '' }
+const EMPTY = { platform: '', url: '', loginId: '', password: '', memo: '' }
 
 // 회사 정보 › 로그인 계정 추가 · 수정 — 섹션: 입력 (저장 버튼은 섹션 아래 고정)
 // 플랫폼은 자유 입력 (제안 목록은 자동완성일 뿐). 수정에서 PW 는 바꿀 때만 입력한다.
@@ -26,7 +26,13 @@ export default function AccountFormPage() {
     if (!editing) return
     getCompanyAccount(id)
       .then((a) => {
-        setForm({ platform: a.platform, url: a.url, loginId: a.loginId, password: '' })
+        setForm({
+          platform: a.platform,
+          url: a.url,
+          loginId: a.loginId,
+          password: '',
+          memo: a.memo,
+        })
         setUsages(a.usages)
         setLoaded(true)
       })
@@ -64,6 +70,7 @@ export default function AccountFormPage() {
       platform: form.platform.trim(),
       loginId: form.loginId.trim(),
       url: form.url.trim(),
+      memo: form.memo.trim(),
       usages,
     }
     setSaving(true)
@@ -191,6 +198,20 @@ export default function AccountFormPage() {
               </label>
             ))}
           </div>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label" htmlFor="memo">
+            비고
+          </label>
+          <input
+            id="memo"
+            className="form-input"
+            placeholder="예: 연동 휴대폰 010-0000-0000"
+            maxLength={1000}
+            value={form.memo}
+            onChange={set('memo')}
+          />
         </div>
       </Section>
     </form>
