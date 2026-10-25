@@ -28,8 +28,8 @@ export const TEMPLATE_CSS = `
 .dp .dp-badge{background:#fff;border-radius:16px;padding:14px 22px;min-width:150px}
 .dp .dp-badge b{display:block;font-size:26px;font-weight:800;color:var(--deep);letter-spacing:-.02em}
 .dp .dp-badge span{font-size:14px;color:var(--sub)}
-.dp .dp-hero-img{margin-top:40px;display:flex;justify-content:center;align-items:flex-end}
-.dp .dp-hero-img img{max-width:${TEMPLATE_WIDTH}px;max-height:1100px;width:auto;height:auto}
+.dp .dp-hero-img{margin-top:40px}
+.dp .dp-hero-img img{width:${TEMPLATE_WIDTH}px;height:auto;max-height:1100px;object-fit:contain;object-position:center bottom}
 .dp .dp-hero-pad{height:40px}
 .dp .dp-sec{padding:96px 64px}
 .dp .dp-label{font-size:15px;font-weight:700;color:var(--blue);letter-spacing:.12em}
