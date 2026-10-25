@@ -445,7 +445,7 @@ export default function PricingPage() {
       return { cls: styles.warn, text: '판매가 없음' }
     }
     const emptyBundles = rows.filter((o) => o.bundleQty > 1 && !forms[p.key].prices[o.id]).length
-    if (emptyBundles) return { cls: styles.warn, text: `묶음 판매가 ${emptyBundles}칸 비었음` }
+    if (emptyBundles) return { cls: styles.warn, text: `묶음 빈칸 ${emptyBundles}` }
     return { cls: styles.ok, text: '저장됨' }
   }
 
