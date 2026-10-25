@@ -19,6 +19,14 @@ const toPurchase = (p) => ({
   statusSource: p.status_source, // 'manual' | 'poll'
   statusCheckedAt: p.status_checked_at,
   memo: p.memo || '',
+  // 실제 결제 — 결제창 금액(통화 그대로)과 실제 청구 원화
+  payMethod: p.pay_method || '', // 'card' | 'kakaopay' | 'alipay' | 'other'
+  payCurrency: p.pay_currency || '', // 'USD' | 'KRW' | 'CNY'
+  payAmount: p.pay_amount || '',
+  chargedKrw: p.charged_krw ?? '',
+  chargedStatus: p.charged_status || 'none', // 'none' 미확인 | 'approved' 승인 | 'settled' 청구 확정
+  chargedAt: p.charged_at,
+  chargedSource: p.charged_source || '',
   order: {
     id: p.order.id,
     code: p.order.code || '',
@@ -64,6 +72,13 @@ const toBody = (f) => ({
   cn_tracking_no: orNull(f.cnTrackingNo),
   arrived_at: orNull(f.arrivedAt),
   memo: orNull(f.memo),
+  pay_method: orNull(f.payMethod),
+  pay_currency: orNull(f.payCurrency),
+  pay_amount: orNull(f.payAmount),
+  charged_krw: f.chargedKrw === '' || f.chargedKrw == null ? null : Number(f.chargedKrw),
+  charged_status: f.chargedStatus || 'none',
+  charged_at: orNull(f.chargedAt),
+  charged_source: orNull(f.chargedSource),
 })
 
 export const createPurchase = async (orderId, form) => {

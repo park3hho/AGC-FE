@@ -47,7 +47,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.5fr) minmax(0, 1fr) 120px 80px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.5fr) minmax(0, 1fr) 120px 150px;
   gap: var(--space-3);
   align-items: center;
   width: 100%;
@@ -114,4 +114,13 @@
   .row > :nth-child(5) {
     display: none;
   }
+}
+
+/* 결제 · 실제 청구 칸 — 오른쪽 정렬 두 줄 */
+.payCell {
+  align-items: flex-end;
+}
+
+.main small.warn {
+  color: var(--color-warning);
 }

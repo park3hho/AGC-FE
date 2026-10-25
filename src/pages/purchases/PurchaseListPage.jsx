@@ -5,7 +5,7 @@ import { getPurchases } from '@/api/taobaoPurchase'
 import Badge from '@/components/Badge'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
-import { CN_STATUS, MARKETS } from '@/constants/orderConst'
+import { CHARGED_STATUS, CN_STATUS, MARKETS, PAY_METHOD } from '@/constants/orderConst'
 import styles from './Purchases.module.css'
 
 // 'MM-DD HH:mm' (KST)
@@ -113,7 +113,7 @@ export default function PurchaseListPage() {
               <span role="columnheader">중국 내 배송</span>
               <span role="columnheader">구매 · 입고</span>
               <span role="columnheader" className={styles.num}>
-                결제
+                결제 · 실제 청구
               </span>
             </div>
             {rows.map((p) => (
@@ -153,8 +153,20 @@ export default function PurchaseListPage() {
                   <span>구매 {kst(p.purchasedAt)}</span>
                   <small>입고 {kst(p.arrivedAt)}</small>
                 </span>
-                <span role="cell" className={styles.num}>
-                  {p.paidCny ? `¥${p.paidCny}` : '-'}
+                <span role="cell" className={`${styles.num} ${styles.main} ${styles.payCell}`}>
+                  <span>
+                    {p.paidCny ? `¥${p.paidCny}` : '-'}
+                    {p.payMethod && <small> · {PAY_METHOD[p.payMethod]}</small>}
+                  </span>
+                  <small className={p.chargedStatus === 'none' ? styles.warn : ''}>
+                    {p.chargedKrw !== ''
+                      ? `₩${Number(p.chargedKrw).toLocaleString('ko-KR')}`
+                      : p.payAmount
+                        ? `${p.payCurrency} ${p.payAmount}`
+                        : '결제 미기록'}
+                    {(p.chargedKrw !== '' || p.payAmount) &&
+                      ` · ${CHARGED_STATUS[p.chargedStatus]?.label}`}
+                  </small>
                 </span>
               </button>
             ))}

@@ -635,3 +635,10 @@
   margin: 0;
   color: var(--color-text);
 }
+
+/* 타오바오 구매 입력 — 결제창 금액 (통화 + 금액 한 줄) */
+.amountRow {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: var(--space-2);
+}

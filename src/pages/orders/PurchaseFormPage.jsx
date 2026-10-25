@@ -5,7 +5,15 @@ import { confirmOrder, getOrder } from '@/api/order'
 import { createPurchase, deletePurchase, getPurchase, updatePurchase } from '@/api/taobaoPurchase'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
-import { CN_COURIERS, CN_STATUS, MARKETS, PCCC_STATUS } from '@/constants/orderConst'
+import {
+  CHARGED_STATUS,
+  PAY_CURRENCY,
+  PAY_METHOD,
+  CN_COURIERS,
+  CN_STATUS,
+  MARKETS,
+  PCCC_STATUS,
+} from '@/constants/orderConst'
 import styles from './Orders.module.css'
 
 // ISO → <input type="datetime-local"> 값 (KST)
@@ -33,6 +41,13 @@ const EMPTY = {
   cnTrackingNo: '',
   arrivedAt: '',
   memo: '',
+  payMethod: '',
+  payCurrency: '',
+  payAmount: '',
+  chargedKrw: '',
+  chargedStatus: 'none',
+  chargedAt: '',
+  chargedSource: '',
 }
 
 const orderLabel = (o) =>
@@ -66,6 +81,7 @@ export default function PurchaseFormPage() {
           purchasedAt: toLocal(p.purchasedAt),
           shippedAt: toLocal(p.shippedAt),
           arrivedAt: toLocal(p.arrivedAt),
+          chargedAt: toLocal(p.chargedAt),
         })
         setOrder(p.order)
       } else {
@@ -120,6 +136,7 @@ export default function PurchaseFormPage() {
         purchasedAt: fromLocal(form.purchasedAt),
         shippedAt: fromLocal(form.shippedAt),
         arrivedAt: fromLocal(form.arrivedAt),
+        chargedAt: fromLocal(form.chargedAt),
       }
       if (editing) await updatePurchase(id, body)
       else await createPurchase(orderId, body)
@@ -284,7 +301,7 @@ export default function PurchaseFormPage() {
             </div>
             <div className="form-group">
               <label className="form-label" htmlFor="paidCny">
-                실제 결제 (위안, 할인·배송비 반영)
+                상품 결제 위안 (타오바오 표시 금액)
               </label>
               <input
                 id="paidCny"
@@ -366,6 +383,112 @@ export default function PurchaseFormPage() {
           >
             옵션 줄 추가
           </button>
+        </div>
+
+        <div className={styles.fGroup}>
+          <h3 className={styles.fTitle}>실제 결제</h3>
+          <div className={styles.fGrid}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="payMethod">
+                결제수단
+              </label>
+              <select
+                id="payMethod"
+                className="form-input"
+                value={form.payMethod}
+                onChange={set('payMethod')}
+              >
+                <option value="">모름</option>
+                {Object.entries(PAY_METHOD).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="payAmount">
+                결제창 금액 (결제 수수료 포함)
+              </label>
+              <div className={styles.amountRow}>
+                <select
+                  className="form-input"
+                  aria-label="결제 통화"
+                  value={form.payCurrency}
+                  onChange={set('payCurrency')}
+                >
+                  <option value="">통화</option>
+                  {PAY_CURRENCY.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  id="payAmount"
+                  className="form-input"
+                  inputMode="decimal"
+                  placeholder="예: 4.20"
+                  value={form.payAmount}
+                  onChange={set('payAmount')}
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="chargedKrw">
+                실제 청구 원화 (카드사·카카오페이 기준)
+              </label>
+              <input
+                id="chargedKrw"
+                className="form-input"
+                inputMode="numeric"
+                placeholder="예: 5650"
+                value={form.chargedKrw}
+                onChange={set('chargedKrw')}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="chargedStatus">
+                청구 확인
+              </label>
+              <select
+                id="chargedStatus"
+                className="form-input"
+                value={form.chargedStatus}
+                onChange={set('chargedStatus')}
+              >
+                {Object.entries(CHARGED_STATUS).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="chargedAt">
+                결제 일시
+              </label>
+              <input
+                id="chargedAt"
+                className="form-input"
+                type="datetime-local"
+                value={form.chargedAt}
+                onChange={set('chargedAt')}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="chargedSource">
+                확인한 곳
+              </label>
+              <input
+                id="chargedSource"
+                className="form-input"
+                placeholder="예: 현대카드 앱 승인내역"
+                value={form.chargedSource}
+                onChange={set('chargedSource')}
+              />
+            </div>
+          </div>
         </div>
 
         <div className={styles.fGroup}>

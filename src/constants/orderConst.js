@@ -161,3 +161,17 @@ export const CN_COURIERS = [
   '邮政 (EMS)',
   '德邦 (Deppon)',
 ]
+
+// 타오바오 실제 결제 — BE core/purchase_config
+export const PAY_METHOD = {
+  card: '카드',
+  kakaopay: '카카오페이',
+  alipay: '알리페이',
+  other: '기타',
+}
+export const PAY_CURRENCY = ['USD', 'KRW', 'CNY']
+export const CHARGED_STATUS = {
+  none: { label: '미확인', tone: 'warning' },
+  approved: { label: '승인 금액', tone: 'primary' },
+  settled: { label: '청구 확정', tone: 'success' },
+}
