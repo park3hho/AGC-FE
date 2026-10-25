@@ -15,6 +15,7 @@ import {
   GOOD_MARGIN_PCT,
   LOW_MARGIN_PCT,
   PLATFORMS,
+  PROFIT_MIN_MARGIN_PCT,
 } from '@/constants/pricingConst'
 import {
   calcOption,
@@ -343,6 +344,7 @@ export default function PricingPage() {
     if (!targets.length) return setBulkMsg({ text: '값을 입력하세요', error: true })
     const nextForms = { ...forms }
     let skipped = 0
+    let raised = 0 // 마진 바닥 때문에 올린 칸
     for (const p of targets) {
       const st = states[p.key]
       if (bulk.mode !== 'sale' && !st.feeReady) {
@@ -366,6 +368,14 @@ export default function PricingPage() {
             bulk.mode === 'profit'
               ? salePriceForProfit(o, amount, st.settings)
               : salePriceForMargin(o, amount, st.settings)
+          // 목표 차익: 마진이 바닥(5%) 아래면 바닥 마진이 되는 판매가로 올린다
+          if (bulk.mode === 'profit' && price != null) {
+            const floor = salePriceForMargin(o, PROFIT_MIN_MARGIN_PCT, st.settings)
+            if (floor != null && floor > price) {
+              price = floor
+              raised += 1
+            }
+          }
           if (price == null) {
             return setBulkMsg({
               text: `${p.label}: 이 값으로는 판매가를 계산할 수 없어요`,
@@ -381,7 +391,11 @@ export default function PricingPage() {
     setBulkMsg({
       text: skipped
         ? `용량을 못 읽은 옵션 ${skipped}칸은 배송비를 몰라 그대로 뒀어요`
-        : `${targets.map((p) => p.label).join('·')} 판매가를 바꿨어요. 저장해야 반영돼요`,
+        : `${targets.map((p) => p.label).join('·')} 판매가를 바꿨어요${
+            raised
+              ? ` (마진 ${PROFIT_MIN_MARGIN_PCT}% 아래 ${raised}칸은 ${PROFIT_MIN_MARGIN_PCT}%로 올림)`
+              : ''
+          }. 저장해야 반영돼요`,
       error: false,
     })
   }
@@ -952,7 +966,9 @@ export default function PricingPage() {
                 title={
                   bulk.mode === 'sale'
                     ? '모든 옵션에 같은 판매가 · 비운 판매처는 그대로'
-                    : '100원 단위로 올림 · 비운 판매처는 그대로'
+                    : bulk.mode === 'profit'
+                      ? `100원 단위로 올림 · 마진이 ${PROFIT_MIN_MARGIN_PCT}% 아래면 ${PROFIT_MIN_MARGIN_PCT}%로 · 비운 판매처는 그대로`
+                      : '100원 단위로 올림 · 비운 판매처는 그대로'
                 }
               >
                 쿠팡·네이버 한 번에 적용

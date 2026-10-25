@@ -28,6 +28,10 @@ export const NAVER_ADDON_LIMITS = [
 export const SALE_PRICE_UNIT = 100
 
 // 일괄 적용 방식 — unit: 입력칸 단위, initial: 방식을 바꿀 때 넣어 주는 값
+// 목표 차익으로 맞출 때 마진율 바닥(%) — 차익을 맞춘 판매가의 마진이 이보다 낮으면 이 마진이 되게 올린다
+// (묶음처럼 비싼 옵션은 2,000원 차익이 마진 5% 아래가 된다, 2026-10-26 사용자 결정)
+export const PROFIT_MIN_MARGIN_PCT = 5
+
 export const BULK_MODES = [
   { key: 'profit', label: '목표 차익', unit: '원', initial: '2000' },
   { key: 'margin', label: '목표 마진', unit: '%', initial: '10' },
