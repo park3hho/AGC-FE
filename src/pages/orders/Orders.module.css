@@ -594,3 +594,12 @@
   color: var(--color-text-sub);
   font-weight: 500;
 }
+
+/* 수취인 값 + 복사 (주문 상세) */
+.copyVal {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  word-break: keep-all;
+}

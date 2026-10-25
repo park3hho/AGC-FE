@@ -21,7 +21,7 @@ const toOrder = (o) => ({
   quantity: o.quantity,
   unitPrice: o.unit_price,
   totalPrice: o.total_price,
-  receiver: o.receiver, // { name, phone, zip, address, pccc } — 가린 값
+  receiver: o.receiver, // { name, phone(통관용), contact_phone(쇼핑몰 연락처), zip, address, pccc } — 가린 값
   pcccStatus: o.pccc_status, // 'ok' | 'mismatch' | 'missing' | 'error' | 'pending'
   pcccMessage: o.pccc_message || '',
   pcccCheckedAt: o.pccc_checked_at,
@@ -83,8 +83,26 @@ export const getOrders = async ({
 
 export const getOrder = async (id) => {
   const data = await request(`/orders/${id}`, { errorMsg: '주문을 불러오지 못했어요' })
-  return { order: toOrder(data.order), events: data.events.map(toEvent), raw: data.raw_masked }
+  return toDetail(data)
 }
+
+// 상세 전용 수취인 원본 — 타오바오 한국 주소·배송에 쓴다. 통관용 전화와 쇼핑몰 연락처는 따로
+const toReceiverFull = (r) =>
+  r && {
+    name: r.name || '',
+    zip: r.zip || '',
+    address: r.address || '',
+    customsPhone: r.customs_phone || '',
+    contactPhone: r.contact_phone || '',
+    pccc: r.pccc || '',
+  }
+
+const toDetail = (data) => ({
+  order: toOrder(data.order),
+  events: data.events.map(toEvent),
+  raw: data.raw_masked,
+  receiverFull: toReceiverFull(data.receiver_full),
+})
 
 export const collectOrders = async (markets = ['naver', 'coupang']) => {
   const data = await request('/orders/collect', {
@@ -100,7 +118,7 @@ export const recheckPccc = async (id) => {
     method: 'POST',
     errorMsg: '통관부호를 검증하지 못했어요',
   })
-  return { order: toOrder(data.order), events: data.events.map(toEvent), raw: data.raw_masked }
+  return toDetail(data)
 }
 
 // 앱 아래 바 — 마켓별 마지막 수집 + 자동 수집 주기 (가벼운 조회)

@@ -47,6 +47,38 @@ function MarketMark({
 }
 
 // 상태 표시 — 색 점 + 글자 (DESIGN.md §4.2-9: 둥근 배지 대신)
+// 값 + 복사 버튼 (타오바오 한국 주소에 그대로 붙여넣기용)
+function CopyValue({
+  value, // string: 보여줄 값 (빈 값이면 '없음')
+  label, // string?: 값 뒤 보조 글자
+}) {
+  const [done, setDone] = useState(false)
+  if (!value) return <span className={styles.weak}>없음</span>
+  const copy = async () => {
+    await navigator.clipboard.writeText(value)
+    setDone(true)
+    setTimeout(() => setDone(false), 1200)
+  }
+  return (
+    <span className={styles.copyVal}>
+      <span>{value}</span>
+      {label && <span className={styles.weak}>{label}</span>}
+      <button type="button" className="btn-text" onClick={copy}>
+        {done ? '복사됨' : '복사'}
+      </button>
+    </span>
+  )
+}
+
+const fmtPhone = (v) =>
+  !v
+    ? ''
+    : v.length === 11
+      ? `${v.slice(0, 3)}-${v.slice(3, 7)}-${v.slice(7)}`
+      : v.length === 12
+        ? `${v.slice(0, 4)}-${v.slice(4, 8)}-${v.slice(8)}`
+        : v
+
 function StatusDot({
   tone = 'neutral', // 'success' | 'warning' | 'danger' | 'primary' | 'neutral'
   weak, // boolean?: 글자는 연하게 (점만 색)
@@ -359,6 +391,7 @@ export default function OrderReceivePage() {
   const counts = data?.pcccCounts || {}
   const allCount = Object.values(counts).reduce((a, b) => a + b, 0)
   const o = detail?.order
+  const rf = detail?.receiverFull // 수취인 원본 (상세 전용)
 
   // 타오바오 구매 기록 열기 — id 를 주면 그 구매, 아니면 이 주문의 마지막 구매 (없으면 새로)
   const openPurchase = (purchaseId) => {
@@ -539,12 +572,36 @@ export default function OrderReceivePage() {
                   <dd>{o.sellerCode || '-'}</dd>
                   <dt>수취인</dt>
                   <dd>
-                    {o.receiver.name} · {o.receiver.phone || '전화 없음'} · (
-                    {o.receiver.zip || '우편번호 없음'}) {o.receiver.address}
+                    <CopyValue value={rf?.name || o.receiver.name} />
+                  </dd>
+                  <dt>주소</dt>
+                  <dd>
+                    <CopyValue
+                      value={rf ? rf.address : o.receiver.address}
+                      label={(rf?.zip || o.receiver.zip) && `(${rf?.zip || o.receiver.zip})`}
+                    />
+                  </dd>
+                  <dt>통관용 전화</dt>
+                  <dd>
+                    <CopyValue
+                      value={fmtPhone(rf?.customsPhone) || o.receiver.phone}
+                      label="통관부호 검증·타오바오 주소용"
+                    />
+                  </dd>
+                  <dt>쇼핑몰 연락처</dt>
+                  <dd>
+                    <CopyValue
+                      value={fmtPhone(rf?.contactPhone) || o.receiver.contact_phone}
+                      label={
+                        (rf?.contactPhone || '').startsWith('050')
+                          ? '안심번호 · 고객 연락용'
+                          : '고객 연락용'
+                      }
+                    />
                   </dd>
                   <dt>통관부호</dt>
                   <dd className={styles.pccc}>
-                    <span>{o.receiver.pccc || '없음'}</span>
+                    <CopyValue value={rf?.pccc || o.receiver.pccc} />
                     <StatusDot tone={PCCC_STATUS[o.pcccStatus].tone}>
                       {PCCC_STATUS[o.pcccStatus].label}
                     </StatusDot>
