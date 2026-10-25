@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import { getPricing, savePricing } from '@/api/pricing'
+import { getPricing, rowIdOf, savePricing } from '@/api/pricing'
 import { getProducts } from '@/api/product'
 import Icon from '@/components/Icon'
 import Thumb from '@/components/Thumb'
@@ -25,6 +25,7 @@ import {
   formatAddon,
   formatCny,
   formatFx,
+  formatKgFromG,
   formatPct,
   formatWon,
   naverListingPlan,
@@ -40,13 +41,16 @@ import styles from './PricingEdit.module.css'
 
 // 서버 Pricing → 입력값 (전부 문자열). 환율·배송비는 여기서 입력하지 않는다 (환율 설정 · 옵션 용량으로 자동)
 // (네이버) groupOf: 직접 정한 상품 번호 { [optionId]: n } · baseIds: 직접 정한 대표 옵션 — 비어 있으면 자동
+// rows = 판매 옵션 줄 전부 (조사 옵션 + 묶음). 키는 줄 id (옵션 id · 묶음은 "66x2")
+const byKey = (a, b) => String(a).localeCompare(String(b), 'en', { numeric: true })
 const toForm = (pricing, options) => {
-  const byId = Object.fromEntries(pricing.optionPrices.map((o) => [o.optionId, o.salePrice]))
+  const all = [...pricing.optionPrices, ...pricing.bundlePrices]
+  const byId = Object.fromEntries(all.map((o) => [o.rowId, o.salePrice]))
   const groupOf = {}
   const baseIds = []
-  for (const o of pricing.optionPrices) {
-    if (o.listingGroup != null) groupOf[o.optionId] = o.listingGroup
-    if (o.isBase) baseIds.push(o.optionId)
+  for (const o of all) {
+    if (o.listingGroup != null) groupOf[o.rowId] = o.listingGroup
+    if (o.isBase) baseIds.push(o.rowId)
   }
   // 예전 방식(대표 옵션 1개)으로 저장된 값 — 다음 저장 때 옵션별 isBase 로 바뀐다
   if (pricing.baseOptionId != null && !baseIds.length) baseIds.push(pricing.baseOptionId)
@@ -54,7 +58,7 @@ const toForm = (pricing, options) => {
     platformFeeRate: trimDecimal(pricing.platformFeeRate),
     paymentFeeRate: trimDecimal(pricing.paymentFeeRate),
     groupOf,
-    baseIds: baseIds.sort((a, b) => a - b),
+    baseIds: baseIds.sort(byKey),
     prices: Object.fromEntries(
       options.map((o) => [o.id, byId[o.id] == null ? '' : String(byId[o.id])]),
     ),
@@ -68,7 +72,12 @@ const FEE_FIELDS = [
 
 const inPct = (v) => toNum(v) >= 0 && toNum(v) <= 100
 const invalidPrice = (v) => v !== '' && !(toNum(v) >= 1)
-const optionName = (o) => (o.option2 ? `${o.option1} / ${o.option2}` : o.option1)
+const optionName = (o) =>
+  o.bundleQty > 1
+    ? `${o.marketOption1}${o.marketOption2 ? ` / ${o.marketOption2}` : ''} (${o.packNote})`
+    : o.option2
+      ? `${o.option1} / ${o.option2}`
+      : o.option1
 const YMD = (date) => (date ? date.slice(2).replace(/-/g, '') : '') // '2026-10-24' → '261024'
 
 // 가격 구조 막대 색 — 상품·배송은 옅은 주색, 수수료 선색, 차익 주색 (오버레이는 body 에 그려져 전역 토큰만)
@@ -123,7 +132,7 @@ const platformState = (platform, form, saved, options, survey, fx) => {
 // 한도(NAVER_ADDON_LIMITS)를 넘으면 용량·입수별로 상품을 나눈다 (utils/pricing.naverListingPlan)
 const naverAddons = (form, options) => {
   const items = options
-    .map((o) => ({ id: o.id, sale: toNum(form.prices[o.id]), pack: o.option2 }))
+    .map((o) => ({ id: o.id, sale: toNum(form.prices[o.id]), pack: o.marketOption2 ?? o.option2 }))
     .filter((i) => i.sale >= 1)
   return naverListingPlan(items, { groupOf: form.groupOf, baseIds: form.baseIds })
 }
@@ -194,6 +203,7 @@ export default function PricingPage() {
   const [bulkMsg, setBulkMsg] = useState(EMPTY_MSG)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [bundleOn, setBundleOn] = useState(() => new Set()) // 판매가 없이 켠 묶음 줄
 
   useEffect(() => {
     setData(null)
@@ -202,7 +212,12 @@ export default function PricingPage() {
       .then((d) => {
         setSaved(d.pricings)
         setForms(
-          Object.fromEntries(Object.entries(d.pricings).map(([k, p]) => [k, toForm(p, d.options)])),
+          Object.fromEntries(
+            Object.entries(d.pricings).map(([k, p]) => [
+              k,
+              toForm(p, [...d.options, ...d.bundles]),
+            ]),
+          ),
         )
         setData(d)
       })
@@ -232,20 +247,53 @@ export default function PricingPage() {
   }
   if (!data || !forms) return null
 
-  const { product, survey, fx, options } = data
+  const { product, survey, fx, options, bundles } = data
   const platforms = PLATFORMS.filter((p) => saved[p.key])
+  // 묶음 줄 — 어느 판매처든 판매가가 있거나 켠 것만 판매 옵션. 나머지 제안은 표 아래에 따로
+  const isOn = (b) =>
+    bundleOn.has(b.id) || platforms.some((p) => (forms[p.key].prices[b.id] ?? '') !== '')
+  const allRows = [...options, ...bundles] // 저장 · 바뀐 칸 비교 기준
+  const rows = [...options, ...bundles.filter(isOn)] // 표에 판매 옵션으로 보이는 줄
+  const offers = bundles.filter((b) => !isOn(b))
+  const setBundle = (b, on) => {
+    setBundleOn((s) => {
+      const n = new Set(s)
+      if (on) n.add(b.id)
+      else n.delete(b.id)
+      return n
+    })
+    if (!on) {
+      setForms((f) =>
+        Object.fromEntries(
+          Object.entries(f).map(([k, form]) => {
+            const groupOf = { ...form.groupOf }
+            delete groupOf[b.id]
+            return [
+              k,
+              {
+                ...form,
+                groupOf,
+                baseIds: form.baseIds.filter((id) => id !== b.id),
+                prices: { ...form.prices, [b.id]: '' },
+              },
+            ]
+          }),
+        ),
+      )
+    }
+  }
   const hide = (id) => (survey ? tabs.hide(id) : '')
   const states = survey
     ? Object.fromEntries(
         platforms.map((p) => [
           p.key,
-          platformState(p, forms[p.key], saved[p.key], options, survey, fx),
+          platformState(p, forms[p.key], saved[p.key], allRows, survey, fx),
         ]),
       )
     : {}
   const naverKey = platforms.find((p) => p.priceMode === 'base_addon')?.key
-  const naver = naverKey && survey ? naverAddons(forms[naverKey], options) : null
-  const optionById = Object.fromEntries(options.map((o) => [o.id, o]))
+  const naver = naverKey && survey ? naverAddons(forms[naverKey], allRows) : null
+  const optionById = Object.fromEntries(allRows.map((o) => [o.id, o]))
 
   const toSave = Object.values(states).filter((s) => s.needsSave)
   const totalChanges = Object.values(states).reduce((n, s) => n + s.changeCount, 0)
@@ -263,7 +311,7 @@ export default function PricingPage() {
       const group = naver?.byId[optionId]?.group
       const others = form.baseIds.filter((id) => naver?.byId[id]?.group !== group)
       const baseIds = form.baseIds.includes(optionId) ? others : [...others, optionId]
-      return { ...f, [platformKey]: { ...form, baseIds: baseIds.sort((a, b) => a - b) } }
+      return { ...f, [platformKey]: { ...form, baseIds: baseIds.sort(byKey) } }
     })
   // 상품 번호 옮기기 (네이버) — null = 자동
   const setGroup = (platformKey, optionId, no) =>
@@ -289,7 +337,7 @@ export default function PricingPage() {
       }
       const amount = bulk.amounts[p.key]
       const prices = { ...forms[p.key].prices }
-      for (const o of options) {
+      for (const o of rows) {
         let price
         if (bulk.mode === 'sale') {
           price = Math.round(toNum(amount))
@@ -341,17 +389,18 @@ export default function PricingPage() {
           fxMarkupPct: saved[key].fxMarkupPct ?? '0',
           platformFeeRate: form.platformFeeRate,
           paymentFeeRate: form.paymentFeeRate === '' ? '0' : form.paymentFeeRate,
-          optionPrices: options
-            .filter((o) => form.prices[o.id] !== '')
+          optionPrices: allRows
+            .filter((o) => (form.prices[o.id] ?? '') !== '')
             .map((o) => ({
-              optionId: o.id,
+              optionId: o.optionId ?? o.id,
+              bundleQty: o.bundleQty ?? 1,
               salePrice: Math.round(toNum(form.prices[o.id])),
               listingGroup: addonMode ? (form.groupOf[o.id] ?? null) : null,
               isBase: addonMode && form.baseIds.includes(o.id),
             })),
         })
         setSaved((prev) => ({ ...prev, [key]: res }))
-        setForms((prev) => ({ ...prev, [key]: toForm(res, options) }))
+        setForms((prev) => ({ ...prev, [key]: toForm(res, allRows) }))
       }
       setBulkMsg(EMPTY_MSG)
     } catch (err) {
@@ -364,8 +413,9 @@ export default function PricingPage() {
   const revert = () => {
     setForms((f) => ({
       ...f,
-      ...Object.fromEntries(platforms.map((p) => [p.key, toForm(saved[p.key], options)])),
+      ...Object.fromEntries(platforms.map((p) => [p.key, toForm(saved[p.key], allRows)])),
     }))
+    setBundleOn(new Set())
     setBulkMsg(EMPTY_MSG)
   }
 
@@ -491,13 +541,35 @@ export default function PricingPage() {
                 </tr>
               </thead>
               <tbody>
-                {options.map((o) => {
+                {rows.map((o) => {
                   const cost = costSettings ? costWithShipping(o, costSettings) : null
+                  const bundled = o.bundleQty > 1
                   return (
                     <tr key={o.id}>
                       <td>
-                        <span className={styles.optName}>{o.option1}</span>{' '}
-                        <span className={styles.weak}>{o.option2}</span>
+                        <span className={styles.optName}>
+                          {bundled ? o.marketOption1 : o.option1}
+                        </span>{' '}
+                        <span className={styles.weak}>{bundled ? o.marketOption2 : o.option2}</span>
+                        {bundled && (
+                          <span className={styles.bundleNote}>
+                            묶음 {o.packNote} · {formatKgFromG(o.weightG)} · 타오바오에서{' '}
+                            {o.bundleQty}개 구매
+                            <button
+                              type="button"
+                              className={styles.bundleBtn}
+                              onClick={() => setBundle(o, false)}
+                              title="이 묶음을 판매 옵션에서 빼요 (저장해야 반영)"
+                            >
+                              빼기
+                            </button>
+                          </span>
+                        )}
+                        {o.overDutyFree && (
+                          <span className={styles.optWarn}>
+                            상품가가 면세 한도($150)를 넘을 수 있어요
+                          </span>
+                        )}
                         {o.shippingCny == null && (
                           <span className={styles.optWarn}>용량을 못 읽어 배송비를 몰라요</span>
                         )}
@@ -659,6 +731,37 @@ export default function PricingPage() {
                           </td>
                         )
                       })}
+                    </tr>
+                  )
+                })}
+                {offers.map((b) => {
+                  const one = optionById[b.optionId]
+                  const perUnit = b.shippingCny == null ? null : toNum(b.shippingCny) / b.bundleQty
+                  return (
+                    <tr key={b.id} className={styles.offerRow}>
+                      <td colSpan={2 + platforms.length}>
+                        <span className={styles.offerTag}>묶음 제안</span>
+                        <span className={styles.optName}>{b.marketOption1}</span>{' '}
+                        <span className={styles.weak}>{b.marketOption2}</span>
+                        <span className={styles.bundleNote}>
+                          {b.packNote} · {formatKgFromG(b.weightG)} · 운임{' '}
+                          {formatCny(b.shippingCny)}
+                          {one?.shippingCny != null && perUnit != null && (
+                            <>
+                              {' '}
+                              ({one.option2 || one.option1} 1개당 {formatCny(perUnit.toFixed(2))},
+                              지금 {formatCny(one.shippingCny)})
+                            </>
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          className={styles.bundleBtn}
+                          onClick={() => setBundle(b, true)}
+                        >
+                          판매 옵션으로 추가
+                        </button>
+                      </td>
                     </tr>
                   )
                 })}

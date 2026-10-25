@@ -484,3 +484,35 @@
     width: 90px;
   }
 }
+
+/* 묶음 판매 줄 (조사 옵션 × N) — 배지 대신 글자, 버튼은 밑줄 글자 (DESIGN §4.2-9) */
+.bundleNote {
+  display: block;
+  color: var(--color-text-sub);
+  font-size: 11px;
+}
+
+.bundleBtn {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.offerRow td {
+  background: var(--color-bg-sub);
+  color: var(--color-text-sub);
+}
+
+.offerTag {
+  margin-right: 8px;
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: 700;
+}

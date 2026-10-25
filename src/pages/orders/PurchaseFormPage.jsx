@@ -64,6 +64,7 @@ export default function PurchaseFormPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState(EMPTY)
   const [order, setOrder] = useState(null) // 붙는 고객 주문
+  const [sourcing, setSourcing] = useState(null) // 타오바오에서 살 것 (조사 옵션 × 묶음)
   const [receiver, setReceiver] = useState(null) // 배송지 원본 (발주확인 전 재확인용)
   const [confirming, setConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState('')
@@ -85,12 +86,24 @@ export default function PurchaseFormPage() {
         })
         setOrder(p.order)
       } else {
-        const { order: o, receiverFull } = await getOrder(orderId)
+        const { order: o, receiverFull, sourcing: s } = await getOrder(orderId)
         setReceiver(receiverFull)
+        setSourcing(s)
+        // 조사 옵션을 찾았으면 타오바오 옵션 이름 · 살 개수(주문 수량 × 묶음) · 단가를 미리 채운다
+        const found = s && s.optionId
         setForm({
           ...EMPTY,
           purchasedAt: nowLocal(),
-          items: [{ name: o.optionName || o.productName, qty: o.quantity, priceCny: '' }],
+          itemUrl: s?.taobaoUrl || '',
+          items: [
+            found
+              ? {
+                  name: [s.option1, s.option2].filter(Boolean).join(' '),
+                  qty: s.taobaoQty,
+                  priceCny: s.priceCny ?? '',
+                }
+              : { name: o.optionName || o.productName, qty: o.quantity, priceCny: '' },
+          ],
         })
         setOrder(o)
       }
@@ -221,6 +234,15 @@ export default function PurchaseFormPage() {
         <div className={styles.fGroup}>
           <h3 className={styles.fTitle}>고객 주문</h3>
           <p className={styles.linkText}>{order ? orderLabel(order) : '불러오는 중…'}</p>
+          {sourcing?.optionId && !editing && (
+            <p className={styles.linkText}>
+              타오바오에서 살 것: {sourcing.option1} {sourcing.option2} ×{sourcing.taobaoQty}개
+              {sourcing.bundleQty > 1
+                ? ` (주문 ${order?.quantity ?? 1}개 × 묶음 ${sourcing.bundleQty})`
+                : ''}{' '}
+              · 조사가 {sourcing.priceCny ? `¥${sourcing.priceCny}` : '-'}
+            </p>
+          )}
           {order && !editing && (
             <p className={order.confirmed ? styles.confirmOk : styles.confirmWait}>
               {order.confirmed

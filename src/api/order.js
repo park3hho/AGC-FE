@@ -102,6 +102,22 @@ const toDetail = (data) => ({
   events: data.events.map(toEvent),
   raw: data.raw_masked,
   receiverFull: toReceiverFull(data.receiver_full),
+  // 타오바오에서 살 것 — 마켓 옵션 = 조사 옵션 × 묶음 수 (판매자 코드 · 마켓 등록 기록으로 찾음). 못 찾으면 null
+  sourcing: data.sourcing
+    ? {
+        productId: data.sourcing.product_id,
+        productCode: data.sourcing.product_code,
+        productTitle: data.sourcing.product_title || '',
+        taobaoUrl: data.sourcing.taobao_url || '',
+        optionId: data.sourcing.option_id ?? null,
+        option1: data.sourcing.option1 || '',
+        option2: data.sourcing.option2 || '',
+        priceCny: data.sourcing.price_cny ?? null,
+        bundleQty: data.sourcing.bundle_qty ?? null,
+        taobaoQty: data.sourcing.taobao_qty ?? null, // 주문 수량 × 묶음 수
+        matchedBy: data.sourcing.matched_by,
+      }
+    : null,
 })
 
 export const collectOrders = async (markets = ['naver', 'coupang']) => {
