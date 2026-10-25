@@ -17,6 +17,8 @@ const toBundle = (b) => ({
   packNote: b.pack_note || '', // "24캔×2"
   totalCount: b.total_count ?? null,
   overDutyFree: !!b.over_duty_free, // 상품가가 면세 한도($150 근사)를 넘을 수 있음
+  adopted: !!b.adopted, // 판매 옵션으로 채택함 (판매가는 비어 있을 수 있음)
+  sku: b.sku || '', // 마켓 판매자 코드 PR-…-66x2
 })
 
 const toOptionPrice = (o) => ({
@@ -99,3 +101,18 @@ export const savePricing = async (productId, platform, body) => {
   })
   return toPricing(data.pricing)
 }
+
+// 묶음을 판매 옵션으로 채택 (판매가는 비워 둔다 — 가격 책정 저장으로 따로 넣는다)
+export const adoptBundle = (productId, optionId, bundleQty) =>
+  request(`/products/${productId}/pricing/bundles`, {
+    method: 'POST',
+    body: { option_id: optionId, bundle_qty: bundleQty },
+    errorMsg: '묶음을 추가하지 못했어요',
+  })
+
+// 채택 풀기 — 저장된 판매가는 가격 책정에서 지우고 저장해야 없어진다
+export const dropBundle = (productId, optionId, bundleQty) =>
+  request(`/products/${productId}/pricing/bundles/${optionId}/${bundleQty}`, {
+    method: 'DELETE',
+    errorMsg: '묶음을 빼지 못했어요',
+  })

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import { getPricing, rowIdOf, savePricing } from '@/api/pricing'
+import { adoptBundle, dropBundle, getPricing, rowIdOf, savePricing } from '@/api/pricing'
 import { getProducts } from '@/api/product'
 import Icon from '@/components/Icon'
 import Thumb from '@/components/Thumb'
@@ -203,7 +203,8 @@ export default function PricingPage() {
   const [bulkMsg, setBulkMsg] = useState(EMPTY_MSG)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const [bundleOn, setBundleOn] = useState(() => new Set()) // 판매가 없이 켠 묶음 줄
+  const [bundleOn, setBundleOn] = useState(() => new Set()) // 판매 옵션으로 채택한 묶음 줄 (서버 product_bundle)
+  const [bundleBusy, setBundleBusy] = useState(false)
 
   useEffect(() => {
     setData(null)
@@ -219,6 +220,7 @@ export default function PricingPage() {
             ]),
           ),
         )
+        setBundleOn(new Set(d.bundles.filter((b) => b.adopted).map((b) => b.id)))
         setData(d)
       })
       .catch((err) => setError(err.message))
@@ -230,7 +232,9 @@ export default function PricingPage() {
       .then((list) => {
         const here = list.findIndex((p) => p.id === Number(productId))
         const todo = list.filter(
-          (p) => p.id !== Number(productId) && ['pending', 'partial'].includes(p.pricingStatus),
+          (p) =>
+            p.id !== Number(productId) &&
+            (['pending', 'partial'].includes(p.pricingStatus) || p.bundleUnpriced > 0),
         )
         setNext(todo.find((p) => list.indexOf(p) > here) || todo[0] || null)
       })
@@ -255,7 +259,16 @@ export default function PricingPage() {
   const allRows = [...options, ...bundles] // 저장 · 바뀐 칸 비교 기준
   const rows = [...options, ...bundles.filter(isOn)] // 표에 판매 옵션으로 보이는 줄
   const offers = bundles.filter((b) => !isOn(b))
-  const setBundle = (b, on) => {
+  // 추가 · 빼기는 바로 서버에 남긴다 (판매가는 저장 버튼으로 따로)
+  const setBundle = async (b, on) => {
+    setSaveError('')
+    try {
+      if (on) await adoptBundle(product.id, b.optionId, b.bundleQty)
+      else await dropBundle(product.id, b.optionId, b.bundleQty)
+    } catch (err) {
+      setSaveError(err.message)
+      return
+    }
     setBundleOn((s) => {
       const n = new Set(s)
       if (on) n.add(b.id)
@@ -415,7 +428,7 @@ export default function PricingPage() {
       ...f,
       ...Object.fromEntries(platforms.map((p) => [p.key, toForm(saved[p.key], allRows)])),
     }))
-    setBundleOn(new Set())
+
     setBulkMsg(EMPTY_MSG)
   }
 
@@ -431,6 +444,8 @@ export default function PricingPage() {
     if (options.every((o) => forms[p.key].prices[o.id] === '')) {
       return { cls: styles.warn, text: '판매가 없음' }
     }
+    const emptyBundles = rows.filter((o) => o.bundleQty > 1 && !forms[p.key].prices[o.id]).length
+    if (emptyBundles) return { cls: styles.warn, text: `묶음 판매가 ${emptyBundles}칸 비었음` }
     return { cls: styles.ok, text: '저장됨' }
   }
 
@@ -943,6 +958,21 @@ export default function PricingPage() {
                 쿠팡·네이버 한 번에 적용
               </button>
 
+              {offers.length > 0 && (
+                <button
+                  type="button"
+                  className={`btn-secondary btn-md ${styles.applyBtn}`}
+                  disabled={bundleBusy}
+                  title="표 아래 묶음 제안을 모두 판매 옵션으로 넣어요. 판매가는 비워 둬요"
+                  onClick={async () => {
+                    setBundleBusy(true)
+                    for (const b of offers) await setBundle(b, true)
+                    setBundleBusy(false)
+                  }}
+                >
+                  {bundleBusy ? '추가 중…' : `묶음 제안 ${offers.length}개 모두 추가`}
+                </button>
+              )}
               {saveError && <p className={styles.hintError}>{saveError}</p>}
               <div className={styles.saveRow}>
                 <button

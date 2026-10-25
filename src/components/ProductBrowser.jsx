@@ -20,7 +20,9 @@ const SORTS = [
 
 const matchStatus = (p, status) => {
   if (status === 'all') return true
-  if (status === 'todo') return p.pricingStatus === 'pending' || p.pricingStatus === 'partial'
+  // 할 일 = 판매가를 아직 안 정했거나, 채택한 묶음 판매가가 빈 제품
+  if (status === 'todo')
+    return p.pricingStatus === 'pending' || p.pricingStatus === 'partial' || p.bundleUnpriced > 0
   return p.pricingStatus === status
 }
 
@@ -75,9 +77,14 @@ export default function ProductBrowser({
   const rows = filtered.slice((current - 1) * pageSize, current * pageSize)
 
   const badge = (p) => (
-    <Badge tone={PRICING_STATUS[p.pricingStatus].tone}>
-      {PRICING_STATUS[p.pricingStatus].label}
-    </Badge>
+    <>
+      <Badge tone={PRICING_STATUS[p.pricingStatus].tone}>
+        {PRICING_STATUS[p.pricingStatus].label}
+      </Badge>
+      {p.bundleUnpriced > 0 && (
+        <span className={styles.bundleTodo}>묶음 판매가 {p.bundleUnpriced}칸</span>
+      )}
+    </>
   )
 
   return (

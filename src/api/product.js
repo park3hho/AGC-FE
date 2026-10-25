@@ -27,6 +27,7 @@ const toProduct = (p) => ({
       }
     : null,
   pricedPlatforms: p.priced_platforms || [], // 판매가를 저장한 판매처 키
+  bundleUnpriced: p.bundle_unpriced || 0, // 채택한 묶음 중 판매가가 빈 칸 수 (판매처 × 묶음)
   pricingStatus: pricingStatusOf(p.priced_platforms || [], !!p.latest_survey || p.survey_count > 0),
 })
 
