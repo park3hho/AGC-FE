@@ -824,15 +824,17 @@ export default function PricingPage() {
                 type="button"
                 className={`btn-secondary btn-sm ${styles.applyBtn}`}
                 onClick={applyBulk}
+                title={
+                  bulk.mode === 'sale'
+                    ? '모든 옵션에 같은 판매가 · 비운 판매처는 그대로'
+                    : '100원 단위로 올림 · 비운 판매처는 그대로'
+                }
               >
                 쿠팡·네이버 한 번에 적용
               </button>
-              <p className={bulkMsg.error ? styles.hintError : styles.hint}>
-                {bulkMsg.text ||
-                  (bulk.mode === 'sale'
-                    ? '모든 옵션에 같은 판매가 · 비운 판매처는 그대로'
-                    : '100원 단위로 올림 · 비운 판매처는 그대로')}
-              </p>
+              {bulkMsg.text && (
+                <p className={bulkMsg.error ? styles.hintError : styles.hint}>{bulkMsg.text}</p>
+              )}
             </Section>
 
             <Section name="수수료" id="fees" className={hide('side')}>
