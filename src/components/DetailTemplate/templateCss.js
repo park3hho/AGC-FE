@@ -28,8 +28,8 @@ export const TEMPLATE_CSS = `
 .dp .dp-badge{background:#fff;border-radius:16px;padding:14px 22px;min-width:150px}
 .dp .dp-badge b{display:block;font-size:26px;font-weight:800;color:var(--deep);letter-spacing:-.02em}
 .dp .dp-badge span{font-size:14px;color:var(--sub)}
-.dp .dp-free{display:inline-flex;align-items:center;gap:14px;margin-top:28px;background:var(--deep);color:#fff;border-radius:999px;padding:12px 28px 12px 12px;font-size:19px;font-weight:600;letter-spacing:-.01em}
-.dp .dp-free b{background:#ffd84d;color:var(--deep);border-radius:999px;padding:6px 18px;font-size:20px;font-weight:800}
+.dp .dp-free{display:flex;align-items:center;justify-content:center;gap:18px;width:${TEMPLATE_WIDTH}px;background:var(--deep);color:#fff;padding:28px 40px;font-size:20px;font-weight:700;letter-spacing:-.01em;text-align:left}
+.dp .dp-free b{flex:0 0 auto;background:#ffd84d;color:var(--deep);border-radius:999px;padding:8px 22px;font-size:20px;font-weight:800}
 .dp .dp-hero-img{margin-top:40px}
 .dp .dp-hero-img img{width:${TEMPLATE_WIDTH}px;height:auto;max-height:1100px;object-fit:contain;object-position:center bottom}
 .dp .dp-hero-pad{height:40px}
