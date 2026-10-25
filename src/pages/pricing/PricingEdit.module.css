@@ -424,6 +424,18 @@
   color: var(--color-text-sub);
 }
 
+.row .gridLabel {
+  width: 76px;
+}
+
+.row .select {
+  flex: 1;
+}
+
+.row + .grid {
+  margin-top: var(--space-2);
+}
+
 .applyBtn {
   width: 100%;
   margin-top: var(--space-2);

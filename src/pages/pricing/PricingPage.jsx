@@ -769,7 +769,8 @@ export default function PricingPage() {
             </Section>
 
             <Section name="한 번에 맞추기" id="bulk" className={hide('side')}>
-              <div className={styles.grid} style={{ '--cols': platforms.length }}>
+              <div className={styles.row}>
+                <span className={styles.gridLabel}>방식</span>
                 <select
                   className={styles.select}
                   value={bulk.mode}
@@ -789,6 +790,9 @@ export default function PricingPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className={styles.grid} style={{ '--cols': platforms.length }}>
+                <span />
                 {platforms.map((p) => (
                   <span key={p.key} className={styles.gridHead}>
                     {p.label} ({bulkMode.unit})
