@@ -11,6 +11,8 @@ const toProduct = (p) => ({
   titleKo: p.title_ko || '',
   photoPath: p.photo_url || '', // BE 에 저장된 값 그대로 — 가격조사에 연결할 때 보낸다
   photoUrl: fileUrl(p.photo_url), // 화면에 띄울 주소
+  photoPaths: p.photos || [], // 추가 사진(갤러리) — BE 에 저장된 값 그대로, 순서대로
+  photos: (p.photos || []).map(fileUrl), // 추가 사진 — 화면에 띄울 주소
   addedAt: toKstDate(p.created_at), // 제품 코드 추가일
   createdAt: p.created_at, // 제품 추가 시각 (ISO) — 리서치 시작
   surveyCount: p.survey_count ?? 0,
@@ -40,7 +42,7 @@ export const getProduct = async (id) => {
   return { product: toProduct(data.product), surveys: data.price_surveys.map(toResearchSummary) }
 }
 
-// 제품에 모인 사진 전부 — 대표 사진 + 가격 조사들의 옵션(맛)별 사진. 같은 파일은 한 번만.
+// 제품에 모인 사진 전부 — 대표 사진 + 추가 사진(갤러리) + 가격 조사들의 옵션(맛)별 사진. 같은 파일은 한 번만.
 // 반환: [{ url, label }] (label: '대표' 또는 '옵션1 · 옵션2')
 // 조사 하나를 못 불러와도 나머지 사진은 보여준다.
 export const getProductPhotos = async (product, surveys) => {
@@ -53,6 +55,8 @@ export const getProductPhotos = async (product, surveys) => {
     photos.push({ url, label })
   }
   add(product.photoUrl, '대표')
+  const extra = product.photos || []
+  extra.forEach((u, i) => add(u, `추가 ${i + 1}`))
   details.forEach((d) => {
     if (!d) return
     add(d.photoUrl, '대표')
