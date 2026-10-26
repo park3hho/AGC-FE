@@ -127,6 +127,17 @@ export const MENU = [
     path: '/accounts',
     feature: FEATURE.ACCOUNT_VIEW,
   },
+  // 플레이북 — 반복할 작업 방식 문서 (src/playbooks/*.md). 개발자 모드에서만 보인다
+  {
+    key: 'playbooks',
+    group: 'settings',
+    label: '플레이북',
+    dev: true,
+    icon: 'book',
+    tone: 'neutral',
+    path: '/playbooks',
+    feature: FEATURE.RESEARCH,
+  },
   {
     key: 'users',
     group: 'settings',

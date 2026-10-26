@@ -24,6 +24,7 @@ const DesignEditPage = lazy(() => import('@/pages/design/DesignEditPage'))
 const ShippingFeePage = lazy(() => import('@/pages/pricing/ShippingFeePage'))
 const ExchangeRatePage = lazy(() => import('@/pages/pricing/ExchangeRatePage'))
 const MarketsPage = lazy(() => import('@/pages/markets/MarketsPage'))
+const PlaybooksPage = lazy(() => import('@/pages/playbooks/PlaybooksPage'))
 const CompanyInfoPage = lazy(() => import('@/pages/accounts/CompanyInfoPage'))
 const CompanyInfoFormPage = lazy(() => import('@/pages/accounts/CompanyInfoFormPage'))
 const AccountListPage = lazy(() => import('@/pages/accounts/AccountListPage'))
@@ -76,6 +77,7 @@ export default function App() {
               <Route path="/shipping/addresses/edit" element={<ShippingAddressFormPage />} />
               <Route path="/exchange-rate" element={<ExchangeRatePage />} />
               <Route path="/markets" element={<MarketsPage />} />
+            <Route path="/playbooks" element={<PlaybooksPage />} />
             </Route>
 
             <Route element={<RequireAuth feature={FEATURE.ACCOUNT_VIEW} />}>
