@@ -63,6 +63,6 @@
 /* 표 공통 칸 여백이 0 이라 가격 칸과 붙지 않게 */
 .options th.barcode,
 .options td.barcode {
-  padding-left: var(--space-6);
+  padding-left: var(--space-5);
   padding-right: var(--space-4);
 }
