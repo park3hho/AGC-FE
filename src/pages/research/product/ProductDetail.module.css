@@ -320,3 +320,46 @@
     word-break: break-all;
   }
 }
+
+/* 제품 상세 › 제품 정보 (제조사·원재료·알레르기·소비기한·보관) */
+.infoRows {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--font-sm);
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.infoRow dt {
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+
+.infoRow dd {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: pre-line;
+}
+
+.infoEmpty {
+  color: var(--color-warning);
+}
+
+.infoForm {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.infoForm textarea {
+  resize: vertical;
+  min-height: 64px;
+}

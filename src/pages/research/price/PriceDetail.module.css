@@ -42,3 +42,20 @@
     display: contents;
   }
 }
+
+/* 옵션 표 › 바코드 칸 */
+.barcode {
+  width: 160px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.barcode :global(.form-input) {
+  height: 30px;
+  padding: 0 var(--space-2);
+  font-size: var(--font-sm);
+}
+
+.noBarcode {
+  color: var(--color-warning);
+}

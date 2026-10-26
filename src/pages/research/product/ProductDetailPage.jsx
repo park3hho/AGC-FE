@@ -22,6 +22,7 @@ import {
 } from '@/utils/pricing'
 import research from '../Research.module.css'
 import styles from './ProductDetail.module.css'
+import ProductInfoSection from './ProductInfoSection'
 
 // 데스크탑에서 가격조사 섹션 한 페이지 건수 (섹션이 남은 높이를 채우지 않아 고정)
 const SURVEY_PAGE = 2
@@ -85,6 +86,7 @@ export default function ProductDetailPage() {
     [
       { id: 'photos', name: '사진' },
       { id: 'info', name: '정보' },
+      { id: 'product-info', name: '제품정보' },
       { id: 'price-summary', name: '판매가' },
       options.length > 0 && { id: 'options', name: '옵션' },
       { id: 'surveys', name: '조사' },
@@ -252,7 +254,6 @@ export default function ProductDetailPage() {
             )}
           </Section>
 
-
           <Section
             name="기본 정보"
             id="info"
@@ -282,6 +283,12 @@ export default function ProductDetailPage() {
               <dd>{product.addedAt}</dd>
             </dl>
           </Section>
+          <ProductInfoSection
+            product={product}
+            onSaved={(p) => setData({ ...data, product: p })}
+            fill={fillOf('product-info', false)}
+            className={tabs.hide('product-info')}
+          />
           <Section
             name="가격조사"
             id="surveys"
@@ -329,7 +336,6 @@ export default function ProductDetailPage() {
 
         {/* 오른쪽 — 판매가 요약 · 옵션 */}
         <div className={`fit-col ${styles.col}`}>
-
           <Section
             name="판매가 요약"
             id="price-summary"

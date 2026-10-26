@@ -37,8 +37,18 @@ export const getPriceResearch = async (id) => {
       option2: o.option2 || '',
       priceCny: o.price_cny, // 문자열 "39.90"
       photoUrl: fileUrl(o.photo_url),
+      barcode: o.barcode || '', // 바코드 (GTIN) — 쿠팡 공식 브랜드 등록에 필요
     })),
   }
+}
+
+// 옵션 1개의 바코드만 고친다 (옵션 id 유지 → 저장된 판매가·마켓 등록 연결 그대로). 빈 값이면 비운다.
+export const updateOptionBarcode = async (surveyId, optionId, barcode) => {
+  await request(`/price-surveys/${surveyId}/options/${optionId}`, {
+    method: 'PATCH',
+    body: { barcode: barcode && barcode.trim() ? barcode.trim() : null },
+    errorMsg: '바코드를 저장하지 못했어요',
+  })
 }
 
 // 다음 조사 코드번호 미리보기 (조사일 기준) — 실제 코드는 등록 응답의 code
@@ -65,6 +75,7 @@ export const createPriceResearch = async (r) => {
         option1: o.option1,
         option2: orNull(o.option2),
         price_cny: String(o.priceCny),
+        barcode: orNull(o.barcode),
       })),
     },
     errorMsg: '조사를 저장하지 못했어요',

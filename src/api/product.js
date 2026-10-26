@@ -13,6 +13,12 @@ const toProduct = (p) => ({
   photoUrl: fileUrl(p.photo_url), // 화면에 띄울 주소
   photoPaths: p.photos || [], // 추가 사진(갤러리) — BE 에 저장된 값 그대로, 순서대로
   photos: (p.photos || []).map(fileUrl), // 추가 사진 — 화면에 띄울 주소
+  // 제품 정보 — 리서치 때 함께 찾아 저장, 상세페이지 '제품 정보' 표가 쓴다
+  manufacturer: p.manufacturer || '',
+  ingredients: p.ingredients || '',
+  allergens: p.allergens || '',
+  shelfLife: p.shelf_life || '',
+  storage: p.storage || '',
   addedAt: toKstDate(p.created_at), // 제품 코드 추가일
   createdAt: p.created_at, // 제품 추가 시각 (ISO) — 리서치 시작
   surveyCount: p.survey_count ?? 0,
@@ -75,6 +81,23 @@ export const getNextProductCode = async () => {
 export const uploadPhoto = async (file) => {
   const data = await upload('/uploads/photos', file, { errorMsg: '사진을 올리지 못했어요' })
   return data.url
+}
+
+// 제품 정보 저장 — 빈 칸은 null 로 보내 비운다
+export const updateProductInfo = async (id, info) => {
+  const v = (s) => (s && s.trim() ? s.trim() : null)
+  const data = await request(`/products/${id}`, {
+    method: 'PATCH',
+    body: {
+      manufacturer: v(info.manufacturer),
+      ingredients: v(info.ingredients),
+      allergens: v(info.allergens),
+      shelf_life: v(info.shelfLife),
+      storage: v(info.storage),
+    },
+    errorMsg: '제품 정보를 저장하지 못했어요',
+  })
+  return toProduct(data.product)
 }
 
 // photoFile: File? — 있으면 먼저 올리고 받은 주소로 등록한다

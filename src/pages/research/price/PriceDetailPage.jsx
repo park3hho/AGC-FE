@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
-import { getPriceResearch } from '@/api/priceResearch'
+import { getPriceResearch, updateOptionBarcode } from '@/api/priceResearch'
 import PageHeader from '@/components/common/PageHeader'
 import Pager from '@/components/common/Pager'
 import Section from '@/components/common/Section'
@@ -39,6 +39,9 @@ export default function PriceDetailPage() {
   const [item, setItem] = useState(null)
   const [error, setError] = useState('')
   const [optionPage, setOptionPage] = useState(1)
+  const [barcodes, setBarcodes] = useState(null) // 바코드 입력 중이면 { optionId: 값 }
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const optionRef = useRef(null)
   const optionSize = useFitRows(optionRef, { fallback: 49 })
   const tabs = useSectionTabs(TABS)
@@ -60,6 +63,30 @@ export default function PriceDetailPage() {
     )
   }
   if (!item) return null
+
+  const startBarcodes = () => {
+    setBarcodes(Object.fromEntries(item.options.map((o) => [o.id, o.barcode])))
+    setSaveError('')
+  }
+  // 바뀐 것만 저장 — 하나라도 실패하면 멈추고 알린다 (앞에 저장된 건 그대로)
+  const saveBarcodes = async () => {
+    setSaving(true)
+    setSaveError('')
+    try {
+      for (const o of item.options) {
+        const next = (barcodes[o.id] || '').trim()
+        if (next === o.barcode) continue
+        await updateOptionBarcode(item.id, o.id, next)
+      }
+      setItem(await getPriceResearch(id))
+      setBarcodes(null)
+    } catch (err) {
+      setSaveError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+  const missingBarcodes = item.options.filter((o) => !o.barcode).length
 
   const pageCount = Math.max(1, Math.ceil(item.options.length / optionSize))
   const current = Math.min(optionPage, pageCount)
@@ -129,7 +156,27 @@ export default function PriceDetailPage() {
       <Section
         name="옵션"
         id="options"
-        sub={`총 ${item.options.length}종류`}
+        sub={`총 ${item.options.length}종류${missingBarcodes ? ` · 바코드 없음 ${missingBarcodes}` : ''}`}
+        action={
+          barcodes ? (
+            <>
+              <button
+                className="btn-ghost btn-sm"
+                onClick={() => setBarcodes(null)}
+                disabled={saving}
+              >
+                취소
+              </button>
+              <button className="btn-primary btn-sm" onClick={saveBarcodes} disabled={saving}>
+                저장
+              </button>
+            </>
+          ) : (
+            <button className="btn-secondary btn-sm" onClick={startBarcodes}>
+              바코드 입력
+            </button>
+          )
+        }
         flush
         fill={fillOf('options', true)}
         className={`${own.options} ${tabs.hide('options')}`}
@@ -142,6 +189,7 @@ export default function PriceDetailPage() {
               <th>옵션1</th>
               <th>옵션2</th>
               <th className={detail.price}>가격 (위안)</th>
+              <th>바코드</th>
             </tr>
           </thead>
           <tbody>
@@ -155,10 +203,25 @@ export default function PriceDetailPage() {
                 </td>
                 <td>{o.option2 || '-'}</td>
                 <td className={detail.price}>¥{o.priceCny}</td>
+                <td className={own.barcode}>
+                  {barcodes ? (
+                    <input
+                      className="form-input"
+                      inputMode="numeric"
+                      placeholder="69… 13자리"
+                      aria-label={`${o.option1} ${o.option2 || ''} 바코드`}
+                      value={barcodes[o.id] ?? ''}
+                      onChange={(e) => setBarcodes({ ...barcodes, [o.id]: e.target.value })}
+                    />
+                  ) : (
+                    o.barcode || <span className={own.noBarcode}>없음</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {saveError && <p className="form-error">{saveError}</p>}
       </Section>
     </main>
   )
