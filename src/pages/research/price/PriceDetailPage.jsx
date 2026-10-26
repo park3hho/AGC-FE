@@ -189,7 +189,7 @@ export default function PriceDetailPage() {
               <th>옵션1</th>
               <th>옵션2</th>
               <th className={detail.price}>가격 (위안)</th>
-              <th>바코드</th>
+              <th className={own.barcode}>바코드</th>
             </tr>
           </thead>
           <tbody>
