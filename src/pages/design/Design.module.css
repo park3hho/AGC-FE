@@ -490,3 +490,13 @@
 .linkNote a {
   color: var(--color-primary);
 }
+
+/* 휴먼 체크 — 남은 확인 표시 (마우스를 올리면 자리 목록) */
+.markNeed {
+  align-self: center;
+  color: var(--color-danger);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: help;
+}

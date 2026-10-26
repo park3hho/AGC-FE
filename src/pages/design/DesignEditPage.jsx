@@ -91,7 +91,10 @@ export default function DesignEditPage() {
   const dirty = !saved || !same(content, saved)
   const commonDirty = !!common && !same(commonBody(common), commonBody(savedCommon))
   const markerCount = useMemo(
-    () => (content && common ? countMarks(content) + countMarks(commonBody(common)) : 0),
+    () =>
+      content && common
+        ? countMarks(content) + countMarks({ ...commonBody(common), reg_no: '' })
+        : 0,
     [content, common],
   )
   const regNoReady = !!savedCommon?.regNoReady && !commonDirty
@@ -195,7 +198,8 @@ export default function DesignEditPage() {
   }
 
   const st = DETAIL_STATUS[status]
-  const exportReady = status === 'approved' && !dirty && !commonDirty
+  // 확인 표시 [[...]]가 남으면 내보내기도 잠근다 (BE 409 와 같은 규칙, 2026-10-26)
+  const exportReady = status === 'approved' && !dirty && !commonDirty && markerCount === 0
   // 미리보기 이름표 옆 — 저장된 상세 이미지 버전 (지금 내용과 다르면 '예전')
   const exportNote = EXPORT_PLATFORMS.map((pf) => {
     const e = page?.exports?.[pf.key]
@@ -272,7 +276,9 @@ export default function DesignEditPage() {
               title={
                 exportReady
                   ? '네이버 860px PNG(무손실) · 쿠팡 780px JPG(품질 100), 3000px 이하 조각 (zip)'
-                  : '휴먼 체크에서 확인한 상세페이지만 내보낼 수 있어요'
+                  : markerCount > 0
+                    ? `확인 필요 ${markerCount}칸 — [[...]] 표시를 실제 값으로 채워야 내보낼 수 있어요`
+                    : '휴먼 체크에서 확인한 상세페이지만 내보낼 수 있어요'
               }
               onClick={downloadImages}
             >

@@ -8,7 +8,7 @@ const kst = (iso) =>
 
 // 디자인(제품) › 휴먼 체크 — 사람이 미리보기를 보고 '확인' 한 번 누르면 검수 완료 (승인).
 //   체크리스트 없음 (2026-10-22 사용자 결정). 초안 · 검수 대기 · 수정 필요 어디서든 바로 확인할 수 있다.
-//   등록번호 미입력 · 확인 표시([[...]]) 남음은 막지 않고 경고만 한다 — 이미지에 그대로 나간다.
+//   등록번호 미입력은 경고만. 확인 표시([[...]])가 남으면 확인을 잠근다 — 고객 이미지에 그대로 찍히므로 (2026-10-26, BE 409).
 //   수정 요청은 메모 필수. BE 규칙은 docs/api-contract.md approve.
 export default function ReviewPanel({
   page, // object?: 저장된 상세페이지 (없으면 null)
@@ -23,13 +23,12 @@ export default function ReviewPanel({
   const [note, setNote] = useState('')
   const status = page?.status || 'none'
   const approved = status === 'approved'
-  const canConfirm = canReview && !!page && !approved && !dirty && !busy
+  const canConfirm = canReview && !!page && !approved && !dirty && !busy && markerCount === 0
   const canChange = canReview && ['review', 'approved'].includes(status) && !busy
 
-  const warn = [
-    markerCount > 0 && `확인 표시 ${markerCount}개 남음`,
-    !regNoReady && '등록번호 미입력',
-  ].filter(Boolean)
+  const warn = [!regNoReady && '등록번호 미입력'].filter(Boolean)
+  // 남은 확인 표시 자리 (저장된 내용 기준, BE markers) — 버튼 힌트로
+  const spots = (page?.markers || []).map((m) => `${m.where} ${m.text}`).join('\n')
 
   const reason = !page
     ? '먼저 저장해요'
@@ -39,7 +38,9 @@ export default function ReviewPanel({
         ? `확인됨 — ${page.reviewedBy?.name || '-'} · ${kst(page.reviewedAt)}`
         : dirty
           ? '저장 안 한 변경이 있어요 — 저장한 뒤 확인해요'
-          : '미리보기를 보고 확인을 누르면 검수 완료'
+          : markerCount > 0
+            ? '[[...]] 표시를 채우고 저장하면 확인할 수 있어요'
+            : '미리보기를 보고 확인을 누르면 검수 완료'
 
   return (
     <div className={styles.review}>
@@ -59,15 +60,27 @@ export default function ReviewPanel({
         >
           수정 요청
         </button>
+        {markerCount > 0 && (
+          <span className={styles.markNeed} title={spots || undefined}>
+            확인 필요 {markerCount}칸
+          </span>
+        )}
         <button
           type="button"
           className="btn-primary btn-sm"
           disabled={!canConfirm}
+          title={markerCount > 0 ? '[[...]] 표시를 실제 값으로 채워야 확인할 수 있어요' : undefined}
           onClick={() => onApprove(note.trim())}
         >
           확인
         </button>
       </div>
+      {markerCount > 0 && (
+        <p className={styles.reviewWarn}>
+          [[...]] 표시 {markerCount}칸이 남아 있어 확인 · 이미지 내보내기를 잠갔어요
+          {approved ? ' (이미 확인된 페이지도 채우기 전엔 내보낼 수 없어요)' : ''}
+        </p>
+      )}
       {!approved && warn.length > 0 && (
         <p className={styles.reviewWarn}>{warn.join(' · ')} — 이미지에 그대로 나가요</p>
       )}

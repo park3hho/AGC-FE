@@ -44,6 +44,7 @@ const toPage = (p) =>
         content: p.content,
         reviewChecks: p.review_checks || [],
         markerCount: p.marker_count || 0,
+        markers: p.markers || [], // 남은 확인 표시 자리 [{ path, where, text }] — 남으면 확인 · 내보내기 409
         contentHash: p.content_hash || '',
         exports: Object.fromEntries(
           Object.entries(p.exports || {}).map(([k, e]) => [k, toExport(e)]),
