@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://180.231.169.53/:path*" },
+    { "source": "/api/:path*", "destination": "https://api.eidofood.com/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
