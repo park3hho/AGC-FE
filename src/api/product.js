@@ -1,4 +1,4 @@
-import { fileUrl, request, upload } from '@/api/client'
+import { fileUrl, request, requestAll, upload } from '@/api/client'
 import { getPriceResearch, toResearchSummary } from '@/api/priceResearch'
 import { toKstDate } from '@/utils/date'
 import { pricingStatusOf } from '@/utils/pricing'
@@ -31,10 +31,10 @@ const toProduct = (p) => ({
   pricingStatus: pricingStatusOf(p.priced_platforms || [], !!p.latest_survey || p.survey_count > 0),
 })
 
-// TODO: 제품이 100개를 넘으면 화면에 페이지 넘김을 붙인다 (BE 는 page/size 지원)
+// 제품 전부 (BE 는 100개씩 → 페이지를 다 받아 합친다)
 export const getProducts = async () => {
-  const data = await request('/products?size=100', { errorMsg: '제품 목록을 불러오지 못했어요' })
-  return data.items.map(toProduct)
+  const items = await requestAll('/products', { errorMsg: '제품 목록을 불러오지 못했어요' })
+  return items.map(toProduct)
 }
 
 // 제품 상세 + 그 제품의 가격 조사 요약 (조사일 최근 순)

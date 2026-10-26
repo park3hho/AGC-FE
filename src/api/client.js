@@ -64,3 +64,16 @@ export async function request(path, { method = 'GET', body, errorMsg, authRedire
   })
   return handleResponse(res, errorMsg, authRedirect)
 }
+
+// 페이지 넘김 목록 API 를 전부 받는다 (BE size 최대 100) — 첫 페이지의 total 을 보고 나머지 페이지는 한 번에.
+//   목록이 100개를 넘으면 잘리던 문제 (2026-10-26: 제품 226개 중 최근 100개만 보임)
+export async function requestAll(path, { size = 100, errorMsg } = {}) {
+  const sep = path.includes('?') ? '&' : '?'
+  const pageOf = (n) => request(`${path}${sep}size=${size}&page=${n}`, { errorMsg })
+  const first = await pageOf(1)
+  const pages = Math.ceil((first.total || 0) / size)
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, pages - 1) }, (_, i) => pageOf(i + 2)),
+  )
+  return [first, ...rest].flatMap((d) => d.items)
+}

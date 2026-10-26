@@ -1,4 +1,4 @@
-import { fileUrl, request } from '@/api/client'
+import { fileUrl, request, requestAll } from '@/api/client'
 
 // BE 응답(snake_case) → 화면에서 쓰는 모양(camelCase). 스펙: docs/api-contract.md
 export const toResearchSummary = (s) => ({
@@ -16,10 +16,10 @@ export const toResearchSummary = (s) => ({
   naverUrl: s.naver_url || '',
 })
 
-// TODO: 조사가 100개를 넘으면 화면에 페이지 넘김을 붙인다 (BE 는 page/size 지원)
+// 가격 조사 전부 (BE 는 100개씩 → 페이지를 다 받아 합친다)
 export const getPriceResearches = async () => {
-  const data = await request('/price-surveys?size=100', { errorMsg: '조사 목록을 불러오지 못했어요' })
-  return data.items.map(toResearchSummary)
+  const items = await requestAll('/price-surveys', { errorMsg: '조사 목록을 불러오지 못했어요' })
+  return items.map(toResearchSummary)
 }
 
 // 가격 조사 상세 (옵션 포함)
