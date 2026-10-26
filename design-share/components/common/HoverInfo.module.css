@@ -1,0 +1,26 @@
+.target {
+  border-bottom: 1px dashed transparent;
+  cursor: help;
+  outline: 0;
+}
+
+.target:hover,
+.target:focus-visible {
+  border-bottom-color: var(--color-text-weak);
+}
+
+.box {
+  position: fixed;
+  z-index: 1000;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-pop);
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+}

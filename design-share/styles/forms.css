@@ -1,0 +1,45 @@
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-label {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.form-input {
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+@media (max-width: 768px) {
+  .form-input {
+    min-height: var(--touch-min);
+  }
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+[data-theme='netrunner'] .form-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.form-input-error {
+  border-color: var(--color-danger);
+}
+
+.form-error {
+  font-size: var(--font-sm);
+  color: var(--color-danger);
+}

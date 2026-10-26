@@ -1,0 +1,9 @@
+/* Pretendard (한글·본문) — scripts/export-design-share.mjs 가 만든 파일. variables.css 보다 먼저 import 한다.
+   넷러너 테마의 영문·숫자 글꼴 Chakra Petch 는 index.html 에 Google Fonts 링크로 (docs/design-system-share.md) */
+@font-face {
+  font-family: 'Pretendard';
+  src: url('../fonts/PretendardVariable.woff2') format('woff2-variations');
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+}

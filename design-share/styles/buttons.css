@@ -1,0 +1,81 @@
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.btn-text,
+.btn-danger {
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.btn-primary:active {
+  background: var(--color-primary-pressed);
+}
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.btn-secondary {
+  background: var(--color-bg-sub);
+  color: var(--color-text);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-sub);
+}
+.btn-text {
+  background: none;
+  color: var(--color-primary);
+  padding: 0;
+}
+.btn-danger {
+  background: var(--color-danger);
+  color: var(--color-on-primary);
+}
+
+.btn-sm {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-sm);
+}
+.btn-md {
+  min-height: var(--touch-min);
+  padding: 0 var(--space-4);
+}
+.btn-lg {
+  min-height: 56px;
+  padding: 0 var(--space-5);
+}
+.btn-full {
+  width: 100%;
+}
+
+/* 넷러너 — 주요 버튼은 오른쪽 위를 잘라낸 모서리 + 빛, 마우스를 올리면 짧은 RGB 갈라짐 (DESIGN.md §4.8) */
+[data-theme='netrunner'] .btn-primary,
+[data-theme='netrunner'] .btn-danger {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  box-shadow: var(--glow-primary);
+}
+
+[data-theme='netrunner'] .btn-primary:hover:not(:disabled) {
+  animation: nr-glitch 0.3s steps(2) 1;
+  text-shadow:
+    -1px 0 var(--color-accent),
+    1px 0 rgba(255, 255, 255, 0.6);
+}
+
+[data-theme='netrunner'] .btn-secondary {
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+[data-theme='netrunner'] .btn-secondary:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+  color: var(--color-accent);
+}

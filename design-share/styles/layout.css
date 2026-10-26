@@ -1,0 +1,186 @@
+/* 화면 본문 — 칸(pane) 배치: 앱 틀 안을 끝까지 채우고, 섹션은 카드로 띄우지 않고 1px 선으로 나눈다 (DESIGN.md §4.2)
+   높이는 틀의 남은 높이로 고정 (§4.4). 기본 섹션은 줄어들지 않고, Section fill 하나가 남은 높이를 채운다.
+   overflow-y: auto 는 비상용 — 창이 아주 낮아 fill 의 최소 높이(--fill-min)도 안 나올 때만 생긴다 */
+.page-flat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--page-gap);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: var(--page-pad-y) var(--page-pad-x);
+  overflow-y: auto;
+  background: var(--color-bg);
+}
+
+.page-flat > * {
+  flex-shrink: 0;
+}
+
+/* 화면 맞춤 틀 (§4.4) — fill 섹션을 감싸는 줄·칸은 남은 높이를 넘겨준다
+   .fit-row: 가로로 나란히 (열 너비는 화면 CSS 에서 grid-template-columns 로) · .fit-col: 세로로 쌓기 */
+.fit-row {
+  display: grid;
+  flex: 1 1 0;
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--page-gap);
+  min-height: var(--fill-min);
+}
+
+.fit-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--page-gap);
+  min-width: 0;
+  min-height: 0;
+}
+
+.page-flat > .fit-col {
+  flex: 1 1 0;
+}
+
+.fit-col > * {
+  flex-shrink: 0;
+}
+
+/* 칸 나누기 선 — 가로로 나란한 칸은 왼쪽 선, 세로로 쌓인 칸은 위 선 (틈 0, 선은 한 줄만) */
+.fit-row > * + * {
+  box-shadow: inset 1px 0 0 var(--color-border);
+}
+
+.fit-col > * + * {
+  box-shadow: inset 0 1px 0 var(--color-border);
+}
+
+.page-flat h1 {
+  font-size: var(--font-lg);
+}
+
+@media (max-width: 768px) {
+  .fit-row > * + * {
+    box-shadow: inset 0 1px 0 var(--color-border); /* 모바일은 세로로 쌓이므로 위 선 */
+  }
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--color-overlay);
+  animation: fade-in 0.15s;
+}
+
+.modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-pop);
+}
+
+/* 화면 아래 고정 버튼 줄 — 페이지가 스크롤되지 않으니 본문 맨 아래에 두면 된다 */
+.sticky-cta {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: var(--space-2) var(--pane-pad-x);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+/* 모바일 섹션 탭(SectionTabs)으로 가린 섹션 */
+@media (max-width: 768px) {
+  .mobile-hidden {
+    display: none !important;
+  }
+}
+
+/* 섹션 이름 보기 (DESIGN.md §4.6) — 위쪽 바 버튼이 body 에 .show-sections 를 붙인다 */
+body.show-sections [data-section] {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 2px;
+}
+
+body.show-sections [data-section]::before {
+  content: attr(data-section);
+  position: absolute;
+  top: -11px;
+  left: 10px;
+  z-index: 30;
+  padding: 0 8px;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* 공통 틀(맨 위·맨 왼쪽에 붙은 영역)은 이름표가 화면 밖으로 잘리지 않게 안쪽에 */
+body.show-sections [data-section^='공통']::before {
+  top: 4px;
+  left: auto;
+  right: 8px;
+}
+
+body.show-sections [data-section^='공통'] {
+  outline-offset: -2px;
+}
+
+/* ═══ 넷러너 테마 장식 (DESIGN.md §4.8) — 평소엔 조용하고, 마우스를 올리거나 고를 때만 짧게 ═══ */
+[data-theme='netrunner'] body {
+  letter-spacing: 0.01em;
+}
+
+[data-theme='netrunner'] h1,
+[data-theme='netrunner'] h2,
+[data-theme='netrunner'] h3 {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+/* 화면 아주 옅은 주사선 — 클릭은 통과 */
+[data-theme='netrunner'] #root::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.018) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+@keyframes nr-glitch {
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  25% {
+    transform: translate(-1px, 1px);
+  }
+  50% {
+    transform: translate(1px, -1px);
+  }
+  75% {
+    transform: translate(-1px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='netrunner'] * {
+    animation: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  [data-theme='netrunner'] #root::after {
+    display: none;
+  }
+}

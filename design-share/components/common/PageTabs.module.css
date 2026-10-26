@@ -1,0 +1,25 @@
+/* 화면 머리 탭 — 제목 옆 작은 세그먼트 */
+.tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius);
+  background: var(--color-bg-sub);
+  vertical-align: middle;
+}
+
+.tab {
+  padding: 3px 10px;
+  border-radius: var(--radius);
+  color: var(--color-text-sub);
+  font-size: 13px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.on {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px var(--color-border);
+}

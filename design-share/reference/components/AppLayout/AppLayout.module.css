@@ -1,0 +1,429 @@
+/* 공통 틀 (DESIGN.md §4.5) — 데스크탑: 왼쪽 메뉴 + 위쪽 바 / ≤ 768px: 위쪽 바 + 아래 탭 */
+
+/* 틀은 창 높이에 고정 — 페이지 전체 스크롤 금지 (DESIGN.md §4.4) */
+.shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--color-bg-app);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 화면 본문 자리 — 위쪽 바 아래 남은 높이 전부 */
+.content {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+/* ---------- 왼쪽 메뉴 ---------- */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--space-3) var(--space-2);
+  overflow-y: auto;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-1) 10px var(--space-4);
+}
+
+.brand b {
+  display: block;
+  font-size: var(--font-md);
+}
+
+.brand small {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.navGroup {
+  margin-top: var(--space-3);
+}
+
+.navLabel {
+  padding: 0 10px 6px;
+  color: var(--color-text-weak);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  color: var(--color-text-sub);
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.navItem:hover {
+  background: var(--color-bg-sub);
+}
+
+.navOn,
+.navOn:hover {
+  background: var(--color-primary-bg);
+  color: var(--color-primary-pressed);
+  font-weight: 600;
+}
+
+/* 넷러너 — 고른 메뉴는 왼쪽 빨간 선 */
+:global([data-theme='netrunner']) .navOn {
+  box-shadow: inset 2px 0 0 var(--color-primary);
+  color: var(--color-primary);
+}
+
+:global([data-theme='netrunner']) .brand b,
+:global([data-theme='netrunner']) .logo {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+:global([data-theme='netrunner']) .logo {
+  clip-path: polygon(0 0, 100% 0, 100% 65%, 65% 100%, 0 100%);
+}
+
+.navSoon,
+.navSoon:hover {
+  background: none;
+  color: var(--color-text-weak);
+  cursor: default;
+}
+
+.navSoon small {
+  margin-left: auto;
+  font-size: 11px;
+}
+
+.me {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-3) 6px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  background: var(--color-bg-sub);
+  color: var(--color-text-sub);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.meText {
+  flex: 1;
+  min-width: 0;
+}
+
+.meText b {
+  display: block;
+  font-size: var(--font-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meText small {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+/* ---------- 위쪽 바 ---------- */
+.topbar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-3);
+  height: var(--topbar-h);
+  padding: 0 var(--pane-pad-x);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-app-glass);
+  backdrop-filter: blur(6px);
+}
+
+.crumb {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-weak);
+  font-size: var(--font-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crumb b {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.crumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.crumb a:hover {
+  color: var(--color-primary);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 300px;
+  height: 30px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text-weak);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--color-text);
+  font-size: var(--font-sm);
+}
+
+.fx {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 13px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.fx b {
+  color: var(--color-text);
+}
+
+.fxDot {
+  width: 7px;
+  height: 7px;
+  margin-right: 2px;
+  border-radius: 50%;
+  background: var(--color-warning-strong);
+}
+
+.sectionToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sectionToggleOn {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary-pressed);
+  font-weight: 600;
+}
+
+/* ---------- 아래 탭 (모바일) ---------- */
+.tabbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--color-text-weak);
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.tabOn {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: var(--tabbar-h);
+  }
+
+  .sidebar,
+  .search,
+  .fxMeta,
+  .sectionToggleText,
+  .crumbGroup {
+    display: none;
+  }
+
+  .topbar {
+    padding: 0 var(--space-4);
+  }
+
+  .crumb {
+    font-size: var(--font-md);
+  }
+
+  .tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    height: var(--tabbar-h);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg);
+  }
+}
+
+/* 내 계정 — 누르면 모달 (개발자 모드 · 로그아웃) */
+button.me {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-text-sub);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.me:hover .meText b {
+  color: var(--color-primary);
+}
+
+.devTag {
+  color: var(--color-dev);
+  font-weight: 600;
+}
+
+/* 개발자 모드 전용 메뉴 — 보라색 글씨 */
+.navDev,
+.navDev:hover {
+  color: var(--color-dev);
+}
+
+.navDev.navOn,
+.navDev.navOn:hover {
+  background: var(--color-dev-bg);
+  color: var(--color-dev);
+}
+
+/* ---------- 아래 바 (데스크탑) — 틀의 일부, 본문은 그 위 남은 높이만 쓴다 ---------- */
+.footer {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-3);
+  height: var(--footer-h);
+  padding: 0 var(--pane-pad-x);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.footItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+}
+
+.footItem:hover b {
+  color: var(--color-primary);
+}
+
+.footWeak {
+  color: var(--color-text-weak);
+}
+
+.footBad {
+  color: var(--color-danger);
+}
+
+.footRight {
+  margin-left: auto;
+  color: var(--color-text-weak);
+}
+
+@media (max-width: 768px) {
+  .footer {
+    display: none;
+  }
+}
