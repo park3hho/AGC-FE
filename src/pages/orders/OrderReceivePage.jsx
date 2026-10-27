@@ -708,7 +708,9 @@ export default function OrderReceivePage() {
                       : formatWon(it.totalPrice)}
                   {it.amount?.discount > 0 && (
                     <small className={it.amount.discountSeller ? styles.sellerCut : styles.weak}>
-                      할인 {minus(it.amount.discount)} ({burdenText(it.amount, it.market)})
+                      할인 {minus(it.amount.discount)}
+                      <br />
+                      {burdenText(it.amount, it.market)}
                     </small>
                   )}
                 </span>
