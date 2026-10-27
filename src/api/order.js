@@ -11,6 +11,24 @@ const toOrder = (o) => ({
   shipUnitNo: o.ship_unit_no,
   marketStatus: o.market_status,
   confirmed: o.confirmed,
+  // 금액 (2026-10-27) — total 판매가(총액) · discount 할인 · discountMarket 마켓 부담 · discountSeller 판매자 부담(우리 몫이 깎임)
+  //   · paid 고객 결제 · fee 수수료(feeDetail · feeRate) · settlement 정산 예정 · estimated(수수료율로 추정) · actual(마켓 실제 정산액)
+  amount: o.amount
+    ? {
+        total: o.amount.total,
+        discount: o.amount.discount,
+        discountMarket: o.amount.discount_market,
+        discountSeller: o.amount.discount_seller,
+        paid: o.amount.paid,
+        fee: o.amount.fee,
+        feeDetail: o.amount.fee_detail || [],
+        feeRate: o.amount.fee_rate,
+        settlement: o.amount.settlement,
+        estimated: !!o.amount.estimated,
+        actual: !!o.amount.actual,
+      }
+    : null,
+  settlementDate: o.settlement_date || null,
   claimType: o.claim_type || null, // 클레임 (CANCEL · RETURN · EXCHANGE · STOP_SHIPPING …) · 없으면 null
   claimStatus: o.claim_status || null,
   claimAt: o.claim_at || null,

@@ -198,6 +198,61 @@ function TraceProgress({
 
 // 추적 기록 1줄 — 시각 · 단계(중분류) · 종류만. 누르면 내용 칸이 뜬다 (한 번에 하나, 바깥 누르기·스크롤·Esc 로 닫힘)
 // 내용 칸은 섹션 스크롤에 잘리지 않게 body 위에 fixed 로 그린다 (아래 자리가 모자라면 위로)
+// 할인 부담 주체 — '쿠팡 부담' · '판매자 부담' · '쿠팡 2,000 · 판매자 1,000'
+const burdenText = (a, market) => {
+  const m = MARKETS[market]?.label || market
+  if (!a.discount) return ''
+  if (!a.discountSeller) return `${m} 부담`
+  if (!a.discountMarket) return '판매자 부담'
+  return `${m} ${a.discountMarket.toLocaleString('ko-KR')} · 판매자 ${a.discountSeller.toLocaleString('ko-KR')}`
+}
+const minus = (n) => `−${(n || 0).toLocaleString('ko-KR')}`
+
+// 주문 상세 › 금액 — 판매가 · 할인(부담) · 고객 결제 · 수수료 · 정산 예정 (판매자 부담 할인은 주황)
+function AmountBox({ amount: a, market, settlementDate }) {
+  const m = MARKETS[market]?.label || market
+  const pct = (n) => (a.discount ? Math.round((n / a.discount) * 100) : 0)
+  return (
+    <dl className={styles.amount}>
+      <dt>판매가(총액)</dt>
+      <dd>{formatWon(a.total)}</dd>
+      {a.discount > 0 && (
+        <>
+          <dt className={a.discountSeller ? styles.sellerCut : ''}>할인</dt>
+          <dd className={a.discountSeller ? styles.sellerCut : ''}>
+            {minus(a.discount)}
+            <small>
+              부담: {m} {a.discountMarket.toLocaleString('ko-KR')}
+              {a.discountMarket ? ` (${pct(a.discountMarket)}%)` : ''} / 판매자{' '}
+              {a.discountSeller.toLocaleString('ko-KR')}
+            </small>
+          </dd>
+        </>
+      )}
+      <dt>고객 결제</dt>
+      <dd>{formatWon(a.paid)}</dd>
+      <dt>수수료{a.estimated && a.feeRate != null ? '(추정)' : ''}</dt>
+      <dd>
+        {minus(a.fee)}
+        <small>
+          {a.feeDetail.length
+            ? a.feeDetail.map((f) => `${f.label} ${f.amount.toLocaleString('ko-KR')}`).join(' · ')
+            : a.feeRate != null
+              ? `${a.feeRate}%`
+              : ''}
+        </small>
+      </dd>
+      <dt className={styles.settleDt}>
+        {a.actual ? '정산 확정' : a.estimated ? '정산 예정(추정)' : '정산 예정'}
+      </dt>
+      <dd className={styles.settleDd}>
+        {a.settlement == null ? '-' : formatWon(a.settlement)}
+        {a.actual && settlementDate && <small>{settlementDate}</small>}
+      </dd>
+    </dl>
+  )
+}
+
 function EventRow({
   event, // object: 주문 기록
   onPurchase, // function?: 타오바오 구매기록이면 그 구매 열기 (누르면 바로 이동)
@@ -646,7 +701,16 @@ export default function OrderReceivePage() {
                   )}
                 </span>
                 <span className={styles.price}>
-                  {it.totalPrice == null ? '-' : formatWon(it.totalPrice)}
+                  {it.amount
+                    ? formatWon(it.amount.total)
+                    : it.totalPrice == null
+                      ? '-'
+                      : formatWon(it.totalPrice)}
+                  {it.amount?.discount > 0 && (
+                    <small className={it.amount.discountSeller ? styles.sellerCut : styles.weak}>
+                      할인 {minus(it.amount.discount)} ({burdenText(it.amount, it.market)})
+                    </small>
+                  )}
                 </span>
               </button>
             ))}
@@ -711,10 +775,21 @@ export default function OrderReceivePage() {
                   <dd>
                     {o.optionName || '-'} × {o.quantity}
                   </dd>
-                  <dt>결제</dt>
+                  <dt>결제 시각</dt>
+                  <dd>{kst(o.paidAt || o.orderedAt)}</dd>
+                  <dt>금액</dt>
                   <dd>
-                    {o.totalPrice == null ? '-' : formatWon(o.totalPrice)} ·{' '}
-                    {kst(o.paidAt || o.orderedAt)}
+                    {o.amount ? (
+                      <AmountBox
+                        amount={o.amount}
+                        market={o.market}
+                        settlementDate={o.settlementDate}
+                      />
+                    ) : o.totalPrice == null ? (
+                      '-'
+                    ) : (
+                      formatWon(o.totalPrice)
+                    )}
                   </dd>
                   <dt>마켓 상태</dt>
                   <dd>

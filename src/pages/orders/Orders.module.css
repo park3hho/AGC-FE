@@ -718,3 +718,49 @@
 .diffList li + li {
   margin-top: 2px;
 }
+
+/* 주문 금액 — 총액 · 할인(부담) · 고객 결제 · 수수료 · 정산 (2026-10-27) */
+.price small {
+  display: block;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.amount {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 12px;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.amount dt {
+  color: var(--color-text-sub);
+}
+
+.amount dd {
+  margin: 0;
+  text-align: right;
+}
+
+.amount dd small {
+  display: block;
+  color: var(--color-text-weak);
+  font-size: 11px;
+}
+
+.settleDt,
+.settleDd {
+  padding-top: 4px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+/* 판매자 부담 할인 — 우리 몫이 깎이는 경우 주황 */
+.sellerCut,
+.amount .sellerCut,
+.amount dd.sellerCut small {
+  color: var(--color-warning);
+  font-weight: 600;
+}
