@@ -705,3 +705,16 @@
   color: var(--color-danger);
   font-weight: 600;
 }
+
+/* 추적 기록 › '변경' 펼침 — 이전값 → 새값 (2026-10-27) */
+.diffList {
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.diffList li + li {
+  margin-top: 2px;
+}

@@ -13,12 +13,12 @@ import {
 import { getJiyunList } from '@/api/jiyun'
 import { getPurchases } from '@/api/taobaoPurchase'
 import PageHeader from '@/components/common/PageHeader'
+import { collectMode, diffLines, eventTitle } from '@/utils/orderEvent'
 import Section from '@/components/common/Section'
 import {
   ACTOR,
   CLAIM_TYPE,
   CN_STATUS,
-  EVENT_KIND,
   MARKET_STATUS,
   MARKETS,
   KIND_STEP,
@@ -279,7 +279,7 @@ function EventRow({
           </StatusDot>
         )}
         <b className={`${styles.eventKind} ${bad ? styles.bad : ''}`}>
-          {EVENT_KIND[event.kind] || event.kind}
+          {eventTitle(event)}
           {bad && ' — 불일치'}
         </b>
         {event.via === 'mock' && <span className={styles.weak}>목업</span>}
@@ -297,10 +297,19 @@ function EventRow({
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.eventSummary}>{event.summary}</div>
+            {event.kind === 'changed' && diffLines(event).length > 0 && (
+              <ul className={styles.diffList}>
+                {diffLines(event).map((x) => (
+                  <li key={x.key}>
+                    <span className={styles.weak}>{x.label}</span> {x.from} → <b>{x.to}</b>
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className={styles.weak}>
               {actor.label}
               {event.actorName && ` ${event.actorName}`} ·{' '}
-              {TRACE_SOURCE[d.source] || VIA[event.via] || event.via}
+              {collectMode(event) || TRACE_SOURCE[d.source] || VIA[event.via] || event.via}
               {event.syncRunId && ` · 수집 #${event.syncRunId}`}
               {late && ` · 기록 ${kst(event.at).slice(5)}`}
             </div>
