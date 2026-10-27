@@ -46,7 +46,9 @@ export function eventTitle(event) {
   const d = event.data || {}
   const diff = d.diff || {}
   const keys = Object.keys(diff)
-  const due = diff.ship_due_at
+  // 발송기한 — 날짜(KST)가 그대로고 시각만 바뀐 건(쿠팡이 00:00·09:00 을 번갈아 줌) 발송지연이 아니다
+  const dueRaw = diff.ship_due_at
+  const due = dueRaw && md(dueRaw[0]) !== md(dueRaw[1]) ? dueRaw : null
   const dueText = due
     ? new Date(due[1]) > new Date(due[0])
       ? `발송지연 안내 · 발송기한 ${md(due[0])} → ${md(due[1])}`
@@ -71,8 +73,10 @@ export function eventTitle(event) {
   if (diff.confirmed && keys.length === 1) return '발주확인됨 (마켓에서)'
   // 6) 수취인·통관 정보
   if (!keys.length && d.receiver_now) return '수취인·통관 정보 변경'
-  // 그 밖 — '변경 · 수량, 금액'
-  const names = keys.map((k) => DIFF_FIELD[k] || k)
+  // 그 밖 — '변경 · 수량, 금액' (발송기한은 시각만 바뀌었으면 '발송기한 시각 (11-09)')
+  const names = keys.map((k) =>
+    k === 'ship_due_at' && !due ? `발송기한 시각 (${md(dueRaw[1])})` : DIFF_FIELD[k] || k,
+  )
   if (d.receiver_now) names.push('수취인·통관 정보')
   return names.length ? `${base} · ${names.join(', ')}` : base
 }
