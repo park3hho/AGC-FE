@@ -6,6 +6,7 @@ import {
   collectOrders,
   getOrder,
   getOrders,
+  getOrderUpdates,
   ORDERS_COLLECTED_EVENT,
   recheckPccc,
 } from '@/api/order'
@@ -15,6 +16,7 @@ import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import {
   ACTOR,
+  CLAIM_TYPE,
   CN_STATUS,
   EVENT_KIND,
   MARKET_STATUS,
@@ -345,6 +347,11 @@ export default function OrderReceivePage() {
   const [busy, setBusy] = useState('') // 'collect' | 'recheck' | ''
   const [popId, setPopId] = useState(null) // 내용 칸이 열린 추적 기록 줄 (한 번에 하나)
   const [view, setView] = useState('trace') // 추적 기록 섹션 보기: trace 기록 · detail 주문 상세 · raw 마켓 원본
+  const [alerts, setAlerts] = useState({ orders: [], claims: [] }) // 화면을 연 뒤 새로 생긴 주문·클레임 (알림)
+  const [notifyPerm, setNotifyPerm] = useState(
+    typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
+  )
+  const lastEventId = useRef(null) // 알림 기준 — 이 id 뒤의 수집·클레임 기록만 새 소식
 
   const stage = params.get('stage') || 'received' // 목록 단계 탭
   const filter = params.get('pccc') || 'all'
@@ -386,6 +393,65 @@ export default function OrderReceivePage() {
       .catch((err) => setError(err.message))
   }, [selected])
 
+  // 새 소식 확인 — 기준 id 뒤의 새 주문·클레임을 알림에 쌓고, 화면이 안 보일 땐 브라우저 알림
+  const checkUpdates = useCallback(async () => {
+    const u = await getOrderUpdates(lastEventId.current)
+    const first = lastEventId.current == null
+    lastEventId.current = u.lastEventId
+    if (first || (!u.newOrders.length && !u.claims.length)) return
+    setAlerts((a) => ({
+      orders: [...a.orders, ...u.newOrders],
+      claims: [...a.claims, ...u.claims],
+    }))
+    if (
+      typeof Notification !== 'undefined' &&
+      Notification.permission === 'granted' &&
+      document.hidden
+    ) {
+      const parts = []
+      if (u.newOrders.length) parts.push(`새 주문 ${u.newOrders.length}건`)
+      if (u.claims.length) parts.push(`클레임 ${u.claims.length}건`)
+      const n = new Notification(`AGC 주문 — ${parts.join(' · ')}`, {
+        body: [...u.claims, ...u.newOrders]
+          .slice(0, 3)
+          .map((x) => `${x.code} ${x.summary}`)
+          .join('\n'),
+        tag: 'agc-orders',
+      })
+      n.onclick = () => window.focus()
+    }
+  }, [])
+
+  // 자동 새로고침 — 자동 수집 주기(기본 5분)마다 목록·고른 주문·새 소식을 다시 읽는다. 화면으로 돌아오면 바로 한 번
+  const pollMinutes = data?.pollMinutes || 5
+  const refreshRef = useRef(null)
+  refreshRef.current = async () => {
+    await load()
+    if (selected)
+      getOrder(selected)
+        .then(setDetail)
+        .catch(() => {})
+    await checkUpdates().catch(() => {})
+    window.dispatchEvent(new Event(ORDERS_COLLECTED_EVENT)) // 아래 바도
+  }
+  useEffect(() => {
+    checkUpdates().catch(() => {}) // 기준 id 잡기
+  }, [checkUpdates])
+  useEffect(() => {
+    const timer = setInterval(() => refreshRef.current(), Math.max(1, pollMinutes) * 60 * 1000)
+    const onVisible = () => document.visibilityState === 'visible' && refreshRef.current()
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [pollMinutes])
+
+  const askNotify = async () => {
+    if (typeof Notification === 'undefined') return
+    setNotifyPerm(await Notification.requestPermission())
+  }
+
   const set = (patch) => {
     const next = new URLSearchParams(params)
     Object.entries(patch).forEach(([k, v]) =>
@@ -401,6 +467,7 @@ export default function OrderReceivePage() {
       await collectOrders()
       window.dispatchEvent(new Event(ORDERS_COLLECTED_EVENT)) // 아래 바도 바로 다시 읽게
       await load()
+      await checkUpdates().catch(() => {})
       if (selected) setDetail(await getOrder(selected))
     } catch (err) {
       setError(err.message)
@@ -446,6 +513,45 @@ export default function OrderReceivePage() {
           </button>
         }
       />
+
+      {(alerts.orders.length > 0 || alerts.claims.length > 0) && (
+        <Section name="알림" id="alerts" title={false} className={styles.alertBar}>
+          <div className={styles.alertRow}>
+            {alerts.claims.length > 0 && (
+              <span className={styles.alertClaim}>● 클레임 {alerts.claims.length}건</span>
+            )}
+            {alerts.orders.length > 0 && (
+              <span className={styles.alertNew}>● 새 주문 {alerts.orders.length}건</span>
+            )}
+            <span className={styles.alertList}>
+              {[...alerts.claims, ...alerts.orders].slice(0, 4).map((x) => (
+                <button
+                  key={x.eventId}
+                  type="button"
+                  className={styles.alertItem}
+                  onClick={() => set({ stage: null, id: x.orderId })}
+                  title={x.summary}
+                >
+                  {x.code}
+                </button>
+              ))}
+            </span>
+            <span className={styles.alertSpacer} />
+            {notifyPerm === 'default' && (
+              <button type="button" className={styles.alertBtn} onClick={askNotify}>
+                브라우저 알림 켜기
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.alertBtn}
+              onClick={() => setAlerts({ orders: [], claims: [] })}
+            >
+              확인
+            </button>
+          </div>
+        </Section>
+      )}
 
       <div className={`fit-row ${styles.split}`}>
         <Section name="접수 목록" id="list" sub={data && `${data.total}건`} flush fill>
@@ -524,6 +630,11 @@ export default function OrderReceivePage() {
                     {MARKET_STATUS[it.marketStatus] || it.marketStatus}
                     {it.confirmed && ' · 발주확인됨'}
                   </small>
+                  {it.claimType && (
+                    <small className={styles.claimText} title={it.claimStatus || ''}>
+                      ● {CLAIM_TYPE[it.claimType] || it.claimType}
+                    </small>
+                  )}
                 </span>
                 <span className={styles.price}>
                   {it.totalPrice == null ? '-' : formatWon(it.totalPrice)}

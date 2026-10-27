@@ -61,6 +61,7 @@ export const EVENT_KIND = {
   jiyun_deleted: '집운 기록 삭제',
   market_confirmed: '발주확인',
   market_confirm_failed: '발주확인 실패',
+  claim: '클레임',
   dispatch_delayed: '발송지연',
   warehouse_requested: '집운 배송 요청',
   warehouse_dispatched: '집운 출고',
@@ -198,3 +199,13 @@ export const KR_COURIERS = {
 }
 
 export const TRANSPORTS = { sea: '해운', air: '항공' }
+
+// 클레임 종류 (BE order_service.CLAIM_LABEL 과 같게) — 2026-10-27
+export const CLAIM_TYPE = {
+  CANCEL: '취소',
+  ADMIN_CANCEL: '취소(관리자)',
+  RETURN: '반품',
+  EXCHANGE: '교환',
+  STOP_SHIPPING: '출고중지 요청',
+  PURCHASE_DECISION_HOLDBACK: '구매확정 보류',
+}

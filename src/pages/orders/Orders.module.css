@@ -642,3 +642,66 @@
   grid-template-columns: 88px minmax(0, 1fr);
   gap: var(--space-2);
 }
+
+/* 주문 접수 › 알림 — 화면을 연 뒤 새로 생긴 주문·클레임 (2026-10-27) */
+.alertRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  font-size: 13px;
+}
+
+.alertClaim {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.alertNew {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.alertList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.alertItem {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.alertItem:hover {
+  text-decoration: underline;
+}
+
+.alertSpacer {
+  flex: 1;
+}
+
+.alertBtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-sub);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.alertBtn:hover {
+  color: var(--color-primary);
+}
+
+.claimText {
+  color: var(--color-danger);
+  font-weight: 600;
+}

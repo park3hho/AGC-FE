@@ -11,6 +11,9 @@ const toOrder = (o) => ({
   shipUnitNo: o.ship_unit_no,
   marketStatus: o.market_status,
   confirmed: o.confirmed,
+  claimType: o.claim_type || null, // 클레임 (CANCEL · RETURN · EXCHANGE · STOP_SHIPPING …) · 없으면 null
+  claimStatus: o.claim_status || null,
+  claimAt: o.claim_at || null,
   stage: o.stage,
   orderedAt: o.ordered_at,
   paidAt: o.paid_at,
@@ -160,4 +163,27 @@ export const confirmOrder = async (id) => {
     errorMsg: '발주확인을 보내지 못했어요',
   })
   return { ...toDetail(data), already: !!data.already }
+}
+
+// 주문 접수 화면 알림 — after(이벤트 id) 뒤 새 주문·새 클레임. after 없이 부르면 기준 id 만
+const toUpdate = (u) => ({
+  eventId: u.event_id,
+  orderId: u.order_id,
+  code: u.code,
+  market: u.market,
+  productName: u.product_name,
+  summary: u.summary,
+  at: u.at,
+  auto: !!u.auto, // 자동 수집으로 들어왔는지
+})
+export const getOrderUpdates = async (after) => {
+  const q = after == null ? '' : `?after=${after}`
+  const data = await request(`/orders/updates${q}`, {
+    errorMsg: '새 주문 소식을 불러오지 못했어요',
+  })
+  return {
+    lastEventId: data.last_event_id,
+    newOrders: data.new_orders.map(toUpdate),
+    claims: data.claims.map(toUpdate),
+  }
 }
