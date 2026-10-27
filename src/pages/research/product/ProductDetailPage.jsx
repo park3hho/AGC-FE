@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { getPricing } from '@/api/pricing'
-import { getProduct, getProductPhotos } from '@/api/product'
+import { getProduct, getProductPhotos, setMainPhoto } from '@/api/product'
 import Badge from '@/components/Badge'
 import Thumb from '@/components/Thumb'
 import ListItem from '@/components/common/ListItem'
@@ -72,6 +72,7 @@ export default function ProductDetailPage() {
   const [photos, setPhotos] = useState(null) // [{ url, label }] — 대표 + 옵션별 사진
   const [selected, setSelected] = useState(0)
   const [opened, setOpened] = useState(null) // 크게 보는 사진
+  const [picking, setPicking] = useState('') // 대표 지정 저장 중 ('main' | 'hover')
   const [error, setError] = useState('')
   const [optionPage, setOptionPage] = useState(1)
   const [surveyPage, setSurveyPage] = useState(1)
@@ -133,11 +134,26 @@ export default function ProductDetailPage() {
   const status = pricingStatusOf(savedKeys, surveys.length > 0)
 
   // 사진 — 모은 사진 + 사진이 없는 맛은 빈 칸 (빠진 걸 바로 보이게)
-  const gallery = photos || (product.photoUrl ? [{ url: product.photoUrl, label: '대표' }] : [])
+  const gallery = photos || (product.photoUrl ? [{ url: product.photoUrl, label: '대표이미지' }] : [])
   const missing = options.filter((o) => !o.photoUrl).map((o) => o.option1)
   const heroIndex = Math.max(0, Math.min(selected, gallery.length - 1))
   const hero = gallery[heroIndex]
   const taobaoUrl = surveys[0]?.taobaoUrl
+
+  // 보고 있는 사진을 대표이미지 / 대표이미지(전환용)으로 지정 — 저장 후 사진 목록을 다시 모은다
+  const pickMain = async (which) => {
+    setPicking(which)
+    try {
+      const next = await setMainPhoto(product, hero.url, which)
+      setData((d) => ({ ...d, product: next }))
+      setPhotos(await getProductPhotos(next, surveys))
+      setSelected(0)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setPicking('')
+    }
+  }
 
   const optionPaged = page(options, optionPage, optionSize)
   const surveyPaged = page(surveys, surveyPage, tabs.mobile ? surveyFit : SURVEY_PAGE)
@@ -218,6 +234,28 @@ export default function ProductDetailPage() {
                   {hero.label}
                   {gallery.length > 1 && ` · ${heroIndex + 1}/${gallery.length}`}
                 </span>
+                {hero.url !== product.photoUrl && (
+                  <button
+                    type="button"
+                    className="btn-ghost btn-sm"
+                    disabled={!!picking}
+                    onClick={() => pickMain('main')}
+                    title="이 사진을 대표이미지로"
+                  >
+                    대표로
+                  </button>
+                )}
+                {hero.url !== product.photoUrl && hero.url !== product.hoverPhotoUrl && (
+                  <button
+                    type="button"
+                    className="btn-ghost btn-sm"
+                    disabled={!!picking}
+                    onClick={() => pickMain('hover')}
+                    title="이 사진을 대표이미지(전환용)으로 — 자사몰 카드에 마우스를 올리면 보이는 사진"
+                  >
+                    전환용으로
+                  </button>
+                )}
                 {gallery.length > 1 && (
                   <button
                     type="button"

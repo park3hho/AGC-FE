@@ -11,6 +11,8 @@ const toProduct = (p) => ({
   titleKo: p.title_ko || '',
   photoPath: p.photo_url || '', // BE 에 저장된 값 그대로 — 가격조사에 연결할 때 보낸다
   photoUrl: fileUrl(p.photo_url), // 화면에 띄울 주소
+  hoverPhotoPath: p.photo_hover_url || '', // 대표이미지(전환용) — 자사몰 카드 마우스오버 연출컷 (BE 값 그대로)
+  hoverPhotoUrl: fileUrl(p.photo_hover_url), // 대표이미지(전환용) — 화면에 띄울 주소
   photoPaths: p.photos || [], // 추가 사진(갤러리) — BE 에 저장된 값 그대로, 순서대로
   photos: (p.photos || []).map(fileUrl), // 추가 사진 — 화면에 띄울 주소
   // 제품 정보 — 리서치 때 함께 찾아 저장, 상세페이지 '제품 정보' 표가 쓴다
@@ -61,7 +63,8 @@ export const getProductPhotos = async (product, surveys) => {
     seen.add(url)
     photos.push({ url, label })
   }
-  add(product.photoUrl, '대표')
+  add(product.photoUrl, '대표이미지')
+  add(product.hoverPhotoUrl, '대표이미지(전환용)')
   const extra = product.photos || []
   extra.forEach((u, i) => add(u, `추가 ${i + 1}`))
   details.forEach((d) => {
@@ -97,6 +100,39 @@ export const updateProductInfo = async (id, info) => {
     },
     errorMsg: '제품 정보를 저장하지 못했어요',
   })
+  return toProduct(data.product)
+}
+
+// 대표이미지 두 장 지정 — 보낸 것만 바꾼다. 값은 BE 경로(/files/...), null 이면 비움
+// 화면 주소 → BE 경로 (fileUrl 되돌리기)
+const FILES_PREFIX = fileUrl('/files/').slice(0, -'/files/'.length)
+export const photoPathOf = (url) =>
+  url && FILES_PREFIX && url.startsWith(`${FILES_PREFIX}/files/`) ? url.slice(FILES_PREFIX.length) : url || ''
+
+// 보고 있던 사진을 대표이미지 / 대표이미지(전환용)으로 지정.
+// 대표를 바꾸면 기존 대표는 추가 사진 맨 앞으로 옮긴다 (지우지 않음, 최대 10장).
+export const setMainPhoto = async (product, url, which) => {
+  const path = photoPathOf(url)
+  if (which === 'hover') return updateProductMainPhotos(product.id, { hoverPhotoPath: path })
+  const rest = product.photoPaths.filter((p) => p !== path && p !== product.photoPath)
+  const photos = [product.photoPath, ...rest].filter(Boolean).slice(0, 10)
+  const data = await request(`/products/${product.id}`, {
+    method: 'PATCH',
+    body: {
+      photo_url: path,
+      photos,
+      ...(product.hoverPhotoPath === path ? { photo_hover_url: null } : {}),
+    },
+    errorMsg: '대표이미지를 저장하지 못했어요',
+  })
+  return toProduct(data.product)
+}
+
+export const updateProductMainPhotos = async (id, { photoPath, hoverPhotoPath }) => {
+  const body = {}
+  if (photoPath !== undefined) body.photo_url = photoPath || null
+  if (hoverPhotoPath !== undefined) body.photo_hover_url = hoverPhotoPath || null
+  const data = await request(`/products/${id}`, { method: 'PATCH', body, errorMsg: '대표이미지를 저장하지 못했어요' })
   return toProduct(data.product)
 }
 
