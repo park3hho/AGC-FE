@@ -691,28 +691,34 @@ export default function OrderReceivePage() {
                     {PCCC_STATUS[it.pcccStatus].short}
                   </StatusDot>
                   <small className={styles.weak}>
+                    {it.claimType && (
+                      <span className={styles.claimText} title={it.claimStatus || ''}>
+                        ● {CLAIM_TYPE[it.claimType] || it.claimType}{' '}
+                      </span>
+                    )}
                     {MARKET_STATUS[it.marketStatus] || it.marketStatus}
                     {it.confirmed && ' · 발주확인됨'}
                   </small>
-                  {it.claimType && (
-                    <small className={styles.claimText} title={it.claimStatus || ''}>
-                      ● {CLAIM_TYPE[it.claimType] || it.claimType}
-                    </small>
-                  )}
                 </span>
+                {/* 줄 높이를 모든 행에서 같게 — 둘째 줄은 할인이 없어도 자리를 둔다, 길면 말줄임(올리면 전체) */}
                 <span className={styles.price}>
                   {it.amount
                     ? formatWon(it.amount.total)
                     : it.totalPrice == null
                       ? '-'
                       : formatWon(it.totalPrice)}
-                  {it.amount?.discount > 0 && (
-                    <small className={it.amount.discountSeller ? styles.sellerCut : styles.weak}>
-                      할인 {minus(it.amount.discount)}
-                      <br />
-                      {burdenText(it.amount, it.market)}
-                    </small>
-                  )}
+                  <small
+                    className={it.amount?.discountSeller ? styles.sellerCut : styles.weak}
+                    title={
+                      it.amount?.discount > 0
+                        ? `할인 ${minus(it.amount.discount)} · ${burdenText(it.amount, it.market)}`
+                        : undefined
+                    }
+                  >
+                    {it.amount?.discount > 0
+                      ? `${minus(it.amount.discount)} ${burdenText(it.amount, it.market)}`
+                      : '\u00a0'}
+                  </small>
                 </span>
               </button>
             ))}
