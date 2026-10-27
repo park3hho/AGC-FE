@@ -766,3 +766,28 @@
   color: var(--color-warning);
   font-weight: 600;
 }
+
+/* 처리 목록 진행 위치 — 타오바오 구매 / 판매처 발송 / 집운 입고 / 국제 발송 (2026-10-27) */
+.prog {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.prog i {
+  display: inline-block;
+  width: 10px;
+  height: 4px;
+  border-radius: var(--radius);
+  background: var(--color-border-strong);
+}
+
+.prog i.progOn {
+  background: var(--color-primary);
+}
+
+.prog b {
+  margin-left: 4px;
+  color: var(--color-text-sub);
+  font-weight: 600;
+}

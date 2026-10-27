@@ -62,6 +62,7 @@ export const EVENT_KIND = {
   market_confirmed: '발주확인',
   market_confirm_failed: '발주확인 실패',
   claim: '클레임',
+  stage: '단계 변경',
   dispatch_delayed: '발송지연',
   warehouse_requested: '집운 배송 요청',
   warehouse_dispatched: '집운 출고',

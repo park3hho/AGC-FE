@@ -710,6 +710,18 @@ export default function OrderReceivePage() {
                       {PCCC_STATUS[it.pcccStatus].short}
                     </StatusDot>
                     <small className={styles.weak}>
+                      {/* 처리 단계면 진행 위치 — 4칸 막대 + 지금 칸 이름 */}
+                      {it.stage === 'processing' && it.progress && (
+                        <span
+                          className={styles.prog}
+                          title={`처리 ${it.progress.step + 1}/${it.progress.total} — ${it.progress.label}`}
+                        >
+                          {Array.from({ length: it.progress.total }, (_, i) => (
+                            <i key={i} className={i <= it.progress.step ? styles.progOn : ''} />
+                          ))}
+                          <b>{it.progress.label}</b>{' '}
+                        </span>
+                      )}
                       {it.claimType && (
                         <span
                           className={styles.claimText}
@@ -718,8 +730,12 @@ export default function OrderReceivePage() {
                           ● {claimLabel(it)}{' '}
                         </span>
                       )}
-                      {MARKET_STATUS[it.marketStatus] || it.marketStatus}
-                      {it.confirmed && ' · 발주확인됨'}
+                      {!(it.stage === 'processing' && it.progress) && (
+                        <>
+                          {MARKET_STATUS[it.marketStatus] || it.marketStatus}
+                          {it.confirmed && ' · 발주확인됨'}
+                        </>
+                      )}
                     </small>
                   </span>
                 )}
