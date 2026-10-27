@@ -209,3 +209,10 @@ export const CLAIM_TYPE = {
   STOP_SHIPPING: '출고중지 요청',
   PURCHASE_DECISION_HOLDBACK: '구매확정 보류',
 }
+
+// 클레임 한 줄 — 끝난 클레임(주문 단계가 취소)이면 '취소 완료' · '반품 완료', 아니면 '출고중지 요청' 처럼 (2026-10-27)
+export const claimLabel = ({ claimType, stage }) => {
+  if (!claimType) return ''
+  const t = CLAIM_TYPE[claimType] || claimType
+  return stage === 'cancelled' && !t.endsWith('요청') ? `${t} 완료` : t
+}

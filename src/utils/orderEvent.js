@@ -42,6 +42,13 @@ export const diffValue = (field, v) => {
 // 이벤트 이름 — changed 만 내용별로, 나머지는 EVENT_KIND 그대로
 export function eventTitle(event) {
   const base = EVENT_KIND[event.kind] || event.kind
+  // 클레임 — '취소 완료 (판매자 취소 · 재고연동오류)' · '출고중지 요청'
+  if (event.kind === 'claim') {
+    const c = event.data || {}
+    const t = CLAIM_TYPE[c.claim_type] || c.claim_type || base
+    const head = c.done && !String(t).endsWith('요청') ? `${t} 완료` : t
+    return c.claim_reason ? `${head} (${c.claim_reason})` : head
+  }
   if (event.kind !== 'changed') return base
   const d = event.data || {}
   const diff = d.diff || {}

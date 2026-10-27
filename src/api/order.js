@@ -32,6 +32,7 @@ const toOrder = (o) => ({
   claimType: o.claim_type || null, // 클레임 (CANCEL · RETURN · EXCHANGE · STOP_SHIPPING …) · 없으면 null
   claimStatus: o.claim_status || null,
   claimAt: o.claim_at || null,
+  claimReason: o.claim_reason || '', // 사람이 읽는 사유 — 예: 판매자 취소 · 재고연동오류
   stage: o.stage,
   orderedAt: o.ordered_at,
   paidAt: o.paid_at,

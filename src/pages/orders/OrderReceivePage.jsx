@@ -18,6 +18,7 @@ import Section from '@/components/common/Section'
 import {
   ACTOR,
   CLAIM_TYPE,
+  claimLabel,
   CN_STATUS,
   MARKET_STATUS,
   MARKETS,
@@ -692,12 +693,20 @@ export default function OrderReceivePage() {
                   </StatusDot>
                   <small className={styles.weak}>
                     {it.claimType && (
-                      <span className={styles.claimText} title={it.claimStatus || ''}>
-                        ● {CLAIM_TYPE[it.claimType] || it.claimType}{' '}
+                      <span
+                        className={styles.claimText}
+                        title={[it.claimReason, it.claimStatus].filter(Boolean).join(' · ')}
+                      >
+                        ● {claimLabel(it)}{' '}
                       </span>
                     )}
-                    {MARKET_STATUS[it.marketStatus] || it.marketStatus}
-                    {it.confirmed && ' · 발주확인됨'}
+                    {/* 끝난 클레임(취소·반품 완료)이면 마켓 상태는 의미가 없어 숨긴다 */}
+                    {!(it.claimType && it.stage === 'cancelled') && (
+                      <>
+                        {MARKET_STATUS[it.marketStatus] || it.marketStatus}
+                        {it.confirmed && ' · 발주확인됨'}
+                      </>
+                    )}
                   </small>
                 </span>
                 {/* 줄 높이를 모든 행에서 같게 — 둘째 줄은 할인이 없어도 자리를 둔다, 길면 말줄임(올리면 전체) */}
@@ -799,6 +808,18 @@ export default function OrderReceivePage() {
                       formatWon(o.totalPrice)
                     )}
                   </dd>
+                  {o.claimType && (
+                    <>
+                      <dt>클레임</dt>
+                      <dd className={styles.claimText}>
+                        {claimLabel(o)}
+                        {o.claimReason && ` · ${o.claimReason}`}
+                        {o.claimAt && (
+                          <span className={styles.weak}> · {kst(o.claimAt).slice(5)}</span>
+                        )}
+                      </dd>
+                    </>
+                  )}
                   <dt>마켓 상태</dt>
                   <dd>
                     {MARKET_STATUS[o.marketStatus] || o.marketStatus}
