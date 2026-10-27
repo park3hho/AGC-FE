@@ -210,7 +210,7 @@ const burdenText = (a, market) => {
 const minus = (n) => `−${(n || 0).toLocaleString('ko-KR')}`
 
 // 주문 상세 › 금액 — 판매가 · 할인(부담) · 고객 결제 · 수수료 · 정산 예정 (판매자 부담 할인은 주황)
-function AmountBox({ amount: a, market, settlementDate }) {
+function AmountBox({ amount: a, market, settlementDate, cancelled }) {
   const m = MARKETS[market]?.label || market
   const pct = (n) => (a.discount ? Math.round((n / a.discount) * 100) : 0)
   return (
@@ -244,10 +244,16 @@ function AmountBox({ amount: a, market, settlementDate }) {
         </small>
       </dd>
       <dt className={styles.settleDt}>
-        {a.actual ? '정산 확정' : a.estimated ? '정산 예정(추정)' : '정산 예정'}
+        {cancelled
+          ? '정산'
+          : a.actual
+            ? '정산 확정'
+            : a.estimated
+              ? '정산 예정(추정)'
+              : '정산 예정'}
       </dt>
       <dd className={styles.settleDd}>
-        {a.settlement == null ? '-' : formatWon(a.settlement)}
+        {cancelled ? '없음 (취소·반품)' : a.settlement == null ? '-' : formatWon(a.settlement)}
         {a.actual && settlementDate && <small>{settlementDate}</small>}
       </dd>
     </dl>
@@ -809,6 +815,7 @@ export default function OrderReceivePage() {
                         amount={o.amount}
                         market={o.market}
                         settlementDate={o.settlementDate}
+                        cancelled={o.stage === 'cancelled'}
                       />
                     ) : o.totalPrice == null ? (
                       '-'
