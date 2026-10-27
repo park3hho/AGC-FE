@@ -426,7 +426,7 @@ export default function OrderReceivePage() {
   const load = useCallback(
     () =>
       getOrders({
-        stage: stage === 'all' ? undefined : stage,
+        stage: stage === 'all' ? null : stage, // null = 모든 단계 (undefined 면 api 기본값 '접수'가 들어가 전체가 접수만 보이던 문제)
         pccc: filter === 'all' ? undefined : filter,
         search: search.trim() || undefined,
       })
@@ -687,28 +687,36 @@ export default function OrderReceivePage() {
                     {kstTime(it.paidAt || it.orderedAt)}
                   </small>
                 </span>
-                <span className={styles.rowState}>
-                  <StatusDot tone={PCCC_STATUS[it.pcccStatus].tone}>
-                    {PCCC_STATUS[it.pcccStatus].short}
-                  </StatusDot>
-                  <small className={styles.weak}>
-                    {it.claimType && (
-                      <span
-                        className={styles.claimText}
-                        title={[it.claimReason, it.claimStatus].filter(Boolean).join(' · ')}
-                      >
-                        ● {claimLabel(it)}{' '}
-                      </span>
-                    )}
-                    {/* 끝난 클레임(취소·반품 완료)이면 마켓 상태는 의미가 없어 숨긴다 */}
-                    {!(it.claimType && it.stage === 'cancelled') && (
-                      <>
-                        {MARKET_STATUS[it.marketStatus] || it.marketStatus}
-                        {it.confirmed && ' · 발주확인됨'}
-                      </>
-                    )}
-                  </small>
-                </span>
+                {/* 취소·반품 완료면 첫 줄 = 클레임(빨강), 둘째 줄 = 사유 (통관부호·마켓 상태는 의미가 없어 뺀다) */}
+                {it.claimType && it.stage === 'cancelled' ? (
+                  <span className={styles.rowState}>
+                    <StatusDot tone="danger">{claimLabel(it)}</StatusDot>
+                    <small
+                      className={styles.weak}
+                      title={[it.claimReason, it.claimStatus].filter(Boolean).join(' · ')}
+                    >
+                      {it.claimReason || '사유 없음'}
+                    </small>
+                  </span>
+                ) : (
+                  <span className={styles.rowState}>
+                    <StatusDot tone={PCCC_STATUS[it.pcccStatus].tone}>
+                      {PCCC_STATUS[it.pcccStatus].short}
+                    </StatusDot>
+                    <small className={styles.weak}>
+                      {it.claimType && (
+                        <span
+                          className={styles.claimText}
+                          title={[it.claimReason, it.claimStatus].filter(Boolean).join(' · ')}
+                        >
+                          ● {claimLabel(it)}{' '}
+                        </span>
+                      )}
+                      {MARKET_STATUS[it.marketStatus] || it.marketStatus}
+                      {it.confirmed && ' · 발주확인됨'}
+                    </small>
+                  </span>
+                )}
                 {/* 줄 높이를 모든 행에서 같게 — 둘째 줄은 할인이 없어도 자리를 둔다, 길면 말줄임(올리면 전체) */}
                 <span className={styles.price}>
                   {it.amount

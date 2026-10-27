@@ -142,6 +142,7 @@ export const ORDER_STAGES = [
   { key: 'received', label: '접수' },
   { key: 'processing', label: '처리' },
   { key: 'done', label: '완료' },
+  { key: 'cancelled', label: '취소' }, // 취소·반품 완료 — 사유와 함께 (2026-10-27)
   { key: 'all', label: '전체' },
 ]
 

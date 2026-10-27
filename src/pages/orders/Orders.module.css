@@ -67,7 +67,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) 128px 108px;
+  grid-template-columns: 24px minmax(0, 1fr) 160px 108px;
   gap: var(--space-3);
   align-items: center;
   width: 100%;
