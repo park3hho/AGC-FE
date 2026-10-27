@@ -55,17 +55,31 @@ export function useFitRows(
   const [rows, setRows] = useState(min)
   const measure = useRef(() => {})
   const observer = useRef({ ro: null, el: null })
+  // 행 높이는 '지금 칸 높이에서 본 가장 큰 행'으로 고정한다 — 행마다 높이가 다르면(비고 줄이 있는 카드 등)
+  //   페이지마다 첫 행 높이가 달라져 한 페이지 행 수 ↔ 페이지 수가 서로 바뀌며 끝없이 다시 그려진다 (React #185, 2026-10-27).
+  //   칸 높이가 바뀌면(창 크기) 다시 잰다.
+  const stable = useRef({ avail: -1, rowH: 0 })
 
   measure.current = () => {
     const el = ref.current
     if (!el || !el.getBoundingClientRect().height) return
     const firstVisible = (sel) =>
       [...el.querySelectorAll(sel)].find((n) => n.getBoundingClientRect().height > 0)
-    const rowH = firstVisible(rowSelector)?.getBoundingClientRect().height || fallback
+    const rowHs = [...el.querySelectorAll(rowSelector)]
+      .map((n) => n.getBoundingClientRect().height)
+      .filter((h) => h > 0)
+    const avail = availableBodyHeight(el)
+    const s = stable.current
+    if (Math.round(avail) !== s.avail) {
+      s.avail = Math.round(avail)
+      s.rowH = 0
+    }
+    s.rowH = Math.max(s.rowH, rowHs.length ? Math.max(...rowHs) : 0)
+    const rowH = s.rowH || fallback
     const headH = firstVisible(headSelector)?.getBoundingClientRect().height || 0
     const style = getComputedStyle(el)
     const pad = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
-    const inner = availableBodyHeight(el) - pad - headH
+    const inner = avail - pad - headH
     const n = Math.max(min, Math.floor(inner / rowH))
     setRows((prev) => (prev === n ? prev : n))
   }
