@@ -72,6 +72,8 @@ export const EVENT_KIND = {
   delivered: '배송완료',
   purchase_decided: '구매확정',
   settled: '정산',
+  document_add: '증빙 추가',
+  document_delete: '증빙 삭제',
 }
 
 // 추적 기록의 큰 단계 · 세부 단계 (data.stage · data.step) — 진행 막대 순서
