@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { updateProductInfo } from '@/api/product'
+import { categoryLabel, getProductCategories, updateProductInfo } from '@/api/product'
 import Section from '@/components/common/Section'
 import styles from './ProductDetail.module.css'
 
+// 분류(대분류 › 소분류 › 차 형태)도 여기서 본다·고친다 — 자사몰 메뉴가 이 값으로 거른다 (2026-10-29)
 // 제품 정보 칸 — 리서치 때 함께 찾아 저장하고, 상세페이지 '제품 정보' 표가 이 값을 쓴다 (2026-10-27)
 export const INFO_FIELDS = [
   { key: 'manufacturer', label: '제조사', placeholder: '广东健力宝股份有限公司 (공장 법인명)' },
@@ -29,11 +30,20 @@ export default function ProductInfoSection({
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [cats, setCats] = useState(null) // 분류 코드 → 이름 (자사몰 메뉴와 같은 값)
+  useEffect(() => {
+    getProductCategories().then(setCats).catch(() => {})
+  }, [])
 
   const empty = INFO_FIELDS.filter((f) => f.key !== 'allergens' && !product[f.key]).length
 
   const start = () => {
-    setForm(Object.fromEntries(INFO_FIELDS.map((f) => [f.key, product[f.key] || ''])))
+    setForm({
+      ...Object.fromEntries(INFO_FIELDS.map((f) => [f.key, product[f.key] || ''])),
+      category: product.category,
+      subcategory: product.subcategory,
+      teaForm: product.teaForm,
+    })
     setError('')
     setEditing(true)
   }
@@ -82,7 +92,53 @@ export default function ProductInfoSection({
     >
       {editing ? (
         <div className={styles.infoForm}>
-          {INFO_FIELDS.map((f) => (
+          <div className="form-group">
+            <label className="form-label" htmlFor="info-category">
+              분류
+            </label>
+            <div className={styles.catSelects}>
+              <select
+                id="info-category"
+                className="form-input"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value, subcategory: '', teaForm: '' })}
+              >
+                {Object.entries(cats || { [form.category]: { label: form.category } }).map(([k, c]) => (
+                  <option key={k} value={k}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="form-input"
+                aria-label="소분류"
+                value={form.subcategory}
+                onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
+              >
+                <option value="">소분류 없음</option>
+                {Object.entries(cats?.[form.category]?.sub || {}).map(([k, label]) => (
+                  <option key={k} value={k}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              {form.category === 'tea' && (
+                <select
+                  className="form-input"
+                  aria-label="형태"
+                  value={form.teaForm}
+                  onChange={(e) => setForm({ ...form, teaForm: e.target.value })}
+                >
+                  <option value="">형태 없음</option>
+                  {Object.entries(cats?.tea?.forms || {}).map(([k, label]) => (
+                    <option key={k} value={k}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>          {INFO_FIELDS.map((f) => (
             <div key={f.key} className="form-group">
               <label className="form-label" htmlFor={`info-${f.key}`}>
                 {f.label}
@@ -111,6 +167,10 @@ export default function ProductInfoSection({
         </div>
       ) : (
         <dl className={styles.infoRows}>
+          <div className={styles.infoRow}>
+            <dt>분류</dt>
+            <dd className={product.subcategory ? '' : styles.infoEmpty}>{categoryLabel(cats, product)}</dd>
+          </div>
           {INFO_FIELDS.map((f) => (
             <div key={f.key} className={styles.infoRow}>
               <dt>{f.label}</dt>

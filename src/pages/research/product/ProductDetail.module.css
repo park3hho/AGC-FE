@@ -363,3 +363,14 @@
   resize: vertical;
   min-height: 64px;
 }
+
+/* 분류 — 대분류 · 소분류 · (차) 형태 한 줄 */
+.catSelects {
+  display: flex;
+  gap: 8px;
+}
+.catSelects select {
+  flex: 1;
+  min-width: 0;
+}
+

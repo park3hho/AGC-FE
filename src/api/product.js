@@ -21,6 +21,10 @@ const toProduct = (p) => ({
   allergens: p.allergens || '',
   shelfLife: p.shelf_life || '',
   storage: p.storage || '',
+  // 분류 — 자사몰 메뉴가 이 값으로 거른다 (코드 목록: getProductCategories)
+  category: p.category || 'beverage',
+  subcategory: p.subcategory || '',
+  teaForm: p.tea_form || '',
   addedAt: toKstDate(p.created_at), // 제품 코드 추가일
   createdAt: p.created_at, // 제품 추가 시각 (ISO) — 리서치 시작
   surveyCount: p.survey_count ?? 0,
@@ -75,6 +79,25 @@ export const getProductPhotos = async (product, surveys) => {
   return photos
 }
 
+// 분류 코드와 이름 — { beverage: { label, sub: { soda: '탄산', … } }, tea: { label, sub, forms } }. 한 번 받아 둔다 (BE utils/category.py)
+let categoriesPromise = null
+export const getProductCategories = () => {
+  categoriesPromise ||= request('/products/categories', { errorMsg: '분류를 불러오지 못했어요' })
+    .then((d) => d.categories)
+    .catch((e) => {
+      categoriesPromise = null
+      throw e
+    })
+  return categoriesPromise
+}
+
+// 분류 이름 — '음료 › 차음료'. 목록을 아직 못 받았으면 코드 그대로
+export const categoryLabel = (cats, p) => {
+  const c = cats?.[p.category]
+  if (!c) return [p.category, p.subcategory].filter(Boolean).join(' › ')
+  return [c.label, c.sub[p.subcategory] || (p.subcategory ? p.subcategory : '소분류 없음'), c.forms?.[p.teaForm]].filter(Boolean).join(' › ')
+}
+
 // 다음 제품 코드 미리보기 — 실제 코드는 등록 응답의 code
 export const getNextProductCode = async () => {
   const data = await request('/products/next-code')
@@ -97,6 +120,9 @@ export const updateProductInfo = async (id, info) => {
       allergens: v(info.allergens),
       shelf_life: v(info.shelfLife),
       storage: v(info.storage),
+      category: info.category || 'beverage',
+      subcategory: info.subcategory || null,
+      tea_form: info.category === 'tea' ? info.teaForm || null : null,
     },
     errorMsg: '제품 정보를 저장하지 못했어요',
   })
