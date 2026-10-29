@@ -1156,7 +1156,8 @@ export default function OrderReceivePage() {
           </div>
         </Section>
 
-        <div className={`fit-col ${styles.side}`}>
+        {/* 모바일 목록 화면에서는 오른쪽(금액 · 추적 기록)을 숨긴다 — 주문을 누르면 /orders/:id 상세 화면 */}
+        <div className={`fit-col ${styles.side} ${mobile ? 'mobile-hidden' : ''}`}>
           {detail && o && (
             <OrderMoney
               key={o.id}
