@@ -11,6 +11,7 @@ import Section from '@/components/common/Section'
 import { useFitRows } from '@/hooks/useFitRows'
 import { formatCny } from '@/utils/pricing'
 import styles from './PriceList.module.css'
+import { RESEARCH_RULES, RESEARCH_RULES_UPDATED } from '@/constants/researchRules'
 
 // 가격조사 — 섹션: 조사 목록 (데스크탑 표 / 모바일 행 목록, DESIGN.md §4.4)
 // 목록은 남은 높이를 채우고, 그 높이에 들어가는 행 수만큼 한 페이지로 보여준다 (스크롤 대신 페이지 넘김)
@@ -47,6 +48,13 @@ export default function PriceListPage() {
       <PageHeader
         title="가격조사"
         sub="제품별 타오바오 옵션 가격 기록"
+        info={{
+          title: '리서치 규칙',
+          updated: RESEARCH_RULES_UPDATED,
+          source:
+            '원문: 리서처 스킬 (.claude/skills/researcher/SKILL.md) — 규칙을 바꾸면 둘 다 고쳐요',
+          sections: RESEARCH_RULES,
+        }}
         action={
           <button className="btn-primary btn-md" onClick={() => navigate('/research/prices/new')}>
             조사 추가

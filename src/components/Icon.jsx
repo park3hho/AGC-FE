@@ -1,5 +1,11 @@
 // 아이콘 패키지 없이 쓰는 인라인 SVG (24px 그리드, 선 아이콘)
 const PATHS = {
+  info: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v6M12 7.5v.5" />
+    </>
+  ),
   search: (
     <>
       <circle cx="10" cy="10" r="7" />

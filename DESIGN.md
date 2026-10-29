@@ -278,6 +278,10 @@ const rows = items.slice((page - 1) * size, page * size)
 | 더보기 (모바일) | 메뉴 `menu` · 내 계정 `me` |
 - 필터는 칩 대신 **드롭다운** (`<select>`), 첫 항목은 '전체'. 값이 적고 자주 바꾸면 **글자 탭**(밑줄) — 알약 칩은 쓰지 않는다 (§4.2-9).
 
+### 4.9 화면 작업 규칙 ⓘ (2026-10-29)
+- `PageHeader info={{ title, updated, source, sections }}` → 제목 옆 ⓘ, 누르면 오른쪽 안내 패널(`components/InfoPanel`, `공통 › 안내`). 줄 앞 `!` 는 꼭 지킬 것(굵게).
+- 지금: 제품조사·가격조사 = 리서치 규칙 (`constants/researchRules.js`). **원문은 리서처 스킬** — 스킬 규칙을 바꾸면 이 파일도 같이 고친다.
+
 ### 4.8 테마 — 기본 / 넷러너 (2026-10-24)
 - 고르는 곳: **내 계정 모달 › 화면 테마** (왼쪽 메뉴 맨 아래 · 모바일 더보기 › 내 계정). 이 브라우저에만 저장 (`localStorage 'agc.theme'`, `hooks/useTheme`). `<html data-theme="netrunner">` 를 붙이고, `index.html` 이 그리기 전에 먼저 붙여 어두운 테마에서 흰 화면이 번쩍이지 않게 한다.
 - 배치(칸)·크기·간격은 두 테마가 같다. 테마는 **색 · 글꼴 · 모서리 · 장식**만 바꾼다 → `styles/variables.css` 의 `[data-theme='netrunner']` 가 토큰을 덮어쓴다.

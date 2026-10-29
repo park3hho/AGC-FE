@@ -88,3 +88,23 @@
     min-height: 40px;
   }
 }
+
+/* 제목 옆 ⓘ — 이 화면 작업 규칙 (InfoPanel) */
+.info {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--color-text-weak);
+  vertical-align: -3px;
+  cursor: pointer;
+}
+
+.info:hover {
+  background: var(--color-bg-sub);
+  color: var(--color-primary);
+}
