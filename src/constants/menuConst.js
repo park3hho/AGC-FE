@@ -121,7 +121,7 @@ export const MENU = [
   {
     key: 'account',
     group: 'settings',
-    label: '회사 정보', // 탭: 기본 정보 · 로그인 계정 · API 키
+    label: '회사 정보', // HQ(eido-hq) 안내 — 기본 정보 · 로그인 계정 · API 키는 HQ 에서 관리 (2026-10-30)
     icon: 'building',
     tone: 'warning',
     path: '/accounts',

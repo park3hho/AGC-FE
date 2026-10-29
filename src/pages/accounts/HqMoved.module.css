@@ -1,0 +1,27 @@
+.body {
+  display: grid;
+  gap: 8px;
+  max-width: 760px;
+  line-height: 1.6;
+}
+.body p {
+  margin: 0;
+}
+.weak {
+  margin: 0;
+  color: var(--color-text-weak);
+  font-size: var(--font-sm);
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}

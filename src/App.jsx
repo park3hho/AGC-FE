@@ -6,6 +6,7 @@ import RequireAuth from '@/components/RequireAuth'
 import { FEATURE } from '@/constants/permissions'
 
 // 라우트 단위 코드 스플리팅 (DESIGN.md §2)
+const HqMovedPage = lazy(() => import('@/pages/accounts/HqMovedPage')) // 회사 정보 → HQ (2026-10-30)
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const HomePage = lazy(() => import('@/pages/home/HomePage'))
 const MorePage = lazy(() => import('@/pages/more/MorePage'))
@@ -25,12 +26,6 @@ const ShippingFeePage = lazy(() => import('@/pages/pricing/ShippingFeePage'))
 const ExchangeRatePage = lazy(() => import('@/pages/pricing/ExchangeRatePage'))
 const MarketsPage = lazy(() => import('@/pages/markets/MarketsPage'))
 const PlaybooksPage = lazy(() => import('@/pages/playbooks/PlaybooksPage'))
-const CompanyInfoPage = lazy(() => import('@/pages/accounts/CompanyInfoPage'))
-const CompanyInfoFormPage = lazy(() => import('@/pages/accounts/CompanyInfoFormPage'))
-const AccountListPage = lazy(() => import('@/pages/accounts/AccountListPage'))
-const AccountFormPage = lazy(() => import('@/pages/accounts/AccountFormPage'))
-const ApiKeyListPage = lazy(() => import('@/pages/accounts/ApiKeyListPage'))
-const ApiKeyFormPage = lazy(() => import('@/pages/accounts/ApiKeyFormPage'))
 const ShippingAddressPage = lazy(() => import('@/pages/shipping/ShippingAddressPage'))
 const OrderReceivePage = lazy(() => import('@/pages/orders/OrderReceivePage'))
 const PurchaseListPage = lazy(() => import('@/pages/purchases/PurchaseListPage'))
@@ -81,17 +76,8 @@ export default function App() {
             </Route>
 
             <Route element={<RequireAuth feature={FEATURE.ACCOUNT_VIEW} />}>
-              <Route path="/accounts" element={<CompanyInfoPage />} />
-              <Route path="/accounts/logins" element={<AccountListPage />} />
-              <Route path="/accounts/api-keys" element={<ApiKeyListPage />} />
-            </Route>
-            <Route element={<RequireAuth feature={FEATURE.ACCOUNT_EDIT} />}>
-              <Route path="/accounts/info/new" element={<CompanyInfoFormPage />} />
-              <Route path="/accounts/info/:id/edit" element={<CompanyInfoFormPage />} />
-              <Route path="/accounts/logins/new" element={<AccountFormPage />} />
-              <Route path="/accounts/logins/:id/edit" element={<AccountFormPage />} />
-              <Route path="/accounts/api-keys/new" element={<ApiKeyFormPage />} />
-              <Route path="/accounts/api-keys/:id/edit" element={<ApiKeyFormPage />} />
+              {/* 회사 정보 → HQ 로 옮김 (2026-10-30) — 옛 주소(/accounts/…) 전부 안내 화면 */}
+              <Route path="/accounts/*" element={<HqMovedPage />} />
             </Route>
 
             <Route element={<RequireAuth feature={FEATURE.USER_MANAGE} />}>

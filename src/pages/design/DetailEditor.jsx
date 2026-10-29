@@ -477,7 +477,7 @@ function CommonFields({ common, setCommon, canEdit, dirty, saving, onSave }) {
         />
         {common.regNoLinked && (
           <span className={styles.linkNote}>
-            회사 정보 › 기본 정보에서 가져와요. 고치려면 <Link to="/accounts">기본 정보</Link>에서
+            HQ 회사 정보 › 기본 정보에서 가져와요. 고치려면 <Link to="/accounts">HQ</Link>에서
           </span>
         )}
       </Row>

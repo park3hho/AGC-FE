@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { getApiCredentials } from '@/api/apiCredential'
-import { getCompanyInfo } from '@/api/companyInfo'
+import { getCompanyReminders } from '@/api/hq'
 import { getDetailPages } from '@/api/detailPage'
 import { getExchangeRate } from '@/api/exchangeRate'
 import { getPriceResearches } from '@/api/priceResearch'
@@ -102,12 +101,10 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!canSeeKeys) return
-    getApiCredentials()
-      .then(setKeys)
-      .catch(() => setKeys([])) // 키 목록을 못 받아도 홈은 그대로
-    getCompanyInfo()
-      .then((d) => setInfos(d.items))
-      .catch(() => setInfos([]))
+    // 회사 정보 정본 = HQ (2026-10-30) — BE 가 HQ 에서 날짜만 읽어 준다. 못 받아도 홈은 그대로
+    getCompanyReminders()
+      .then((d) => (setKeys(d.keys), setInfos(d.infos)))
+      .catch(() => (setKeys([]), setInfos([])))
   }, [canSeeKeys])
 
   useEffect(() => {
@@ -208,7 +205,7 @@ export default function HomePage() {
         title: `${k.service} — ${s.kind === 'expire' ? '키 만료' : '재인증'} 챙겨주세요`,
         sub: s.text,
         button: '보기',
-        path: '/accounts/api-keys',
+        path: '/accounts', // HQ 안내 화면
       })),
   )
 
