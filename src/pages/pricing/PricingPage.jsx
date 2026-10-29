@@ -177,6 +177,11 @@ function PriceBar({ parts, total, loss, wide }) {
 
 const EMPTY_MSG = { text: '', error: false }
 
+// 한 번에 맞추기 — 판매처마다 쓰는 방식 (자사몰은 '목표 차익'일 때 목표 마진 8%로, 2026-10-29 사용자 결정)
+const modeFor = (p, mode) => (mode === 'profit' && p.bulkMode ? p.bulkMode : mode)
+const initialFor = (p, m) => (m.key === 'profit' && p.bulkMode ? p.bulkInitial : m.initial)
+const unitFor = (p, mode) => BULK_MODES.find((m) => m.key === modeFor(p, mode)).unit
+
 // 모바일에서는 한 번에 한 섹션 (DESIGN.md §4.4) — 저장은 늘 보인다
 const MOBILE_TABS = [
   { id: 'prices', name: '판매가' },
@@ -199,7 +204,7 @@ export default function PricingPage() {
   const [bulk, setBulk] = useState({
     mode: BULK_MODES[0].key, // 기본 = 목표 차익
     // 판매처별 값 — 쿠팡·네이버를 나란히 넣고 '적용' 한 번에 둘 다 바꾼다 (비우면 그 판매처는 그대로)
-    amounts: Object.fromEntries(PLATFORMS.map((p) => [p.key, BULK_MODES[0].initial])),
+    amounts: Object.fromEntries(PLATFORMS.map((p) => [p.key, initialFor(p, BULK_MODES[0])])),
   })
   const [bulkMsg, setBulkMsg] = useState(EMPTY_MSG)
   const [saving, setSaving] = useState(false)
@@ -351,6 +356,7 @@ export default function PricingPage() {
         return setBulkMsg({ text: `${p.label} 수수료를 먼저 확인해 주세요`, error: true })
       }
       const amount = bulk.amounts[p.key]
+      const mode = modeFor(p, bulk.mode) // 자사몰은 '목표 차익'일 때도 목표 마진
       const prices = { ...forms[p.key].prices }
       for (const o of rows) {
         let price
@@ -365,11 +371,11 @@ export default function PricingPage() {
             continue
           }
           price =
-            bulk.mode === 'profit'
+            mode === 'profit'
               ? salePriceForProfit(o, amount, st.settings)
               : salePriceForMargin(o, amount, st.settings)
           // 목표 차익: 마진이 바닥(5%) 아래면 바닥 마진이 되는 판매가로 올린다
-          if (bulk.mode === 'profit' && price != null) {
+          if (mode === 'profit' && price != null) {
             const floor = salePriceForMargin(o, PROFIT_MIN_MARGIN_PCT, st.settings)
             if (floor != null && floor > price) {
               price = floor
@@ -472,9 +478,6 @@ export default function PricingPage() {
     statusText = '아직 저장 안 됨'
     statusCls = styles.weak
   }
-
-  const bulkMode = BULK_MODES.find((m) => m.key === bulk.mode) || BULK_MODES[0]
-  const bulkWon = bulkMode.unit === '원'
   // 원가 표시는 첫 판매처 환율 설정 기준 (판매처 모두 같은 환율)
   const costSettings = survey ? states[platforms[0].key].settings : null
 
@@ -911,7 +914,7 @@ export default function PricingPage() {
                     const m = BULK_MODES.find((x) => x.key === e.target.value)
                     setBulk({
                       mode: m.key,
-                      amounts: Object.fromEntries(platforms.map((p) => [p.key, m.initial])),
+                      amounts: Object.fromEntries(platforms.map((p) => [p.key, initialFor(p, m)])),
                     })
                     setBulkMsg(EMPTY_MSG)
                   }}
@@ -927,7 +930,7 @@ export default function PricingPage() {
                 <span />
                 {platforms.map((p) => (
                   <span key={p.key} className={styles.gridHead}>
-                    {p.label} ({bulkMode.unit})
+                    {p.label} ({unitFor(p, bulk.mode)})
                   </span>
                 ))}
                 <span />
@@ -936,16 +939,19 @@ export default function PricingPage() {
                     key={p.key}
                     className={styles.input}
                     type="text"
-                    inputMode={bulkWon ? 'numeric' : 'decimal'}
+                    inputMode={unitFor(p, bulk.mode) === '원' ? 'numeric' : 'decimal'}
                     placeholder="그대로"
-                    aria-label={`${p.label} ${bulkMode.label}`}
+                    aria-label={`${p.label} ${BULK_MODES.find((m) => m.key === modeFor(p, bulk.mode)).label}`}
                     value={
-                      bulkWon ? withCommas(bulk.amounts[p.key] ?? '') : (bulk.amounts[p.key] ?? '')
+                      unitFor(p, bulk.mode) === '원'
+                        ? withCommas(bulk.amounts[p.key] ?? '')
+                        : (bulk.amounts[p.key] ?? '')
                     }
                     onChange={(e) => {
-                      const v = bulkWon
-                        ? digitsOnly(e.target.value)
-                        : e.target.value.replace(/[^0-9.]/g, '')
+                      const v =
+                        unitFor(p, bulk.mode) === '원'
+                          ? digitsOnly(e.target.value)
+                          : e.target.value.replace(/[^0-9.]/g, '')
                       setBulk((b) => ({ ...b, amounts: { ...b.amounts, [p.key]: v } }))
                       setBulkMsg(EMPTY_MSG)
                     }}

@@ -10,7 +10,7 @@ import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
 import { FEATURE, hasFeature } from '@/constants/permissions'
-import { GOOD_MARGIN_PCT, PLATFORMS } from '@/constants/pricingConst'
+import { GOOD_MARGIN_PCT, MARKET_PLATFORMS, PLATFORMS } from '@/constants/pricingConst'
 import { useAuth } from '@/hooks/useAuth'
 import { toKstDate, toKstDateTime } from '@/utils/date'
 import {
@@ -250,7 +250,7 @@ export default function ProductOverviewPage() {
   const t = timeline
   // 요약 숫자는 마켓에 올린 판매처 기준 (없으면 판매가를 저장한 첫 판매처)
   const mainKey =
-    PLATFORMS.find((p) => listings.some((l) => l.platform === p.key))?.key ||
+    MARKET_PLATFORMS.find((p) => listings.some((l) => l.platform === p.key))?.key ||
     PLATFORMS.find((p) => pricing.pricings[p.key]?.saved)?.key ||
     PLATFORMS[0].key
   const mainResults = rows.map((x) => x.markets[mainKey]?.r).filter(Boolean)
@@ -630,12 +630,14 @@ export default function ProductOverviewPage() {
                     )}
                   </div>
                 ))}
-                {PLATFORMS.filter((p) => !listings.some((l) => l.platform === p.key)).map((p) => (
-                  <div key={p.key} className={styles.mrow}>
-                    <span className={`${styles.chip} ${styles.chipOff}`}>{p.label}</span>
-                    <span className={styles.muted}>아직 안 올림</span>
-                  </div>
-                ))}
+                {MARKET_PLATFORMS.filter((p) => !listings.some((l) => l.platform === p.key)).map(
+                  (p) => (
+                    <div key={p.key} className={styles.mrow}>
+                      <span className={`${styles.chip} ${styles.chipOff}`}>{p.label}</span>
+                      <span className={styles.muted}>아직 안 올림</span>
+                    </div>
+                  ),
+                )}
               </div>
             )}
           </Section>

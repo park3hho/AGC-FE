@@ -6,7 +6,7 @@
 //   마진율     = 차익 / salePrice
 // option: { priceCny, shippingCny } — shippingCny 가 null 이면(용량을 못 읽음) 계산하지 않는다
 // settings: { fxRate, fxMarkupPct, platformFeeRate, paymentFeeRate } — 문자열·숫자 모두 받음
-import { NAVER_ADDON_LIMITS, PLATFORMS, SALE_PRICE_UNIT } from '@/constants/pricingConst'
+import { MARKET_PLATFORMS, NAVER_ADDON_LIMITS, SALE_PRICE_UNIT } from '@/constants/pricingConst'
 
 // 빈 값('' · null · undefined)은 NaN — 0 으로 착각하지 않게
 export const toNum = (v) => (v === '' || v == null ? NaN : Number(v))
@@ -240,8 +240,9 @@ export const formatKgFromG = (g) => (g == null ? '-' : `${Number((g / 1000).toFi
 
 // 제품의 가격 책정 상태 (constants/pricingConst.PRICING_STATUS 키)
 export const pricingStatusOf = (pricedPlatforms, hasSurvey) => {
-  const done = PLATFORMS.filter((p) => pricedPlatforms.includes(p.key)).length
-  if (done === PLATFORMS.length) return 'done'
+  // 가격 책정 완료 = 마켓(쿠팡·네이버) 모두 저장. 자사몰가는 따로 (없어도 완료)
+  const done = MARKET_PLATFORMS.filter((p) => pricedPlatforms.includes(p.key)).length
+  if (done === MARKET_PLATFORMS.length) return 'done'
   if (!hasSurvey) return 'nosurvey'
   return done > 0 ? 'partial' : 'pending'
 }

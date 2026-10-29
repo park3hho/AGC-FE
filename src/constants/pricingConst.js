@@ -1,9 +1,20 @@
 // 가격 책정 상수 — 판매처 키는 BE core/pricing_config.Platform 과 같아야 한다
 // priceMode: 'each' = 옵션마다 판매가 따로 등록 · 'base_addon' = 대표 옵션 가격을 대표가로, 나머지는 ±추가금
+// 판매처 — market: 마켓(상품 등록 · 주문 수집 대상). 자사몰(eidofood.com)은 마켓이 아니라 가격만 정한다 (2026-10-29)
+//   bulkMode · bulkInitial: '목표 차익' 맞추기 때 이 판매처만 다른 방식으로 (자사몰은 목표 마진 8%)
 export const PLATFORMS = [
-  { key: 'coupang', label: '쿠팡', priceMode: 'each' },
-  { key: 'naver', label: '네이버', priceMode: 'base_addon' },
+  { key: 'coupang', label: '쿠팡', priceMode: 'each', market: true },
+  { key: 'naver', label: '네이버', priceMode: 'base_addon', market: true },
+  {
+    key: 'shop',
+    label: '자사몰',
+    priceMode: 'each',
+    market: false,
+    bulkMode: 'margin',
+    bulkInitial: '8',
+  },
 ]
+export const MARKET_PLATFORMS = PLATFORMS.filter((p) => p.market)
 
 // 마진율이 이 값(%) 이상이면 초록색으로 강조 — 임시 기준, 사용자 확정 전
 export const GOOD_MARGIN_PCT = 20

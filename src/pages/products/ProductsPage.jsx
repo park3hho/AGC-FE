@@ -10,7 +10,7 @@ import PageHeader from '@/components/common/PageHeader'
 import Pager from '@/components/common/Pager'
 import Section from '@/components/common/Section'
 import { useFitRows } from '@/hooks/useFitRows'
-import { PLATFORMS } from '@/constants/pricingConst'
+import { MARKET_PLATFORMS as PLATFORMS } from '@/constants/pricingConst'
 import { toKstDate, toKstDateTime } from '@/utils/date'
 import styles from '@/pages/design/Design.module.css'
 
