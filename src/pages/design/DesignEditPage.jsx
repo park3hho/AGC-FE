@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import {
   approveDetailPage,
+  getDetailPages,
   commonBody,
   getDetailPage,
   requestDetailChanges,
@@ -60,6 +61,8 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b)
 // 데스크탑: 왼쪽 편집 / 오른쪽 휴먼 체크 + 미리보기 (스크롤은 미리보기 안에서만)
 export default function DesignEditPage() {
   const { productId } = useParams()
+  const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
   const screen = useScreen()
   const canReview = hasFeature(user, FEATURE.DETAIL_REVIEW)
@@ -76,6 +79,8 @@ export default function DesignEditPage() {
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
+    setData(null)
+    setError('')
     getDetailPage(productId)
       .then((d) => {
         setData(d)
@@ -148,9 +153,11 @@ export default function DesignEditPage() {
     return sets
   }
 
-  // 휴먼 체크 '확인' — 승인 후 상세 이미지(네이버 PNG · 쿠팡 JPG)를 바로 저장한다
-  const approve = (note) =>
+  // '확인' — 저장 안 한 변경이 있으면 먼저 저장하고, 승인 후 상세 이미지(네이버 PNG · 쿠팡 JPG)를 바로 저장한다
+  //   (2026-10-29 사용자: 저장 · 검수 요청 · 확인을 '확인' 하나로 — 검수 권한이 있는 사람 기준)
+  const approve = (note = '') =>
     run('review', async () => {
+      if (dirty) applyPage(await saveDetailPage(productId, content, { submit: false }))
       const p = await approveDetailPage(productId, note)
       applyPage(p)
       try {
@@ -166,6 +173,22 @@ export default function DesignEditPage() {
     run('review', async () => {
       applyPage(await requestDetailChanges(productId, note))
       flash('수정을 요청했어요')
+    })
+  // '다음' — 목록에서 연 순서(검색·필터 적용)대로 다음 제품. 주소로 바로 열었으면 전체 목록 순서
+  const goNext = () =>
+    run('next', async () => {
+      if ((dirty && page) || commonDirty) {
+        if (!window.confirm('저장 안 한 변경이 있어요. 버리고 다음 제품으로 갈까요?')) return
+      }
+      let ids = location.state?.ids
+      if (!ids?.length) ids = (await getDetailPages()).items.map((x) => x.product.id)
+      const i = ids.findIndex((id) => String(id) === String(productId))
+      const next = ids[i + 1]
+      if (next == null) {
+        flash('마지막 제품이에요')
+        return
+      }
+      navigate(`/design/${next}`, { state: { ids } })
     })
   const saveCommon = () =>
     run('common', async () => {
@@ -209,6 +232,16 @@ export default function DesignEditPage() {
     .filter(Boolean)
     .join(' · ')
   const canSubmit = !['review', 'approved'].includes(status) || dirty
+  // 확인 — 바뀐 게 있거나 아직 승인 전이면. 공통 안내를 고쳤으면 그쪽 저장이 먼저 (다른 페이지 승인도 풀리는 저장이라 따로)
+  const canConfirm = canReview && markerCount === 0 && !commonDirty && (status !== 'approved' || dirty)
+  const confirmTitle =
+    markerCount > 0
+      ? `확인 필요 ${markerCount}칸 — [[...]] 표시를 채워야 확인할 수 있어요`
+      : commonDirty
+        ? '공통 안내(S6)를 먼저 저장해 주세요'
+        : status === 'approved' && !dirty
+          ? '이미 확인된 페이지예요'
+          : '저장하고 검수 완료 · 상세 이미지 저장'
 
   return (
     <main className="page-flat">
@@ -262,7 +295,6 @@ export default function DesignEditPage() {
               markerCount={markerCount}
               regNoReady={regNoReady}
               busy={!!busy}
-              onApprove={approve}
               onRequestChanges={requestChanges}
             />
           </Section>
@@ -310,25 +342,43 @@ export default function DesignEditPage() {
                 ? status === 'approved'
                   ? '바꾼 내용을 저장하면 다시 확인해야 해요'
                   : '저장 안 한 변경이 있어요'
-                : `${page.updatedBy?.name || '-'} 저장`)
+                : `마지막 저장 · ${page.updatedBy?.name || '-'}`)
           )}
         </span>
         <span className={styles.saveButtons}>
-          <button
-            type="button"
-            className="btn-secondary btn-md"
-            disabled={(!dirty && !!page) || !!busy}
-            onClick={() => save(false)}
-          >
-            {busy === 'save' ? '저장 중…' : '저장'}
-          </button>
-          <button
-            type="button"
-            className="btn-primary btn-md"
-            disabled={!canSubmit || !!busy}
-            onClick={() => save(true)}
-          >
-            {busy === 'submit' ? '요청 중…' : '저장하고 검수 요청'}
+          {canReview ? (
+            <button
+              type="button"
+              className="btn-primary btn-md"
+              disabled={!canConfirm || !!busy}
+              title={confirmTitle}
+              onClick={() => approve()}
+            >
+              {busy === 'review' ? '확인 중…' : '확인'}
+            </button>
+          ) : (
+            // 검수 권한이 없으면 확인을 못 하니 저장 · 검수 요청은 그대로
+            <>
+              <button
+                type="button"
+                className="btn-secondary btn-md"
+                disabled={(!dirty && !!page) || !!busy}
+                onClick={() => save(false)}
+              >
+                {busy === 'save' ? '저장 중…' : '저장'}
+              </button>
+              <button
+                type="button"
+                className="btn-primary btn-md"
+                disabled={!canSubmit || !!busy}
+                onClick={() => save(true)}
+              >
+                {busy === 'submit' ? '요청 중…' : '저장하고 검수 요청'}
+              </button>
+            </>
+          )}
+          <button type="button" className="btn-secondary btn-md" disabled={!!busy} onClick={goNext}>
+            {busy === 'next' ? '…' : '다음 →'}
           </button>
         </span>
       </div>

@@ -67,7 +67,8 @@ export default function DesignListPage() {
   const current = Math.min(page, pageCount)
   const rows = filtered.slice((current - 1) * pageSize, current * pageSize)
   const counts = data?.counts || {}
-  const open = (it) => navigate(`/design/${it.product.id}`)
+  // 편집 화면 '다음' 버튼이 이 목록 순서(검색·필터 적용)를 따라가게 id 순서를 넘긴다
+  const open = (it) => navigate(`/design/${it.product.id}`, { state: { ids: filtered.map((x) => x.product.id) } })
 
   const lastText = (p) => {
     if (!p) return '-'
