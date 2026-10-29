@@ -162,7 +162,8 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   align-items: center;
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-num); /* 코드·번호 — monospace 는 윈도우에서 한글이 굴림체로 깨져 숫자 글꼴 + 고정폭 숫자로 (2026-10-29) */
+  font-variant-numeric: tabular-nums;
 }
 
 /* 추적 기록 */
@@ -428,7 +429,8 @@
 
 .ref b {
   color: var(--color-text);
-  font-family: ui-monospace, monospace;
+  font-family: var(--font-num); /* 코드·번호 — monospace 는 윈도우에서 한글이 굴림체로 깨져 숫자 글꼴 + 고정폭 숫자로 (2026-10-29) */
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
 
