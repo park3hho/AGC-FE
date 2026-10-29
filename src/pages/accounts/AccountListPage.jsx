@@ -11,7 +11,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { useFitRows } from '@/hooks/useFitRows'
 import AccountTabs from './AccountTabs'
 import styles from './Accounts.module.css'
-import { ShareTags } from './ShareServices'
 
 function CopyButton({
   getText, // function: () => Promise<string> | string
@@ -108,7 +107,6 @@ function AccountCard({
             {u}
           </span>
         ))}
-        <ShareTags value={account.sharedWith} />
         {account.memo && (
           <span className={styles.memo} title={account.memo}>
             {account.memo}

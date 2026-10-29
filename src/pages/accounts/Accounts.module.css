@@ -312,10 +312,3 @@ a.site:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-/* 공유 서비스 표시 (공유 FIN · MKT · SHOP) — 용도 태그와 구분되게 테두리만 강조색 */
-.shareTag {
-  border: 1px solid var(--color-primary);
-  background: transparent;
-  color: var(--color-primary);
-}

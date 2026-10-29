@@ -6,7 +6,6 @@ import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import { PLATFORM_SUGGESTIONS, USAGES } from '@/constants/accountConst'
 import styles from './Accounts.module.css'
-import { ShareServicesField } from './ShareServices'
 
 const EMPTY = { platform: '', url: '', loginId: '', password: '', memo: '' }
 
@@ -18,7 +17,6 @@ export default function AccountFormPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState(EMPTY)
   const [usages, setUsages] = useState([])
-  const [sharedWith, setSharedWith] = useState([])
   const [loaded, setLoaded] = useState(!editing)
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
@@ -36,7 +34,6 @@ export default function AccountFormPage() {
           memo: a.memo,
         })
         setUsages(a.usages)
-        setSharedWith(a.sharedWith)
         setLoaded(true)
       })
       .catch((err) => setError(err.message))
@@ -75,7 +72,6 @@ export default function AccountFormPage() {
       url: form.url.trim(),
       memo: form.memo.trim(),
       usages,
-      sharedWith,
     }
     setSaving(true)
     try {
@@ -217,8 +213,6 @@ export default function AccountFormPage() {
             onChange={set('memo')}
           />
         </div>
-
-        <ShareServicesField value={sharedWith} onChange={setSharedWith} />
       </Section>
     </form>
   )

@@ -10,7 +10,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { keyStatuses } from '@/utils/apiKey'
 import AccountTabs from './AccountTabs'
 import styles from './Accounts.module.css'
-import { ShareTags } from './ShareServices'
 
 const hostOf = (url) => {
   try {
@@ -98,7 +97,6 @@ function KeyCard({
           </a>
         )}
         <span className={styles.badges}>
-          <ShareTags value={item.sharedWith} />
           {statuses.length === 0 && <Badge tone="neutral">만료일 없음</Badge>}
           {statuses.map((s) => (
             <Badge key={s.kind} tone={s.tone}>
