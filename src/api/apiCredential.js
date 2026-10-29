@@ -14,6 +14,7 @@ const toCredential = (c) => ({
   reauthTo: c.reauth_to,
   allowedIps: c.allowed_ips || [],
   memo: c.memo || '',
+  sharedWith: c.shared_with || [], // 공유 서비스 code (fin · mkt · shop)
 })
 
 export const getApiCredentials = async () => {
@@ -47,6 +48,7 @@ const toBody = (f) => ({
   reauth_to: orNull(f.reauthTo),
   allowed_ips: f.allowedIps,
   memo: orNull(f.memo),
+  shared_with: f.sharedWith || [],
 })
 
 export const createApiCredential = async (form) => {

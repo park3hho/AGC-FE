@@ -9,6 +9,7 @@ const toAccount = (a) => ({
   url: a.url || '', // 홈페이지 · 없으면 ''
   usages: a.usages,
   memo: a.memo || '', // 비고 · 없으면 ''
+  sharedWith: a.shared_with || [], // 공유 서비스 code (fin · mkt · shop)
 })
 
 export const getCompanyAccounts = async () => {
@@ -28,10 +29,26 @@ export const revealPassword = async (id) => {
   return data.password
 }
 
-export const createCompanyAccount = async ({ platform, loginId, password, usages, url, memo }) => {
+export const createCompanyAccount = async ({
+  platform,
+  loginId,
+  password,
+  usages,
+  url,
+  memo,
+  sharedWith = [],
+}) => {
   const data = await request('/company-accounts', {
     method: 'POST',
-    body: { platform, login_id: loginId, password, usages, url: url || null, memo: memo || null },
+    body: {
+      platform,
+      login_id: loginId,
+      password,
+      usages,
+      url: url || null,
+      memo: memo || null,
+      shared_with: sharedWith,
+    },
     errorMsg: '계정을 저장하지 못했어요',
   })
   return toAccount(data.account)
@@ -40,9 +57,16 @@ export const createCompanyAccount = async ({ platform, loginId, password, usages
 // 수정 — password 는 바꿀 때만 보낸다 (빈 값이면 그대로)
 export const updateCompanyAccount = async (
   id,
-  { platform, loginId, password, usages, url, memo },
+  { platform, loginId, password, usages, url, memo, sharedWith = [] },
 ) => {
-  const body = { platform, login_id: loginId, usages, url: url || null, memo: memo || null }
+  const body = {
+    platform,
+    login_id: loginId,
+    usages,
+    url: url || null,
+    memo: memo || null,
+    shared_with: sharedWith,
+  }
   if (password) body.password = password
   const data = await request(`/company-accounts/${id}`, {
     method: 'PATCH',

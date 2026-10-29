@@ -12,4 +12,13 @@ export const PLATFORM_SUGGESTIONS = [
   { name: '배송대행지', url: '' },
 ]
 
-export const USAGES = ['소싱', '판매', '정산', '배송', '통관', '인허가', 'API', '관리자', '기타']
+export const USAGES = ['소싱', '판매', '정산', '배송', '통관', '인허가', '마케팅', 'API', '관리자', '기타']
+
+// 공유 서비스 — 체크한 서비스의 서버가 이 계정·키를 내부 API(/internal/company)로 조회할 수 있다.
+// BE core/internal_services.py 의 SERVICES 와 code 가 같아야 한다. 비어 있으면 AGC 사람만 본다.
+export const SHARE_SERVICES = [
+  { code: 'fin', label: 'FIN', desc: '회계' },
+  { code: 'mkt', label: 'MKT', desc: '마케팅' },
+  { code: 'shop', label: 'SHOP', desc: '자사몰' },
+]
+export const shareLabel = (code) => SHARE_SERVICES.find((s) => s.code === code)?.label || code

@@ -6,6 +6,7 @@ import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import { PLATFORM_SUGGESTIONS } from '@/constants/accountConst'
 import styles from './Accounts.module.css'
+import { ShareServicesField } from './ShareServices'
 
 const EMPTY = {
   service: '',
@@ -18,6 +19,7 @@ const EMPTY = {
   reauthTo: '',
   allowedIps: '',
   memo: '',
+  sharedWith: [],
 }
 
 // 날짜 + n일 → 'YYYY-MM-DD'
@@ -103,6 +105,7 @@ export default function ApiKeyFormPage() {
           reauthTo: c.reauthTo || '',
           allowedIps: c.allowedIps.join(', '),
           memo: c.memo,
+          sharedWith: c.sharedWith,
         })
         setLoaded(true)
       })
@@ -327,6 +330,14 @@ export default function ApiKeyFormPage() {
             onChange={set('memo')}
           />
         </div>
+
+        <ShareServicesField
+          value={form.sharedWith}
+          onChange={(v) => {
+            setForm({ ...form, sharedWith: v })
+            setError('')
+          }}
+        />
       </Section>
     </form>
   )
