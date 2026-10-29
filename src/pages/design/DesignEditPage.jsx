@@ -12,6 +12,7 @@ import {
   uploadDetailExport,
 } from '@/api/detailPage'
 import Badge from '@/components/Badge'
+import BottomSheet from '@/components/common/BottomSheet'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
@@ -33,11 +34,11 @@ import ReviewPanel from './ReviewPanel'
 import styles from './Design.module.css'
 import { DESIGN_RULES, WORK_RULES_UPDATED } from '@/constants/workRules'
 
-// 모바일 섹션 탭 — 한 화면 = 한 섹션 (DESIGN.md §4.4)
+// 모바일 섹션 탭 — 한 화면 = 한 섹션 (DESIGN.md §4.4). 모바일은 검수 모드: 미리보기가 첫 탭 (플레이북 '모바일' §4.7)
 const TABS = [
-  { id: 'editor', name: '편집' },
   { id: 'preview', name: '미리보기' },
-  { id: 'check', name: '휴먼 체크' },
+  { id: 'editor', name: '편집' },
+  { id: 'check', name: '기록' },
 ]
 
 // 문자열 안의 [[...]] 개수 (객체·배열 안까지)
@@ -67,6 +68,8 @@ export default function DesignEditPage() {
   const screen = useScreen()
   const canReview = hasFeature(user, FEATURE.DETAIL_REVIEW)
   const tabs = useSectionTabs(TABS)
+  const [changeOpen, setChangeOpen] = useState(false) // 모바일 '수정 요청' 메모 시트
+  const [changeNote, setChangeNote] = useState('')
   const pageRef = useRef(null)
 
   const [data, setData] = useState(null) // getDetailPage 결과
@@ -264,6 +267,22 @@ export default function DesignEditPage() {
         }
       />
       <SectionTabs {...tabs} />
+      {tabs.mobile && (
+        // 모바일 첫 줄 — 상태 · 확인 필요 칸 · 목록에서 몇 번째인지 (다음 → 순서)
+        <div className={styles.mProg}>
+          <span>
+            <i className={` ${styles[`mDot_${st.tone}`] || ''}`} />
+            {st.label}
+            {markerCount > 0 && <b className={styles.markCount}> · 확인 필요 {markerCount}칸</b>}
+          </span>
+          {location.state?.ids?.length > 0 && (
+            <span>
+              {location.state.label || '목록'} {location.state.ids.length} 중{' '}
+              {location.state.ids.findIndex((id) => String(id) === String(productId)) + 1}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* 왼쪽 열: 편집 + 휴먼 체크 · 오른쪽 열: 미리보기 (열 하나를 다 쓴다) */}
       <div className={`fit-row ${styles.layout}`}>
@@ -308,6 +327,8 @@ export default function DesignEditPage() {
           fill="stretch"
           className={tabs.hide('preview')}
           action={
+            // 모바일은 이미지 내보내기 숨김 — 확인하면 상세 이미지가 자동 저장된다
+            !tabs.mobile && (
             <button
               type="button"
               className="btn-secondary btn-sm"
@@ -323,6 +344,7 @@ export default function DesignEditPage() {
             >
               {busy === 'export' ? '만드는 중…' : '이미지 내보내기'}
             </button>
+            )
           }
         >
           <PreviewFrame ref={pageRef} content={content} common={common} />
@@ -346,6 +368,16 @@ export default function DesignEditPage() {
           )}
         </span>
         <span className={styles.saveButtons}>
+          {tabs.mobile && canReview && (
+            <button
+              type="button"
+              className="btn-secondary btn-md"
+              disabled={!['review', 'approved'].includes(status) || !!busy}
+              onClick={() => setChangeOpen(true)}
+            >
+              수정 요청
+            </button>
+          )}
           {canReview ? (
             <button
               type="button"
@@ -382,6 +414,33 @@ export default function DesignEditPage() {
           </button>
         </span>
       </div>
+      <BottomSheet
+        open={changeOpen}
+        title="수정 요청"
+        onClose={() => setChangeOpen(false)}
+        footer={
+          <button
+            type="button"
+            className="btn-primary btn-md"
+            disabled={!changeNote.trim() || !!busy}
+            onClick={async () => {
+              await requestChanges(changeNote.trim())
+              setChangeOpen(false)
+              setChangeNote('')
+            }}
+          >
+            수정 요청 보내기
+          </button>
+        }
+      >
+        <textarea
+          className="form-input"
+          rows={4}
+          value={changeNote}
+          onChange={(e) => setChangeNote(e.target.value)}
+          placeholder="무엇을 고쳐야 하나요? (필수)"
+        />
+      </BottomSheet>
     </main>
   )
 }

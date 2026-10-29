@@ -546,6 +546,19 @@ export default function DetailEditor({
           </button>
         ))}
       </div>
+      {/* 모바일: 묶음 탭 대신 드롭다운 하나 (CSS 로 둘 중 하나만 보임, 플레이북 '모바일' §4.7) */}
+      <select
+        className={`form-input ${styles.groupSelect}`}
+        value={group}
+        onChange={(e) => setGroup(e.target.value)}
+        aria-label="편집 묶음"
+      >
+        {EDITOR_GROUPS.map((g) => (
+          <option key={g.key} value={g.key}>
+            {g.label}
+          </option>
+        ))}
+      </select>
       <div className={styles.fields}>
         {group === 'hero' && <HeroFields c={c.hero || {}} set={sub('hero')} photos={photos} />}
         {group === 'points' && (

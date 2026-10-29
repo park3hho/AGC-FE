@@ -500,3 +500,71 @@
   white-space: nowrap;
   cursor: help;
 }
+
+/* 모바일 검수 모드 (2026-10-30, 플레이북 '모바일' §4.7) */
+.groupSelect {
+  display: none;
+}
+
+.mProg {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 34px;
+  padding: 0 var(--pane-pad-x);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.mDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--color-text-weak);
+  vertical-align: 1px;
+}
+
+.mDot_warning {
+  background: var(--color-warning);
+}
+
+.mDot_success {
+  background: var(--color-success);
+}
+
+.mDot_danger {
+  background: var(--color-danger);
+}
+
+@media (max-width: 768px) {
+  .groups {
+    display: none;
+  }
+
+  .groupSelect {
+    display: block;
+    width: 100%;
+    min-height: var(--touch-min);
+  }
+
+  .saveStatus {
+    display: none;
+  }
+
+  .saveButtons {
+    flex: 1;
+  }
+
+  .saveButtons button {
+    flex: none;
+  }
+
+  .saveButtons :global(.btn-primary) {
+    flex: 1;
+  }
+}

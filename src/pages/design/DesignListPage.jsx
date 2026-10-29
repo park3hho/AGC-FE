@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
+import FilterBar from '@/components/common/FilterBar'
+import { useMobile } from '@/hooks/useMobile'
+
 import { getDetailPages } from '@/api/detailPage'
 import Badge from '@/components/Badge'
 import Icon from '@/components/Icon'
@@ -25,6 +28,9 @@ const StatusBadge = ({ status }) => (
 // 검색어·필터·페이지는 주소(?q=&status=&page=)에 둔다
 export default function DesignListPage() {
   const navigate = useNavigate()
+  const mobile = useMobile()
+  // 모바일 기본 필터는 검수 대기 — 폰에서 디자인 탭을 여는 이유 (플레이북 '모바일' §4.7). 주소에 status 가 있으면 그것
+  const defaultStatus = mobile ? 'review' : 'all'
   const [params, setParams] = useSearchParams()
   const [data, setData] = useState(null) // { items, counts }
   const [error, setError] = useState('')
@@ -32,7 +38,7 @@ export default function DesignListPage() {
   const pageSize = useFitRows(listRef, { fallback: 49 })
 
   const q = params.get('q') || ''
-  const status = params.get('status') || 'all'
+  const status = params.get('status') || defaultStatus
   const page = Number(params.get('page')) || 1
 
   useEffect(() => {
@@ -44,7 +50,7 @@ export default function DesignListPage() {
   const set = (patch) => {
     const next = new URLSearchParams(params)
     Object.entries({ page: 1, ...patch }).forEach(([k, v]) =>
-      v === '' || v == null || (k === 'page' && v === 1) || (k === 'status' && v === 'all')
+      v === '' || v == null || (k === 'page' && v === 1) || (k === 'status' && v === defaultStatus)
         ? next.delete(k)
         : next.set(k, v),
     )
@@ -68,7 +74,13 @@ export default function DesignListPage() {
   const rows = filtered.slice((current - 1) * pageSize, current * pageSize)
   const counts = data?.counts || {}
   // 편집 화면 '다음' 버튼이 이 목록 순서(검색·필터 적용)를 따라가게 id 순서를 넘긴다
-  const open = (it) => navigate(`/design/${it.product.id}`, { state: { ids: filtered.map((x) => x.product.id) } })
+  const open = (it) =>
+    navigate(`/design/${it.product.id}`, {
+      state: {
+        ids: filtered.map((x) => x.product.id),
+        label: status === 'all' ? '전체' : DETAIL_STATUS_FILTERS.find((f) => f.key === status)?.label,
+      },
+    })
 
   const lastText = (p) => {
     if (!p) return '-'
@@ -96,7 +108,12 @@ export default function DesignListPage() {
       />
 
       <Section name="검색·필터" id="filters" title={false}>
-        <div className={styles.filters}>
+        <FilterBar
+          className={styles.filters}
+          active={status !== defaultStatus ? 1 : 0}
+          onReset={() => set({ status: defaultStatus })}
+          count={`개 보기`}
+          search={
           <label className={styles.search}>
             <Icon name="search" size={16} />
             <input
@@ -105,6 +122,8 @@ export default function DesignListPage() {
               placeholder="이름·코드 검색 (중국어 가능)"
             />
           </label>
+          }
+        >
           <select
             className={`form-input ${styles.select}`}
             value={status}
@@ -117,7 +136,7 @@ export default function DesignListPage() {
               </option>
             ))}
           </select>
-        </div>
+        </FilterBar>
       </Section>
 
       <Section

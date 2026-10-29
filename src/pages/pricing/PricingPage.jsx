@@ -9,6 +9,7 @@ import HoverInfo from '@/components/common/HoverInfo'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
+import BottomSheet from '@/components/common/BottomSheet'
 import {
   BULK_MODES,
   FX_SOURCE_LABEL,
@@ -215,6 +216,8 @@ export default function PricingPage() {
   const [saveError, setSaveError] = useState('')
   const [bundleOn, setBundleOn] = useState(() => new Set()) // 판매 옵션으로 채택한 묶음 줄 (서버 product_bundle)
   const [bundleBusy, setBundleBusy] = useState(false)
+  const [mTab, setMTab] = useState(null) // 모바일 판매처 탭 (null = 첫 판매처) · 'summary' = 요약
+  const [bulkOpen, setBulkOpen] = useState(false) // 모바일 '한 번에 맞추기' 시트
 
   useEffect(() => {
     setData(null)
@@ -498,6 +501,275 @@ export default function PricingPage() {
       { label: '수수료', value: r.fee, color: MIX.fee },
       ...(r.profit > 0 ? [{ label: '차익', value: r.profit, color: MIX.profit }] : []),
     ]
+  }
+
+  // 한 번에 맞추기 입력 — 데스크탑 섹션과 모바일 시트가 같은 것을 쓴다
+  const bulkControls = survey && (
+    <>
+      <div className={styles.row}>
+        <span className={styles.gridLabel}>방식</span>
+        <select
+          className={styles.select}
+          value={bulk.mode}
+          aria-label="맞추는 방식"
+          onChange={(e) => {
+            const m = BULK_MODES.find((x) => x.key === e.target.value)
+            setBulk({
+              mode: m.key,
+              amounts: Object.fromEntries(platforms.map((p) => [p.key, initialFor(p, m)])),
+            })
+            setBulkMsg(EMPTY_MSG)
+          }}
+        >
+          {BULK_MODES.map((m) => (
+            <option key={m.key} value={m.key}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className={styles.grid} style={{ '--cols': platforms.length }}>
+        <span />
+        {platforms.map((p) => (
+          <span key={p.key} className={styles.gridHead}>
+            {p.label} ({unitFor(p, bulk.mode)})
+          </span>
+        ))}
+        <span />
+        {platforms.map((p) => (
+          <input
+            key={p.key}
+            className={styles.input}
+            type="text"
+            inputMode={unitFor(p, bulk.mode) === '원' ? 'numeric' : 'decimal'}
+            placeholder="그대로"
+            aria-label={`${p.label} ${BULK_MODES.find((m) => m.key === modeFor(p, bulk.mode)).label}`}
+            value={
+              unitFor(p, bulk.mode) === '원'
+                ? withCommas(bulk.amounts[p.key] ?? '')
+                : (bulk.amounts[p.key] ?? '')
+            }
+            onChange={(e) => {
+              const v =
+                unitFor(p, bulk.mode) === '원'
+                  ? digitsOnly(e.target.value)
+                  : e.target.value.replace(/[^0-9.]/g, '')
+              setBulk((b) => ({ ...b, amounts: { ...b.amounts, [p.key]: v } }))
+              setBulkMsg(EMPTY_MSG)
+            }}
+          />
+        ))}
+      </div>
+      {bulkMsg.text && (
+        <p className={bulkMsg.error ? styles.hintError : styles.hint}>{bulkMsg.text}</p>
+      )}
+    </>
+  )
+
+  // 모바일 (≤ 768px) — 표 대신 판매처 글자 탭 + 옵션 카드 (플레이북 'AGC 모바일 화면 설계' §4.8)
+  if (tabs.mobile && survey) {
+    const cur = mTab === 'summary' ? null : platforms.find((p) => p.key === mTab) || platforms[0]
+    const cs = cur ? states[cur.key] : null
+    return (
+      <main className="page-flat">
+        <PageHeader
+          title={product.titleKo || product.titleCn}
+          back
+          info={{
+            title: '가격 책정 규칙',
+            updated: WORK_RULES_UPDATED,
+            source: '원문: BE DESIGN.md §6.3 · docs/api-contract.md 가격 책정',
+            sections: PRICING_RULES,
+          }}
+        />
+        <div className={styles.mTabs} role="tablist" aria-label="판매처">
+          {platforms.map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              role="tab"
+              aria-selected={cur?.key === p.key}
+              className={cur?.key === p.key ? styles.mTabOn : ''}
+              onClick={() => setMTab(p.key)}
+            >
+              {p.label}
+              <small className={tabStatus(p).cls}>●</small>
+            </button>
+          ))}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!cur}
+            className={!cur ? styles.mTabOn : ''}
+            onClick={() => setMTab('summary')}
+          >
+            요약
+          </button>
+        </div>
+        <div className={styles.mInfo}>
+          <span>
+            {cur
+              ? `수수료 ${trimDecimal(totalFeeRate(cs.settings).toFixed(2))}% · ${tabStatus(cur).text}`
+              : `환율 ${formatFx(fx.cnyKrw)}원`}
+          </span>
+          <button type="button" className={styles.mLink} onClick={() => setBulkOpen(true)}>
+            한 번에 맞추기
+          </button>
+        </div>
+        <div className={styles.mList}>
+          {cur
+            ? rows.map((o) => {
+                const r = cs.results[o.id]
+                const value = forms[cur.key].prices[o.id]
+                const addon = cur.key === naverKey && naver ? naver.byId[o.id] : null
+                const parts = r ? partsOf(o, r, cs.settings) : null
+                const total = r ? Math.max(r.totalCost + r.fee, toNum(value)) : 0
+                const cost = costSettings ? costWithShipping(o, costSettings) : null
+                const bundled = o.bundleQty > 1
+                const warn = o.overLimit
+                  ? '30kg 초과 — 집운 소형 불가'
+                  : o.shippingCny == null
+                    ? '용량을 못 읽어 배송비를 몰라요'
+                    : o.overDutyFree
+                      ? '상품가가 면세 한도($150)를 넘을 수 있어요'
+                      : ''
+                return (
+                  <div key={o.id} className={styles.mCard}>
+                    <div className={styles.mCardHead}>
+                      <b>
+                        {bundled ? o.marketOption1 : o.option1}{' '}
+                        <span className={styles.weak}>
+                          {bundled ? o.marketOption2 : o.option2}
+                        </span>
+                      </b>
+                      <span className={styles.weak}>
+                        원가 {cost == null ? '-' : formatWon(cost)}
+                      </span>
+                    </div>
+                    {warn && <span className={styles.optWarn}>{warn}</span>}
+                    <div className={styles.mPriceRow}>
+                      <input
+                        className={`${styles.mPrice} ${
+                          invalidPrice(value)
+                            ? styles.invalid
+                            : cs.changedIds.has(o.id)
+                              ? styles.changed
+                              : ''
+                        }`}
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="판매가"
+                        aria-label={`${optionName(o)} ${cur.label} 판매가`}
+                        value={withCommas(value)}
+                        onChange={(e) => setPrice(cur.key, o.id, digitsOnly(e.target.value))}
+                      />
+                      <span className={styles.mResult}>
+                        {r ? (
+                          <>
+                            차익{' '}
+                            <b className={r.profit < 0 ? styles.bad : ''}>{formatWon(r.profit)}</b>
+                            <br />
+                            마진 <span className={marginClass(r)}>{formatPct(r.marginPct)}</span>
+                          </>
+                        ) : (
+                          <span className={styles.weak}>판매가를 넣어 주세요</span>
+                        )}
+                      </span>
+                    </div>
+                    {addon && (
+                      <div className={styles.mAddon}>
+                        <button
+                          type="button"
+                          className={`${styles.addon} ${addon.isBase ? styles.addonBase : ''} ${
+                            addon.over ? styles.addonOver : ''
+                          }`}
+                          onClick={() => setBase(cur.key, o.id)}
+                          disabled={addon.isBase && addon.autoBase}
+                        >
+                          {addon.isBase
+                            ? addon.autoBase
+                              ? '대표(자동)'
+                              : '대표'
+                            : `추가금 ${formatAddon(addon.amount)}`}
+                        </button>
+                        {naver.groups.length > 1 && (
+                          <span className={styles.weak}>상품 {addon.group}</span>
+                        )}
+                      </div>
+                    )}
+                    {r && <PriceBar parts={parts} total={total} loss={r.profit < 0} />}
+                  </div>
+                )
+              })
+            : platforms.map((p) => {
+                const sm = states[p.key].summary
+                const ts = tabStatus(p)
+                return (
+                  <div key={p.key} className={styles.mCard}>
+                    <div className={styles.mCardHead}>
+                      <b>{p.label}</b>
+                      <span className={ts.cls}>● {ts.text}</span>
+                    </div>
+                    <div className={styles.mSumRow}>
+                      <span>
+                        평균 마진 <b>{formatPct(sm.avgMarginPct)}</b>
+                      </span>
+                      <span>
+                        최저 차익{' '}
+                        <b className={sm.minProfit < 0 ? styles.bad : ''}>
+                          {formatWon(sm.minProfit)}
+                        </b>
+                      </span>
+                      <span>
+                        손해 <b className={sm.lossCount > 0 ? styles.bad : ''}>{sm.lossCount}개</b>
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+          {saveError && <p className={styles.hintError}>{saveError}</p>}
+        </div>
+        <div className={`sticky-cta ${styles.mCta}`}>
+          <button
+            type="button"
+            className="btn-secondary btn-md"
+            onClick={revert}
+            disabled={totalChanges === 0 || saving}
+          >
+            되돌리기
+          </button>
+          <button
+            type="button"
+            className="btn-primary btn-md"
+            onClick={saveAll}
+            disabled={!canSave}
+          >
+            {saving ? '저장 중…' : totalChanges > 0 ? `저장 (${totalChanges})` : '저장'}
+          </button>
+          {next && (
+            <button
+              type="button"
+              className="btn-secondary btn-md"
+              onClick={() => navigate(`/pricing/${next.id}`)}
+            >
+              다음 →
+            </button>
+          )}
+        </div>
+        <BottomSheet
+          open={bulkOpen}
+          title="한 번에 맞추기"
+          onClose={() => setBulkOpen(false)}
+          footer={
+            <button type="button" className="btn-primary btn-md" onClick={applyBulk}>
+              한 번에 적용
+            </button>
+          }
+        >
+          {bulkControls}
+        </BottomSheet>
+      </main>
+    )
   }
 
   return (
@@ -915,63 +1187,7 @@ export default function PricingPage() {
               id="bulk"
               className={`${styles.bottomGroup} ${hide('side')}`}
             >
-              <div className={styles.row}>
-                <span className={styles.gridLabel}>방식</span>
-                <select
-                  className={styles.select}
-                  value={bulk.mode}
-                  aria-label="맞추는 방식"
-                  onChange={(e) => {
-                    const m = BULK_MODES.find((x) => x.key === e.target.value)
-                    setBulk({
-                      mode: m.key,
-                      amounts: Object.fromEntries(platforms.map((p) => [p.key, initialFor(p, m)])),
-                    })
-                    setBulkMsg(EMPTY_MSG)
-                  }}
-                >
-                  {BULK_MODES.map((m) => (
-                    <option key={m.key} value={m.key}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className={styles.grid} style={{ '--cols': platforms.length }}>
-                <span />
-                {platforms.map((p) => (
-                  <span key={p.key} className={styles.gridHead}>
-                    {p.label} ({unitFor(p, bulk.mode)})
-                  </span>
-                ))}
-                <span />
-                {platforms.map((p) => (
-                  <input
-                    key={p.key}
-                    className={styles.input}
-                    type="text"
-                    inputMode={unitFor(p, bulk.mode) === '원' ? 'numeric' : 'decimal'}
-                    placeholder="그대로"
-                    aria-label={`${p.label} ${BULK_MODES.find((m) => m.key === modeFor(p, bulk.mode)).label}`}
-                    value={
-                      unitFor(p, bulk.mode) === '원'
-                        ? withCommas(bulk.amounts[p.key] ?? '')
-                        : (bulk.amounts[p.key] ?? '')
-                    }
-                    onChange={(e) => {
-                      const v =
-                        unitFor(p, bulk.mode) === '원'
-                          ? digitsOnly(e.target.value)
-                          : e.target.value.replace(/[^0-9.]/g, '')
-                      setBulk((b) => ({ ...b, amounts: { ...b.amounts, [p.key]: v } }))
-                      setBulkMsg(EMPTY_MSG)
-                    }}
-                  />
-                ))}
-              </div>
-              {bulkMsg.text && (
-                <p className={bulkMsg.error ? styles.hintError : styles.hint}>{bulkMsg.text}</p>
-              )}
+              {bulkControls}
             </Section>
 
             {/* 저장 · 다음 — 오른쪽 열 맨 아래 */}

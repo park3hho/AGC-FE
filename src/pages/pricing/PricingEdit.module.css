@@ -543,3 +543,158 @@
 .cellBottom .bar {
   width: 56px;
 }
+
+/* ---------- 모바일 (≤ 768px) — 판매처 글자 탭 + 옵션 카드 (2026-10-30, 플레이북 '모바일' §4.8) ---------- */
+.mTabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: 18px;
+  height: 42px;
+  padding: 0 var(--pane-pad-x);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.mTabs button {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-sub);
+  font: inherit;
+  font-size: var(--font-sm);
+  cursor: pointer;
+}
+
+.mTabs button small {
+  font-size: 9px;
+}
+
+.mTabs button.mTabOn {
+  color: var(--color-text);
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 var(--color-text);
+}
+
+.mInfo {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0 var(--pane-pad-x);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.mLink {
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mList {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--color-bg);
+}
+
+.mCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--pane-pad-x);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mCardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--font-sm);
+}
+
+.mCardHead > span {
+  flex: none;
+  font-size: 12px;
+}
+
+.mPriceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mPrice {
+  flex: 1;
+  min-width: 0;
+  height: var(--touch-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-num);
+  font-size: var(--font-md);
+  font-weight: 700;
+}
+
+.mResult {
+  flex: none;
+  width: 112px;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.mAddon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 12px;
+}
+
+.mSumRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--space-4);
+  color: var(--color-text-sub);
+  font-size: 13px;
+}
+
+.mCta {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.mCta > button {
+  flex: none;
+}
+
+.mCta > :global(.btn-primary) {
+  flex: 1;
+}
+
+.mCard .bar {
+  width: 100%;
+}
+
+.mPrice.changed {
+  border-color: var(--color-primary);
+}
+
