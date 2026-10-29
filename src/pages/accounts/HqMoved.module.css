@@ -25,3 +25,13 @@
   padding: 10px 0;
   border-bottom: 1px solid var(--color-border);
 }
+/* 작은 화면 — 설명 한 줄은 줄이고 날짜 목록은 섹션 안에서만 스크롤 (fill) */
+@media (max-width: 767px) {
+  .desktop {
+    display: none;
+  }
+  .body {
+    font-size: var(--font-sm);
+  }
+}
+

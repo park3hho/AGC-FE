@@ -43,12 +43,12 @@ export default function HqMovedPage() {
             회사 정보의 정본을 <b>HQ</b>({hq.replace(/^https?:\/\//, '')})로 옮겼어요. 사업자·인허가 번호, 계좌, 서류, 로그인 계정
             비밀번호, 마켓 API 키는 HQ 에서 보고 고쳐요. HQ 는 따로 로그인해요.
           </p>
-          <p className={styles.weak}>
+          <p className={` `}>
             AGC 는 HQ 에서 필요한 값만 읽어 와요 — 주문 수집(네이버·쿠팡 API 키), 통관 조회(UNI-PASS), 상세페이지 등록번호.
           </p>
         </div>
       </Section>
-      <Section name="회사 정보 › 만료·재인증" id="hq-dates" sub={data && !data.ok ? 'HQ 연결 안 됨' : `${rows.length}건`}>
+      <Section name="회사 정보 › 만료·재인증" id="hq-dates" fill sub={data && !data.ok ? 'HQ 연결 안 됨' : `${rows.length}건`}>
         {error && <p className="form-error">{error}</p>}
         {data && !rows.length && <p className={styles.weak}>날짜가 정해진 항목이 없어요.</p>}
         <ul className={styles.list}>
