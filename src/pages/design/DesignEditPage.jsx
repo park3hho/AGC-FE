@@ -30,6 +30,7 @@ import DetailEditor from './DetailEditor'
 import PreviewFrame from './PreviewFrame'
 import ReviewPanel from './ReviewPanel'
 import styles from './Design.module.css'
+import { DESIGN_RULES, WORK_RULES_UPDATED } from '@/constants/workRules'
 
 // 모바일 섹션 탭 — 한 화면 = 한 섹션 (DESIGN.md §4.4)
 const TABS = [
@@ -214,6 +215,12 @@ export default function DesignEditPage() {
       <PageHeader
         back
         title={data.product.titleKo || data.product.titleCn}
+        info={{
+          title: '디자인 규칙',
+          updated: WORK_RULES_UPDATED,
+          source: '원문: FE DESIGN.md §4.7 · BE DESIGN.md §6.4',
+          sections: DESIGN_RULES,
+        }}
         sub={
           <>
             {data.product.code} · <Badge tone={st.tone}>{st.label}</Badge>

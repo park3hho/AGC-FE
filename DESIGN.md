@@ -281,6 +281,7 @@ const rows = items.slice((page - 1) * size, page * size)
 ### 4.9 화면 작업 규칙 ⓘ (2026-10-29)
 - `PageHeader info={{ title, updated, source, sections }}` → 제목 옆 ⓘ, 누르면 오른쪽 안내 패널(`components/InfoPanel`, `공통 › 안내`). 줄 앞 `!` 는 꼭 지킬 것(굵게).
 - 지금: 제품조사·가격조사 = 리서치 규칙 (`constants/researchRules.js`). **원문은 리서처 스킬** — 스킬 규칙을 바꾸면 이 파일도 같이 고친다.
+- 디자인·디자인(제품) = 디자인 규칙, 가격 책정·가격 책정(제품) = 가격 책정 규칙 (`constants/workRules.js`). 원문은 FE §4.7 · BE §6.3·§6.4 · api-contract — 규칙을 바꾸면 이 파일도 같이 고친다. 수수료·한도·마진 바닥 같은 숫자는 `pricingConst` 에서 읽어 와서 자동으로 따라간다.
 
 ### 4.8 테마 — 기본 / 넷러너 (2026-10-24)
 - 고르는 곳: **내 계정 모달 › 화면 테마** (왼쪽 메뉴 맨 아래 · 모바일 더보기 › 내 계정). 이 브라우저에만 저장 (`localStorage 'agc.theme'`, `hooks/useTheme`). `<html data-theme="netrunner">` 를 붙이고, `index.html` 이 그리기 전에 먼저 붙여 어두운 테마에서 흰 화면이 번쩍이지 않게 한다.

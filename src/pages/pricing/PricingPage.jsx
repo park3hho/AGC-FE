@@ -39,6 +39,7 @@ import {
   withCommas,
 } from '@/utils/pricing'
 import styles from './PricingEdit.module.css'
+import { PRICING_RULES, WORK_RULES_UPDATED } from '@/constants/workRules'
 
 // 서버 Pricing → 입력값 (전부 문자열). 환율·배송비는 여기서 입력하지 않는다 (환율 설정 · 옵션 용량으로 자동)
 // (네이버) groupOf: 직접 정한 상품 번호 { [optionId]: n } · baseIds: 직접 정한 대표 옵션 — 비어 있으면 자동
@@ -501,7 +502,16 @@ export default function PricingPage() {
 
   return (
     <main className="page-flat">
-      <PageHeader title="가격 책정" back />
+      <PageHeader
+        title="가격 책정"
+        back
+        info={{
+          title: '가격 책정 규칙',
+          updated: WORK_RULES_UPDATED,
+          source: '원문: BE DESIGN.md §6.3 · docs/api-contract.md 가격 책정',
+          sections: PRICING_RULES,
+        }}
+      />
 
       {survey && <SectionTabs {...tabs} />}
 

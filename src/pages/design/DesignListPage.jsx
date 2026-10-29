@@ -13,6 +13,7 @@ import { DETAIL_STATUS, DETAIL_STATUS_FILTERS } from '@/constants/designConst'
 import { useFitRows } from '@/hooks/useFitRows'
 import { toKstDate } from '@/utils/date'
 import styles from './Design.module.css'
+import { DESIGN_RULES, WORK_RULES_UPDATED } from '@/constants/workRules'
 
 const statusOf = (it) => it.page?.status || 'none'
 
@@ -80,6 +81,12 @@ export default function DesignListPage() {
     <main className="page-flat">
       <PageHeader
         title="디자인"
+        info={{
+          title: '디자인 규칙',
+          updated: WORK_RULES_UPDATED,
+          source: '원문: FE DESIGN.md §4.7 · BE DESIGN.md §6.4',
+          sections: DESIGN_RULES,
+        }}
         sub={
           data
             ? `상세페이지 — 검수 대기 ${counts.review || 0} · 승인 ${counts.approved || 0} · 없음 ${counts.none || 0}`
