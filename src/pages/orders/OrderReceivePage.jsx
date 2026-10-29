@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import {
   collectOrders,
+  confirmOrder,
   markDelivered,
   getOrder,
   getOrders,
@@ -15,7 +16,13 @@ import { getExchangeRate } from '@/api/exchangeRate'
 import { getJiyunList } from '@/api/jiyun'
 import { getOrderDocuments, uploadOrderDocument } from '@/api/orderDocument'
 import { getPurchases } from '@/api/taobaoPurchase'
+import BottomSheet, { SheetItem } from '@/components/common/BottomSheet'
+import FilterBar from '@/components/common/FilterBar'
+import { CopyButton } from '@/components/common/MobileBits'
 import PageHeader from '@/components/common/PageHeader'
+import { useDevMode } from '@/hooks/useDevMode'
+import { useMobile } from '@/hooks/useMobile'
+import { nextAction, STEPS6, stepsDone } from '@/utils/nextAction'
 import { collectMode, diffLines, eventTitle } from '@/utils/orderEvent'
 import Section from '@/components/common/Section'
 import {
@@ -358,10 +365,319 @@ function EventRow({
   )
 }
 
+// ---------------------------------------------------------------- 모바일 (≤ 768px) — 주문 상세 화면
+// 플레이북 'AGC 모바일 화면 설계' §4.3 · 목업 M3. 데스크탑의 '목록 | 상세' 한 화면을 모바일에서는 /orders/:orderId 로 나눈다.
+// 요약(진행 6칸) → 다음 할 일 → 글자 탭(주문 정보 · 기록 · 금액 · 원본) → 아래 고정 버튼(다음 할 일) + ⋯ 시트
+const NEXT_DESC = {
+  claim: '마켓 판매자 센터에서 클레임을 처리해요. 처리 결과는 다음 수집 때 따라와요.',
+  pccc: '고객에게 연락해 통관부호·이름·전화를 바로잡은 뒤 다시 검증해요.',
+  confirm: '배송지·통관부호를 보고 보내요. 보내면 고객이 바로 취소할 수 없어요.',
+  purchase: '타오바오에서 산 뒤 주문번호와 결제 금액을 적어요.',
+  shipped: '판매처가 보냈으면 중국 운송장을 구매기록에 넣어요.',
+  arrived: '집운 창고에 들어오면 구매기록 상태를 입고로 바꿔요.',
+  jiyun: '창고에 모이면 집운에 배송을 요청하고 기록해요.',
+  tracking: '한국 택배 송장이 나오면 집운 기록에 넣어요.',
+  delivered: '고객이 받았으면 배송 완료로 표시해요. 고객 화면도 바뀌어요.',
+  shipping: '국내 배송 중이에요. 마켓이 배송 완료를 알려 줘요.',
+}
+
+function MobileOrderDetail({
+  detail, // getOrder 결과
+  purchases, // 타오바오 구매 (null = 불러오는 중)
+  jiyuns, // 집운 기록
+  docs,
+  fx,
+  busy,
+  error,
+  onConfirm,
+  onRecheck,
+  onDelivered,
+  onPurchase,
+  onJiyun,
+  onUpload,
+}) {
+  const devMode = useDevMode()
+  const [tab, setTab] = useState('info')
+  const [more, setMore] = useState(false)
+  const [evOpen, setEvOpen] = useState(null) // 내용을 펼친 기록 줄
+  if (!detail) {
+    return (
+      <main className="page-flat">
+        <PageHeader back title="주문" />
+        {error ? <p className={`form-error ${styles.pad}`}>{error}</p> : <p className={styles.empty}>불러오는 중…</p>}
+      </main>
+    )
+  }
+  const o = detail.order
+  const rf = detail.receiverFull
+  const src = detail.sourcing
+  const extra = purchases && jiyuns ? { purchases, jiyuns } : undefined
+  const next = nextAction(o, extra)
+  const done = stepsDone(o, extra)
+  const pc = PCCC_STATUS[o.pcccStatus] || PCCC_STATUS.pending
+  const tabs = [
+    ['info', '주문 정보'],
+    ['trace', `기록 ${detail.events.length}`],
+    ['money', '금액'],
+    ...(devMode && detail.raw ? [['raw', '원본']] : []),
+  ]
+  const cancelled = o.stage === 'cancelled'
+
+  // 아래 고정 버튼 — 다음 할 일 그대로
+  const primary = {
+    claim: { label: '기록 보기', run: () => setTab('trace') },
+    pccc: { label: busy === 'recheck' ? '검증 중…' : '통관부호 다시 검증', run: onRecheck },
+    confirm: { label: busy === 'confirm' ? '보내는 중…' : `${MARKETS[o.market].label}에 발주확인 보내기`, run: onConfirm },
+    purchase: { label: '타오바오 구매 기록하기', run: () => onPurchase() },
+    shipped: { label: '구매기록 열기', run: () => onPurchase() },
+    arrived: { label: '구매기록 열기', run: () => onPurchase() },
+    jiyun: { label: '집운 기록하기', run: () => onJiyun() },
+    tracking: { label: '집운 기록 열기 (송장)', run: () => onJiyun() },
+    delivered: { label: busy === 'delivered' ? '표시 중…' : '배송 완료 표시', run: onDelivered },
+  }[next?.key]
+
+  return (
+    <main className={`page-flat ${styles.mPage}`}>
+      <PageHeader
+        back
+        title={o.code || '코드 없음'}
+        action={
+          <button type="button" className="btn-secondary btn-sm" onClick={() => setMore(true)} aria-label="더보기">
+            ⋯
+          </button>
+        }
+      />
+
+      <div className={styles.mSum}>
+        <div className={styles.mSumHead}>
+          <MarketMark market={o.market} />
+          <b>{o.productName}</b>
+        </div>
+        <ol className={styles.m6} aria-label={`진행 ${done}/6`}>
+          {STEPS6.map((s, i) => (
+            <li key={s} className={i < done ? styles.m6On : i === done ? styles.m6Now : ''}>
+              <i />
+              <span>{s}</span>
+            </li>
+          ))}
+        </ol>
+        {o.claimType && (
+          <p className={styles.mClaim}>
+            ● {claimLabel(o)}
+            {o.claimReason && ` · ${o.claimReason}`}
+            {o.claimAt && ` · ${kstTime(o.claimAt)}`}
+          </p>
+        )}
+      </div>
+
+      {next && !cancelled && (
+        <div className={`${styles.mNext} ${next.tone === 'danger' ? styles.mNextBad : ''}`}>
+          <small>다음 할 일</small>
+          <b>{next.label}</b>
+          <span>
+            {next.key === 'pccc' && o.pcccMessage ? `UNI-PASS: ${o.pcccMessage}. ` : ''}
+            {NEXT_DESC[next.key]}
+          </span>
+        </div>
+      )}
+
+      <div className={styles.mTabs} role="tablist" aria-label="주문 보기">
+        {tabs.map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={tab === k}
+            className={tab === k ? styles.mTabOn : ''}
+            onClick={() => setTab(k)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className={styles.mBody}>
+        {error && <p className="form-error">{error}</p>}
+        {tab === 'info' && (
+          <dl className={styles.mKv}>
+            <dt>받는 분</dt>
+            <dd>{rf?.name || o.receiver.name || '-'}</dd>
+            <dd><CopyButton value={rf?.name} /></dd>
+            <dt>통관용 전화</dt>
+            <dd>
+              {rf?.customsPhone ? <a href={`tel:${rf.customsPhone}`}>{fmtPhone(rf.customsPhone)}</a> : o.receiver.phone || '-'}
+            </dd>
+            <dd><CopyButton value={rf?.customsPhone} /></dd>
+            {rf?.contactPhone && rf.contactPhone !== rf.customsPhone && (
+              <>
+                <dt>쇼핑몰 연락처</dt>
+                <dd>
+                  <a href={`tel:${rf.contactPhone}`}>{fmtPhone(rf.contactPhone)}</a>
+                  {rf.contactPhone.startsWith('050') && <small className={styles.weak}> 안심번호</small>}
+                </dd>
+                <dd><CopyButton value={rf.contactPhone} /></dd>
+              </>
+            )}
+            <dt>주소</dt>
+            <dd>
+              {(rf?.zip || o.receiver.zip) && `(${rf?.zip || o.receiver.zip}) `}
+              {rf?.address || o.receiver.address || '-'}
+            </dd>
+            <dd><CopyButton value={rf?.address} /></dd>
+            <dt>통관부호</dt>
+            <dd>
+              <StatusDot tone={pc.tone}>{pc.short}</StatusDot> {rf?.pccc || o.receiver.pccc || '-'}
+            </dd>
+            <dd><CopyButton value={rf?.pccc} /></dd>
+            <dt>옵션 · 수량</dt>
+            <dd>
+              {o.optionName || '-'} × {o.quantity}
+            </dd>
+            <dd />
+            <dt>결제 시각</dt>
+            <dd>{kst(o.paidAt || o.orderedAt)}</dd>
+            <dd />
+            <dt>마켓 주문</dt>
+            <dd>
+              {MARKETS[o.market].label} {o.orderNo}
+              <small className={styles.weak}> · {MARKET_STATUS[o.marketStatus] || o.marketStatus}</small>
+            </dd>
+            <dd><CopyButton value={o.orderNo} /></dd>
+            {src && (
+              <>
+                <dt>타오바오</dt>
+                <dd>
+                  {src.taobaoUrl ? (
+                    <a href={src.taobaoUrl} target="_blank" rel="noreferrer">
+                      {src.productTitle || src.productCode} ↗
+                    </a>
+                  ) : (
+                    src.productTitle || src.productCode
+                  )}
+                  {(src.option1 || src.taobaoQty) && (
+                    <small className={styles.weak}>
+                      {' '}
+                      · {[src.option1, src.option2].filter(Boolean).join(' / ')}
+                      {src.taobaoQty ? ` × ${src.taobaoQty}` : ''}
+                    </small>
+                  )}
+                </dd>
+                <dd />
+              </>
+            )}
+            {purchases?.length > 0 && (
+              <>
+                <dt>구매</dt>
+                <dd>
+                  {purchases.map((p) => (
+                    <button key={p.id} type="button" className={styles.mLink} onClick={() => onPurchase(p.id)}>
+                      {p.taobaoOrderNo || '구매'} · {CN_STATUS[p.cnStatus]?.label || p.cnStatus}
+                    </button>
+                  ))}
+                </dd>
+                <dd />
+              </>
+            )}
+            {jiyuns?.length > 0 && (
+              <>
+                <dt>집운</dt>
+                <dd>
+                  {jiyuns.map((j) => (
+                    <button key={j.id} type="button" className={styles.mLink} onClick={() => onJiyun(j.id)}>
+                      {j.jiyunNo || '집운'}
+                      {j.krTrackingNo ? ` · 송장 ${j.krTrackingNo}` : ''}
+                    </button>
+                  ))}
+                </dd>
+                <dd />
+              </>
+            )}
+          </dl>
+        )}
+
+        {tab === 'trace' && (
+          <ol className={styles.mEvents}>
+            {detail.events.map((e) => (
+              <li key={e.id}>
+                <button type="button" onClick={() => setEvOpen(evOpen === e.id ? null : e.id)}>
+                  <time>{kstTime(occurredOf(e))}</time>
+                  <span>
+                    <b>{eventTitle(e)}</b>
+                    {evOpen === e.id && (
+                      <small>
+                        {e.summary}
+                        {(ACTOR[e.actorType]?.label || e.actorType) && ` · ${ACTOR[e.actorType]?.label || e.actorType}`}
+                        {e.actorName && ` ${e.actorName}`}
+                      </small>
+                    )}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        )}
+
+        {tab === 'money' && (
+          <OrderMoney
+            key={o.id}
+            order={o}
+            purchases={purchases}
+            jiyuns={jiyuns}
+            docs={docs}
+            fx={fx}
+            onUpload={onUpload}
+            onShowRaw={() => devMode && setTab('raw')}
+            onPurchase={onPurchase}
+            onJiyun={onJiyun}
+          />
+        )}
+
+        {tab === 'raw' && <pre className={styles.raw}>{JSON.stringify(detail.raw, null, 2)}</pre>}
+      </div>
+
+      {!cancelled && primary && (
+        <div className={`sticky-cta ${styles.mCta}`}>
+          <button type="button" className="btn-secondary btn-md" onClick={() => setMore(true)} aria-label="더보기">
+            ⋯
+          </button>
+          <button type="button" className="btn-primary btn-md" disabled={!!busy} onClick={primary.run}>
+            {primary.label}
+          </button>
+        </div>
+      )}
+
+      <BottomSheet open={more} title={o.code} onClose={() => setMore(false)}>
+        <SheetItem onClick={() => { setMore(false); onRecheck() }} sub="UNI-PASS 로 다시 확인">
+          통관부호 다시 검증
+        </SheetItem>
+        {o.confirmed && !cancelled && (
+          <SheetItem onClick={() => { setMore(false); onPurchase() }}>
+            {purchases?.length ? '타오바오 구매기록 열기' : '타오바오 구매 기록하기'}
+          </SheetItem>
+        )}
+        {purchases?.length > 0 && !cancelled && (
+          <SheetItem onClick={() => { setMore(false); onJiyun() }}>
+            {jiyuns?.length ? '집운 기록 열기' : '집운 기록하기'}
+          </SheetItem>
+        )}
+        <SheetItem onClick={() => { setMore(false); setTab('money') }} sub="증빙 올리기">
+          금액 보기
+        </SheetItem>
+        {devMode && detail.raw && (
+          <SheetItem onClick={() => { setMore(false); setTab('raw') }}>마켓 원본 보기</SheetItem>
+        )}
+      </BottomSheet>
+    </main>
+  )
+}
+
+
 // 판매 › 주문 접수 — 섹션: 수집 · 접수 목록 · 금액 · 추적 기록 (머리 탭: 기록 · 주문 상세 · 마켓 원본)
 // 마켓 주문을 가져오면 새 주문·바뀐 주문은 BE 가 바로 통관부호(UNI-PASS)를 검증한다. 모든 동작은 추적 기록에 남는다.
 export default function OrderReceivePage() {
   const navigate = useNavigate()
+  const mobile = useMobile()
+  const { orderId } = useParams() // /orders/:orderId — 모바일 주문 상세 (데스크톱은 이 주문을 고른 채 열린다)
   const [params, setParams] = useSearchParams()
   const [purchases, setPurchases] = useState(null)
   const [jiyuns, setJiyuns] = useState(null) // 고른 주문의 집운 기록 // 고른 주문의 타오바오 구매
@@ -382,7 +698,8 @@ export default function OrderReceivePage() {
   const stage = params.get('stage') || 'received' // 목록 단계 탭
   const filter = params.get('pccc') || 'all'
   const search = params.get('q') || '' // 자사 코드 · 마켓 주문번호
-  const selected = Number(params.get('id')) || null
+  // ?id= (데스크톱 목록에서 고름) 가 먼저, 없으면 주소의 /orders/:orderId
+  const selected = Number(params.get('id')) || Number(orderId) || null
 
   const load = useCallback(
     () =>
@@ -548,6 +865,29 @@ export default function OrderReceivePage() {
     setBusy('')
   }
 
+  // 발주확인 — 모바일 주문 상세의 아래 버튼 (데스크톱은 타오바오 구매 화면에서 보낸다 — 같은 API)
+  const confirm = async () => {
+    if (
+      !window.confirm(
+        '배송지·통관부호를 확인했나요? 발주확인을 보내면 고객 화면이 상품준비중으로 바뀌어 바로 취소할 수 없어요',
+      )
+    )
+      return
+    setBusy('confirm')
+    setError('')
+    try {
+      const d = await confirmOrder(selected)
+      setDetail(d)
+      await load()
+    } catch (err) {
+      setError(err.message)
+    }
+    setBusy('')
+  }
+
+  // 모바일은 목록에서 주문을 누르면 상세 화면(/orders/:id)으로 이동, 데스크톱은 같은 화면 오른쪽에
+  const openOrder = (id) => (mobile ? navigate(`/orders/${id}`) : set({ id }))
+
   const counts = data?.pcccCounts || {}
   const allCount = Object.values(counts).reduce((a, b) => a + b, 0)
   const o = detail?.order
@@ -564,14 +904,40 @@ export default function OrderReceivePage() {
     navigate(id ? `/orders/jiyun/${id}/edit?order=${o.id}` : `/orders/${o.id}/jiyun/new`)
   }
 
+  // 모바일 — 주문 상세는 따로 한 화면 (목록은 안 보인다)
+  if (mobile && selected) {
+    return (
+      <MobileOrderDetail
+        key={selected}
+        detail={detail && detail.order?.id === selected ? detail : null}
+        purchases={purchases}
+        jiyuns={jiyuns}
+        docs={docs}
+        fx={fx}
+        busy={busy}
+        error={error}
+        onConfirm={confirm}
+        onRecheck={recheck}
+        onDelivered={delivered}
+        onPurchase={openPurchase}
+        onJiyun={openJiyun}
+        onUpload={uploadDoc}
+      />
+    )
+  }
+
   return (
     <main className="page-flat">
       <PageHeader
-        title="주문 접수"
+        title={mobile ? '주문' : '주문 접수'}
         sub="마켓 주문을 받아 통관부호를 바로 검증해요"
         action={
           <button className="btn-primary btn-md" onClick={collect} disabled={busy === 'collect'}>
-            {busy === 'collect' ? '가져오는 중…' : '지금 가져오기'}
+            {busy === 'collect'
+              ? '가져오는 중…'
+              : mobile
+                ? '↻ 가져오기'
+                : '지금 가져오기'}
           </button>
         }
       />
@@ -591,7 +957,7 @@ export default function OrderReceivePage() {
                   key={x.eventId}
                   type="button"
                   className={styles.alertItem}
-                  onClick={() => set({ stage: null, id: x.orderId })}
+                  onClick={() => (mobile ? navigate(`/orders/${x.orderId}`) : set({ stage: null, id: x.orderId }))}
                   title={x.summary}
                 >
                   {x.code}
@@ -619,7 +985,7 @@ export default function OrderReceivePage() {
         <Section name="접수 목록" id="list" sub={data && `${data.total}건`} flush fill>
           <div className={styles.toolbar}>
             <span className={styles.tTabs} role="tablist" aria-label="주문 단계">
-              {ORDER_STAGES.map((s) => (
+              {ORDER_STAGES.filter((s) => !mobile || s.key !== 'cancelled').map((s) => (
                 <button
                   key={s.key}
                   type="button"
@@ -632,27 +998,50 @@ export default function OrderReceivePage() {
                 </button>
               ))}
             </span>
-            <input
-              className={styles.search}
-              value={search}
-              onChange={(e) => set({ q: e.target.value || null, id: null })}
-              placeholder="OR-… · 마켓 주문번호"
-              aria-label="자사 코드·마켓 주문번호 검색"
-            />
-            <select
-              className={styles.select}
-              value={filter}
-              onChange={(e) => set({ pccc: e.target.value, id: null })}
-              aria-label="통관부호 검증 결과로 거르기"
-            >
-              {PCCC_FILTERS.map((k) => (
-                <option key={k} value={k}>
-                  {k === 'all'
-                    ? `통관부호 전체 ${allCount}`
-                    : `${PCCC_STATUS[k].label} ${counts[k] || 0}`}
-                </option>
-              ))}
-            </select>
+            {(() => {
+              const searchEl = (
+                <input
+                  className={styles.search}
+                  value={search}
+                  onChange={(e) => set({ q: e.target.value || null, id: null })}
+                  placeholder={mobile ? '코드 · 마켓 주문번호' : 'OR-… · 마켓 주문번호'}
+                  aria-label="자사 코드·마켓 주문번호 검색"
+                />
+              )
+              const selectEl = (
+                <select
+                  className={styles.select}
+                  value={filter}
+                  onChange={(e) => set({ pccc: e.target.value, id: null })}
+                  aria-label="통관부호 검증 결과로 거르기"
+                >
+                  {PCCC_FILTERS.map((k) => (
+                    <option key={k} value={k}>
+                      {k === 'all'
+                        ? `통관부호 전체 ${allCount}`
+                        : `${PCCC_STATUS[k].label} ${counts[k] || 0}`}
+                    </option>
+                  ))}
+                </select>
+              )
+              // 모바일 — 검색 + '필터' 버튼(시트 안에 통관부호 드롭다운)
+              return mobile ? (
+                <FilterBar
+                  className={styles.mFilter}
+                  search={searchEl}
+                  active={filter === 'all' ? 0 : 1}
+                  onReset={() => set({ pccc: null })}
+                  count={data ? `${data.total}건 보기` : '보기'}
+                >
+                  {selectEl}
+                </FilterBar>
+              ) : (
+                <>
+                  {searchEl}
+                  {selectEl}
+                </>
+              )
+            })()}
           </div>
           {error && <p className={`form-error ${styles.pad}`}>{error}</p>}
 
@@ -672,7 +1061,7 @@ export default function OrderReceivePage() {
                 type="button"
                 role="listitem"
                 className={`${styles.row} ${it.id === selected ? styles.rowOn : ''}`}
-                onClick={() => set({ id: it.id })}
+                onClick={() => openOrder(it.id)}
               >
                 <MarketMark market={it.market} />
                 <span className={styles.prod}>
@@ -683,6 +1072,18 @@ export default function OrderReceivePage() {
                     {it.optionName && `${it.optionName} · `}×{it.quantity} · {it.receiver.name} ·{' '}
                     {kstTime(it.paidAt || it.orderedAt)}
                   </small>
+                  {/* 모바일 — 셋째 줄 '다음 할 일' (utils/nextAction) */}
+                  {mobile &&
+                    (() => {
+                      const n = nextAction(it)
+                      return (
+                        n && (
+                          <small className={`${styles.mNextLine} ${n.tone === 'danger' ? styles.bad : n.tone === 'neutral' ? styles.weak : ''}`}>
+                            다음: {n.label}
+                          </small>
+                        )
+                      )
+                    })()}
                 </span>
                 {/* 취소·반품 완료면 첫 줄 = 클레임(빨강), 둘째 줄 = 사유 (통관부호·마켓 상태는 의미가 없어 뺀다) */}
                 {it.claimType && it.stage === 'cancelled' ? (

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { getCompanyReminders } from '@/api/hq'
 import { getDetailPages } from '@/api/detailPage'
 import { getExchangeRate } from '@/api/exchangeRate'
+import { getOrders } from '@/api/order'
 import { getPriceResearches } from '@/api/priceResearch'
 import { getProducts } from '@/api/product'
 import Badge from '@/components/Badge'
@@ -20,6 +21,7 @@ import { useFitRows } from '@/hooks/useFitRows'
 import { todayKst } from '@/utils/date'
 import { keyStatuses } from '@/utils/apiKey'
 import { infoStatus } from '@/utils/companyInfo'
+import { nextAction, NEXT_GROUPS } from '@/utils/nextAction'
 import { formatCny, formatFx } from '@/utils/pricing'
 import styles from './HomePage.module.css'
 
@@ -98,6 +100,15 @@ export default function HomePage() {
   const canSeeKeys = hasFeature(user, FEATURE.ACCOUNT_VIEW)
   const [keys, setKeys] = useState([]) // API 키 — 만료·재인증이 가까우면 할 일에 띄운다
   const [infos, setInfos] = useState([]) // 회사 정보 › 기본 정보 — 만료가 가까우면 (만료 알림 켠 것만)
+  const canOrder = hasFeature(user, FEATURE.ORDER)
+  const [orders, setOrders] = useState(null) // 접수 · 처리 단계 주문 — 할 일 맨 위 (2026-10-30, utils/nextAction)
+
+  useEffect(() => {
+    if (!canOrder) return
+    Promise.all([getOrders({ stage: 'received' }), getOrders({ stage: 'processing' })])
+      .then(([r, p]) => setOrders({ received: r.items, processing: p.items }))
+      .catch(() => setOrders(null))
+  }, [canOrder])
 
   useEffect(() => {
     if (!canSeeKeys) return
@@ -191,7 +202,13 @@ export default function HomePage() {
       text: design ? `승인 ${design.approved || 0}개` : '디자인 승인된 제품',
       path: '/products',
     },
-    { n: 6, label: '주문 처리', text: '준비 중' },
+    {
+      n: 6,
+      label: '주문 처리',
+      text: orders ? `접수 ${orders.received.length} · 처리 ${orders.processing.length}` : '주문',
+      path: canOrder ? '/orders' : undefined,
+      hot: !!orders?.received.length,
+    },
   ]
 
   // API 키 만료·재인증 — 급한 것만 (utils/apiKey.keyStatuses)
@@ -226,7 +243,33 @@ export default function HomePage() {
     ]
   })
 
+  // 주문 처리 — 다음 할 일 묶음별 건수 (클레임·통관부호 → 발주확인 → 구매 기록 → 판매처·입고 → 집운·송장)
+  const orderTodos = []
+  if (orders) {
+    const all = [...orders.received, ...orders.processing]
+    const byGroup = {}
+    for (const o of all) {
+      const n = nextAction(o)
+      if (n?.group) (byGroup[n.group] ||= []).push(o)
+    }
+    const STAGE_OF = { issue: 'all', confirm: 'received', purchase: 'received', cn: 'processing', ship: 'processing' }
+    for (const g of NEXT_GROUPS) {
+      const list = byGroup[g.key]
+      if (!list?.length) continue
+      orderTodos.push({
+        key: `order-${g.key}`,
+        icon: 'bag',
+        tone: g.key === 'issue' ? 'warning' : 'primary',
+        title: `${g.label} ${list.length}건`,
+        sub: `${g.sub} · ${list.slice(0, 2).map((o) => o.code).join(', ')}${list.length > 2 ? ' …' : ''}`,
+        button: '처리하기',
+        path: `/orders?stage=${STAGE_OF[g.key]}`,
+      })
+    }
+  }
+
   const todos = [
+    ...orderTodos,
     ...keyTodos,
     ...infoTodos,
     reviewWait > 0 && {

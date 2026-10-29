@@ -949,3 +949,297 @@
 .evActs a {
   color: var(--color-primary);
 }
+
+
+/* ---------------------------------------------------------------- 모바일 (≤ 768px) — 플레이북 'AGC 모바일 화면 설계' §4.3 */
+.mNextLine {
+  color: var(--color-primary) !important;
+  font-weight: 700;
+}
+
+.mNextLine.bad {
+  color: var(--color-danger) !important;
+}
+
+.mNextLine.weak {
+  color: var(--color-text-weak) !important;
+  font-weight: 400;
+}
+
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+    padding: 0 var(--space-4) var(--space-2);
+  }
+
+  .toolbar .tTabs {
+    gap: var(--space-5);
+    height: 42px;
+  }
+
+  .toolbar .tTab {
+    height: 42px;
+    font-size: var(--font-sm);
+  }
+
+  .mFilter .search {
+    width: auto;
+    height: var(--touch-min);
+    font-size: var(--font-sm);
+  }
+
+  .row {
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    min-height: 64px;
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .row .rowState small {
+    display: none;
+  }
+
+  .prod b {
+    font-size: var(--font-sm);
+  }
+
+  .alertRow {
+    flex-wrap: wrap;
+  }
+}
+
+/* 모바일 주문 상세 (MobileOrderDetail) */
+.mPage {
+  gap: 0;
+}
+
+.mSum {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mSumHead {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-width: 0;
+}
+
+.mSumHead b {
+  overflow: hidden;
+  font-size: var(--font-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.m6 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.m6 li {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+  color: var(--color-text-weak);
+  font-size: 11px;
+}
+
+.m6 i {
+  width: 100%;
+  height: 6px;
+  background: var(--color-border);
+}
+
+.m6 .m6On {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.m6 .m6On i {
+  background: var(--color-primary);
+}
+
+.m6 .m6Now i {
+  background: var(--color-primary);
+  opacity: 0.35;
+}
+
+.mClaim {
+  margin-top: var(--space-2);
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mNext {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 2px;
+  margin: var(--space-3) var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: var(--color-primary-bg);
+}
+
+.mNext small {
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mNext b {
+  font-size: 15px;
+}
+
+.mNext span {
+  color: var(--color-text-sub);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mNextBad {
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+.mNextBad small {
+  color: var(--color-danger);
+}
+
+.mTabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-5);
+  height: 42px;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mTabs button {
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-text-sub);
+  font: inherit;
+  font-size: var(--font-sm);
+  cursor: pointer;
+}
+
+.mTabs .mTabOn {
+  border-bottom-color: var(--color-text);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+/* 탭 내용 — 이 화면의 유일한 스크롤 */
+.mBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4);
+}
+
+.mKv {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr) auto;
+  gap: var(--space-2) var(--space-2);
+  align-items: center;
+  margin: 0;
+  font-size: var(--font-sm);
+}
+
+.mKv dt {
+  color: var(--color-text-sub);
+  font-size: 13px;
+}
+
+.mKv dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mKv a {
+  color: var(--color-primary);
+}
+
+.mLink {
+  display: block;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mEvents {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mEvents li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.mEvents button {
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mEvents time {
+  flex: none;
+  width: 76px;
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.mEvents span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mEvents b {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mEvents small {
+  color: var(--color-text-sub);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mCta {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.mCta :global(.btn-primary) {
+  flex: 1;
+}

@@ -63,6 +63,8 @@ export default function App() {
               <Route path="/shipping" element={<ShippingFeePage />} />
               <Route path="/shipping/addresses" element={<ShippingAddressPage />} />
               <Route path="/orders" element={<OrderReceivePage />} />
+              {/* 주문 상세 — 모바일은 따로 한 화면, 데스크탑은 이 주문을 고른 주문 접수 (2026-10-30) */}
+              <Route path="/orders/:orderId" element={<OrderReceivePage />} />
               <Route path="/purchases" element={<PurchaseListPage />} />
               <Route path="/orders/:orderId/purchases/new" element={<PurchaseFormPage />} />
               <Route path="/orders/purchases/:id/edit" element={<PurchaseFormPage />} />

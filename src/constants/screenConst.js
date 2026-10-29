@@ -37,6 +37,7 @@ export const SCREENS = [
   { path: '/design', name: '디자인', group: '판매' },
   { path: '/design/:productId', name: '디자인 (제품)', group: '판매', parent: '/design' },
   { path: '/orders', name: '주문 접수', group: '판매' },
+  { path: '/orders/:orderId', name: '주문 상세', group: '판매', parent: '/orders' },
   { path: '/purchases', name: '타오바오 구매기록', group: '판매' },
   { path: '/jiyun', name: '집운 기록', group: '판매' },
   { path: '/orders/:orderId/jiyun/new', name: '집운 기록 추가', group: '판매', parent: '/orders' },
