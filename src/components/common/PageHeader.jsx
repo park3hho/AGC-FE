@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import Icon from '@/components/Icon'
 import InfoPanel from '@/components/InfoPanel'
+import { useScreen } from '@/hooks/useScreen'
 import styles from './PageHeader.module.css'
 
 // 화면 머리 — 제목 · 한 줄 설명 · 오른쪽 버튼. 섹션이 아니라 화면 이름 자리라 이름표를 달지 않는다.
@@ -15,7 +16,13 @@ export default function PageHeader({
   info, // { title, updated?, source?, sections }?: 제목 옆 ⓘ — 누르면 이 화면 작업 규칙 패널 (components/InfoPanel)
 }) {
   const navigate = useNavigate()
+  const screen = useScreen()
   const [infoOpen, setInfoOpen] = useState(false)
+  // 뒤로 — 앱 안에서 온 기록이 있으면 그 화면으로, 링크로 바로 열었으면(기록 없음) 상위 화면으로 (앱 밖으로 나가지 않게)
+  const goBack = () => {
+    if ((window.history.state?.idx ?? 0) > 0) navigate(-1)
+    else navigate(screen?.parent || '/')
+  }
 
   return (
     // data-page-header — 모바일에서는 이 줄이 위쪽 바 자리를 대신한다 (AppLayout.module.css, 플레이북 '모바일' §3.2)
@@ -24,7 +31,7 @@ export default function PageHeader({
         <button
           type="button"
           className={styles.back}
-          onClick={() => navigate(-1)}
+          onClick={goBack}
           aria-label="이전"
         >
           <Icon name="arrowLeft" size={20} />
@@ -32,7 +39,8 @@ export default function PageHeader({
       )}
       <div className={styles.text}>
         <h1 className={styles.title}>
-          {title}
+          {/* 제목 글자만 줄임표 — ⓘ 는 잘리지 않게 따로 (모바일에서 긴 제품명) */}
+          <span className={styles.titleText}>{title}</span>
           {info && (
             <button
               type="button"
