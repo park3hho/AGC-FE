@@ -566,10 +566,16 @@ export default function PricingPage() {
     </>
   )
 
-  // 모바일 (≤ 768px) — 표 대신 판매처 글자 탭 + 옵션 카드 (플레이북 'AGC 모바일 화면 설계' §4.8)
+  // 모바일 (≤ 768px) — 옵션 카드 하나에 쿠팡 · 네이버 · 자사몰 판매가를 같이 (한눈에 비교, 2026-10-30 사용자)
+  //   위: 판매처별 요약 한 줄 · 채우기 버튼(한 번에 맞추기 적용 · 묶음 제안 모두 추가)
+  //   카드: 옵션 이름 · 원가 / 판매처마다 한 줄 = 판매가 입력 · 차익 · 마진 (네이버는 대표·추가금)
+  //   아래: 묶음 제안 (판매 옵션으로 추가) · 저장 줄
   if (tabs.mobile && survey) {
-    const cur = mTab === 'summary' ? null : platforms.find((p) => p.key === mTab) || platforms[0]
-    const cs = cur ? states[cur.key] : null
+    const addAllBundles = async () => {
+      setBundleBusy(true)
+      for (const b of offers) await setBundle(b, true)
+      setBundleBusy(false)
+    }
     return (
       <main className="page-flat">
         <PageHeader
@@ -582,109 +588,113 @@ export default function PricingPage() {
             sections: PRICING_RULES,
           }}
         />
-        <div className={styles.mTabs} role="tablist" aria-label="판매처">
-          {platforms.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              role="tab"
-              aria-selected={cur?.key === p.key}
-              className={cur?.key === p.key ? styles.mTabOn : ''}
-              onClick={() => setMTab(p.key)}
-            >
-              {p.label}
-              <small className={tabStatus(p).cls}>●</small>
-            </button>
-          ))}
-          <button
-            type="button"
-            role="tab"
-            aria-selected={!cur}
-            className={!cur ? styles.mTabOn : ''}
-            onClick={() => setMTab('summary')}
-          >
-            요약
-          </button>
+        {/* 판매처별 요약 — 상태 · 평균 마진 · 최저 차익 */}
+        <div className={styles.mStrip} style={{ gridTemplateColumns: `repeat(${platforms.length}, minmax(0, 1fr))` }}>
+          {platforms.map((p) => {
+            const sm = states[p.key].summary
+            const ts = tabStatus(p)
+            return (
+              <div key={p.key} className={styles.mPlat}>
+                <b>
+                  {p.label} <small className={ts.cls}>●</small>
+                </b>
+                <span>
+                  마진 {formatPct(sm.avgMarginPct)}
+                  {sm.lossCount > 0 && <em className={styles.bad}> · 손해 {sm.lossCount}</em>}
+                </span>
+                <span className={styles.weak}>{ts.text}</span>
+              </div>
+            )
+          })}
         </div>
-        <div className={styles.mInfo}>
-          <span>
-            {cur
-              ? `수수료 ${trimDecimal(totalFeeRate(cs.settings).toFixed(2))}% · ${tabStatus(cur).text}`
-              : `환율 ${formatFx(fx.cnyKrw)}원`}
-          </span>
+        {/* 채우기 — 지금 설정(기본 목표 차익)으로 모든 옵션 판매가를 채운다 · 설정은 시트에서 */}
+        <div className={styles.mActions}>
+          <button type="button" className="btn-secondary btn-md" onClick={applyBulk}>
+            판매가 채우기
+          </button>
           <button type="button" className={styles.mLink} onClick={() => setBulkOpen(true)}>
-            한 번에 맞추기
+            채우기 기준
           </button>
+          {offers.length > 0 && (
+            <button
+              type="button"
+              className="btn-secondary btn-md"
+              disabled={bundleBusy}
+              onClick={addAllBundles}
+              title="묶음 제안을 모두 판매 옵션으로 넣어요. 판매가는 '판매가 채우기'로"
+            >
+              {bundleBusy ? '추가 중…' : `묶음 ${offers.length}개 추가`}
+            </button>
+          )}
         </div>
+        {bulkMsg?.text && <p className={`${styles.mMsg} ${bulkMsg.cls || ''}`}>{bulkMsg.text}</p>}
         <div className={styles.mList}>
-          {cur
-            ? rows.map((o) => {
-                const r = cs.results[o.id]
-                const value = forms[cur.key].prices[o.id]
-                const addon = cur.key === naverKey && naver ? naver.byId[o.id] : null
-                const parts = r ? partsOf(o, r, cs.settings) : null
-                const total = r ? Math.max(r.totalCost + r.fee, toNum(value)) : 0
-                const cost = costSettings ? costWithShipping(o, costSettings) : null
-                const bundled = o.bundleQty > 1
-                const warn = o.overLimit
-                  ? '30kg 초과 — 집운 소형 불가'
-                  : o.shippingCny == null
-                    ? '용량을 못 읽어 배송비를 몰라요'
-                    : o.overDutyFree
-                      ? '상품가가 면세 한도($150)를 넘을 수 있어요'
-                      : ''
-                return (
-                  <div key={o.id} className={styles.mCard}>
-                    <div className={styles.mCardHead}>
-                      <b>
-                        {bundled ? o.marketOption1 : o.option1}{' '}
-                        <span className={styles.weak}>
-                          {bundled ? o.marketOption2 : o.option2}
-                        </span>
-                      </b>
-                      <span className={styles.weak}>
-                        원가 {cost == null ? '-' : formatWon(cost)}
-                      </span>
-                    </div>
-                    {warn && <span className={styles.optWarn}>{warn}</span>}
-                    <div className={styles.mPriceRow}>
+          {rows.map((o) => {
+            const cost = costSettings ? costWithShipping(o, costSettings) : null
+            const bundled = o.bundleQty > 1
+            const warn = o.overLimit
+              ? '30kg 초과 — 집운 소형 불가'
+              : o.shippingCny == null
+                ? '용량을 못 읽어 배송비를 몰라요'
+                : o.overDutyFree
+                  ? '상품가가 면세 한도($150)를 넘을 수 있어요'
+                  : ''
+            return (
+              <div key={o.id} className={styles.mCard}>
+                <div className={styles.mCardHead}>
+                  <b>
+                    {bundled ? o.marketOption1 : o.option1}{' '}
+                    <span className={styles.weak}>{bundled ? o.marketOption2 : o.option2}</span>
+                  </b>
+                  <span className={styles.weak}>원가 {cost == null ? '-' : formatWon(cost)}</span>
+                </div>
+                {bundled && (
+                  <span className={styles.bundleNote}>
+                    묶음 {o.packNote} · {formatKgFromG(o.weightG)} · 타오바오 {o.bundleQty}개
+                    <button type="button" className={styles.bundleBtn} onClick={() => setBundle(o, false)}>
+                      빼기
+                    </button>
+                  </span>
+                )}
+                {warn && <span className={styles.optWarn}>{warn}</span>}
+                {platforms.map((p) => {
+                  const cs = states[p.key]
+                  const r = cs.results[o.id]
+                  const value = forms[p.key].prices[o.id]
+                  const addon = p.key === naverKey && naver ? naver.byId[o.id] : null
+                  return (
+                    <div key={p.key} className={styles.mPRow}>
+                      <span className={styles.mPLabel}>{p.label}</span>
                       <input
-                        className={`${styles.mPrice} ${
-                          invalidPrice(value)
-                            ? styles.invalid
-                            : cs.changedIds.has(o.id)
-                              ? styles.changed
-                              : ''
+                        className={`${styles.mPInput} ${
+                          invalidPrice(value) ? styles.invalid : cs.changedIds.has(o.id) ? styles.changed : ''
                         }`}
                         type="text"
                         inputMode="numeric"
                         placeholder="판매가"
-                        aria-label={`${optionName(o)} ${cur.label} 판매가`}
+                        aria-label={`${optionName(o)} ${p.label} 판매가`}
                         value={withCommas(value)}
-                        onChange={(e) => setPrice(cur.key, o.id, digitsOnly(e.target.value))}
+                        onChange={(e) => setPrice(p.key, o.id, digitsOnly(e.target.value))}
                       />
-                      <span className={styles.mResult}>
+                      <span className={styles.mPRes}>
                         {r ? (
                           <>
-                            차익{' '}
                             <b className={r.profit < 0 ? styles.bad : ''}>{formatWon(r.profit)}</b>
-                            <br />
-                            마진 <span className={marginClass(r)}>{formatPct(r.marginPct)}</span>
+                            <span className={marginClass(r)}>{formatPct(r.marginPct)}</span>
                           </>
                         ) : (
-                          <span className={styles.weak}>판매가를 넣어 주세요</span>
+                          <span className={styles.weak}>-</span>
                         )}
                       </span>
-                    </div>
-                    {addon && (
-                      <div className={styles.mAddon}>
+                      {addon && (
                         <button
                           type="button"
-                          className={`${styles.addon} ${addon.isBase ? styles.addonBase : ''} ${
+                          className={`${styles.mAddonBtn} ${addon.isBase ? styles.addonBase : ''} ${
                             addon.over ? styles.addonOver : ''
                           }`}
-                          onClick={() => setBase(cur.key, o.id)}
+                          onClick={() => setBase(p.key, o.id)}
                           disabled={addon.isBase && addon.autoBase}
+                          title={naver.groups.length > 1 ? `상품 ${addon.group}` : undefined}
                         >
                           {addon.isBase
                             ? addon.autoBase
@@ -692,41 +702,36 @@ export default function PricingPage() {
                               : '대표'
                             : `추가금 ${formatAddon(addon.amount)}`}
                         </button>
-                        {naver.groups.length > 1 && (
-                          <span className={styles.weak}>상품 {addon.group}</span>
-                        )}
-                      </div>
-                    )}
-                    {r && <PriceBar parts={parts} total={total} loss={r.profit < 0} />}
-                  </div>
-                )
-              })
-            : platforms.map((p) => {
-                const sm = states[p.key].summary
-                const ts = tabStatus(p)
-                return (
-                  <div key={p.key} className={styles.mCard}>
-                    <div className={styles.mCardHead}>
-                      <b>{p.label}</b>
-                      <span className={ts.cls}>● {ts.text}</span>
+                      )}
                     </div>
-                    <div className={styles.mSumRow}>
-                      <span>
-                        평균 마진 <b>{formatPct(sm.avgMarginPct)}</b>
-                      </span>
-                      <span>
-                        최저 차익{' '}
-                        <b className={sm.minProfit < 0 ? styles.bad : ''}>
-                          {formatWon(sm.minProfit)}
-                        </b>
-                      </span>
-                      <span>
-                        손해 <b className={sm.lossCount > 0 ? styles.bad : ''}>{sm.lossCount}개</b>
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
+            )
+          })}
+          {offers.length > 0 && <div className={styles.mOfferHead}>묶음 제안 {offers.length}개</div>}
+          {offers.map((b) => (
+            <div key={b.id} className={`${styles.mCard} ${styles.mOffer}`}>
+              <div className={styles.mCardHead}>
+                <b>
+                  {b.marketOption1} <span className={styles.weak}>{b.marketOption2}</span>
+                </b>
+                <button type="button" className={styles.bundleBtn} onClick={() => setBundle(b, true)}>
+                  판매 옵션으로 추가
+                </button>
+              </div>
+              <span className={styles.weak}>
+                {b.packNote} · {formatKgFromG(b.weightG)} · 운임 {formatCny(b.shippingCny)}
+              </span>
+            </div>
+          ))}
+          {platforms
+            .filter((p) => states[p.key].stale)
+            .map((p) => (
+              <p key={p.key} className={styles.notice}>
+                {p.label}: 새 가격 조사가 있어요. 판매가를 다시 넣고 저장하세요
+              </p>
+            ))}
           {saveError && <p className={styles.hintError}>{saveError}</p>}
         </div>
         <div className={`sticky-cta ${styles.mCta}`}>
@@ -738,12 +743,7 @@ export default function PricingPage() {
           >
             되돌리기
           </button>
-          <button
-            type="button"
-            className="btn-primary btn-md"
-            onClick={saveAll}
-            disabled={!canSave}
-          >
+          <button type="button" className="btn-primary btn-md" onClick={saveAll} disabled={!canSave}>
             {saving ? '저장 중…' : totalChanges > 0 ? `저장 (${totalChanges})` : '저장'}
           </button>
           {next && (
@@ -758,11 +758,18 @@ export default function PricingPage() {
         </div>
         <BottomSheet
           open={bulkOpen}
-          title="한 번에 맞추기"
+          title="판매가 채우기 기준"
           onClose={() => setBulkOpen(false)}
           footer={
-            <button type="button" className="btn-primary btn-md" onClick={applyBulk}>
-              한 번에 적용
+            <button
+              type="button"
+              className="btn-primary btn-md"
+              onClick={() => {
+                applyBulk()
+                setBulkOpen(false)
+              }}
+            >
+              이 기준으로 채우기
             </button>
           }
         >
