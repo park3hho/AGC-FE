@@ -791,3 +791,155 @@
   color: var(--color-text-sub);
   font-weight: 600;
 }
+
+/* 금액 섹션 — 들어온 돈 · 나간 돈(원가) · 이익, 빠진 돈 줄을 누르면 증빙 (2026-10-29, OrderMoney.jsx) */
+.money {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mHead {
+  margin: 6px 0 2px;
+  color: var(--color-text-weak);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mHead:first-child {
+  margin-top: 0;
+}
+
+.mRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  width: 100%;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+}
+
+.mLabel {
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+
+.mVal {
+  min-width: 0;
+  text-align: right;
+}
+
+.mVal small {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text-weak);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 누를 수 있는 빠진 돈 줄 */
+.mCut {
+  cursor: pointer;
+}
+
+.mCut:hover .mLabel,
+.mOpen .mLabel {
+  color: var(--color-primary);
+}
+
+.mCaret {
+  color: var(--color-text-weak);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.mCut:hover .mCaret,
+.mOpen .mCaret {
+  color: var(--color-primary);
+}
+
+.mTotal {
+  margin-top: 2px;
+  padding-top: 5px;
+  border-top: 1px solid var(--color-border);
+  font-weight: 700;
+}
+
+.mTotal .mLabel {
+  color: var(--color-text);
+}
+
+.mLoss .mVal {
+  color: var(--color-danger, #e5484d);
+}
+
+/* 증빙 칸 — 줄 아래 펼침 */
+.evBox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 2px 0 6px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--color-primary);
+  background: var(--color-bg-sub);
+  font-size: 12px;
+}
+
+.evBox p {
+  margin: 0;
+}
+
+.evItem + .evItem {
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+}
+
+.evMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+
+.evMeta span {
+  color: var(--color-text-sub);
+}
+
+.evList {
+  margin: 4px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evList a {
+  color: var(--color-primary);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.evList small {
+  display: block;
+  color: var(--color-text-weak);
+  font-size: 11px;
+}
+
+.evNone {
+  color: var(--color-text-weak);
+}
+
+.evActs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.evActs a {
+  color: var(--color-primary);
+}

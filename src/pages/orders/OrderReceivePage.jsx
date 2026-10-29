@@ -10,7 +10,9 @@ import {
   ORDERS_COLLECTED_EVENT,
   recheckPccc,
 } from '@/api/order'
+import { getExchangeRate } from '@/api/exchangeRate'
 import { getJiyunList } from '@/api/jiyun'
+import { getOrderDocuments, uploadOrderDocument } from '@/api/orderDocument'
 import { getPurchases } from '@/api/taobaoPurchase'
 import PageHeader from '@/components/common/PageHeader'
 import { collectMode, diffLines, eventTitle } from '@/utils/orderEvent'
@@ -33,6 +35,7 @@ import {
   VIA,
 } from '@/constants/orderConst'
 import { formatWon } from '@/utils/pricing'
+import OrderMoney from './OrderMoney'
 import styles from './Orders.module.css'
 
 // 'YYYY-MM-DD HH:mm' (KST)
@@ -209,57 +212,6 @@ const burdenText = (a, market) => {
 }
 const minus = (n) => `−${(n || 0).toLocaleString('ko-KR')}`
 
-// 주문 상세 › 금액 — 판매가 · 할인(부담) · 고객 결제 · 수수료 · 정산 예정 (판매자 부담 할인은 주황)
-function AmountBox({ amount: a, market, settlementDate, cancelled }) {
-  const m = MARKETS[market]?.label || market
-  const pct = (n) => (a.discount ? Math.round((n / a.discount) * 100) : 0)
-  return (
-    <dl className={styles.amount}>
-      <dt>판매가(총액)</dt>
-      <dd>{formatWon(a.total)}</dd>
-      {a.discount > 0 && (
-        <>
-          <dt className={a.discountSeller ? styles.sellerCut : ''}>할인</dt>
-          <dd className={a.discountSeller ? styles.sellerCut : ''}>
-            {minus(a.discount)}
-            <small>
-              부담: {m} {a.discountMarket.toLocaleString('ko-KR')}
-              {a.discountMarket ? ` (${pct(a.discountMarket)}%)` : ''} / 판매자{' '}
-              {a.discountSeller.toLocaleString('ko-KR')}
-            </small>
-          </dd>
-        </>
-      )}
-      <dt>고객 결제</dt>
-      <dd>{formatWon(a.paid)}</dd>
-      <dt>수수료{a.estimated && a.feeRate != null ? '(추정)' : ''}</dt>
-      <dd>
-        {minus(a.fee)}
-        <small>
-          {a.feeDetail.length
-            ? a.feeDetail.map((f) => `${f.label} ${f.amount.toLocaleString('ko-KR')}`).join(' · ')
-            : a.feeRate != null
-              ? `${a.feeRate}%`
-              : ''}
-        </small>
-      </dd>
-      <dt className={styles.settleDt}>
-        {cancelled
-          ? '정산'
-          : a.actual
-            ? '정산 확정'
-            : a.estimated
-              ? '정산 예정(추정)'
-              : '정산 예정'}
-      </dt>
-      <dd className={styles.settleDd}>
-        {cancelled ? '없음 (취소·반품)' : a.settlement == null ? '-' : formatWon(a.settlement)}
-        {a.actual && settlementDate && <small>{settlementDate}</small>}
-      </dd>
-    </dl>
-  )
-}
-
 function EventRow({
   event, // object: 주문 기록
   onPurchase, // function?: 타오바오 구매기록이면 그 구매 열기 (누르면 바로 이동)
@@ -405,13 +357,15 @@ function EventRow({
   )
 }
 
-// 판매 › 주문 접수 — 섹션: 수집 · 접수 목록 · 추적 기록 (머리 탭: 기록 · 주문 상세 · 마켓 원본)
+// 판매 › 주문 접수 — 섹션: 수집 · 접수 목록 · 금액 · 추적 기록 (머리 탭: 기록 · 주문 상세 · 마켓 원본)
 // 마켓 주문을 가져오면 새 주문·바뀐 주문은 BE 가 바로 통관부호(UNI-PASS)를 검증한다. 모든 동작은 추적 기록에 남는다.
 export default function OrderReceivePage() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const [purchases, setPurchases] = useState(null)
   const [jiyuns, setJiyuns] = useState(null) // 고른 주문의 집운 기록 // 고른 주문의 타오바오 구매
+  const [docs, setDocs] = useState([]) // 고른 주문의 증빙 파일 (금액 섹션)
+  const [fx, setFx] = useState(null) // 오늘 1위안 원화 — 원가 추정용
   const [data, setData] = useState(null) // { items, total, pcccCounts, lastRuns, pollMinutes }
   const [detail, setDetail] = useState(null) // { order, events }
   const [error, setError] = useState('')
@@ -451,8 +405,13 @@ export default function OrderReceivePage() {
       setDetail(null)
       setPurchases(null)
       setJiyuns(null)
+      setDocs([])
       return
     }
+    setDocs([])
+    getOrderDocuments(selected)
+      .then(setDocs)
+      .catch((err) => setError(err.message))
     getOrder(selected)
       .then(setDetail)
       .catch((err) => setError(err.message))
@@ -463,6 +422,23 @@ export default function OrderReceivePage() {
       .then(setJiyuns)
       .catch((err) => setError(err.message))
   }, [selected])
+
+  useEffect(() => {
+    getExchangeRate()
+      .then((r) => setFx(r.current.cnyKrw))
+      .catch(() => {})
+  }, [])
+
+  // 증빙 올리기 (금액 섹션) — 올리고 나면 목록 · 추적 기록 다시
+  const uploadDoc = async (file, meta) => {
+    try {
+      await uploadOrderDocument(selected, file, meta)
+      setDocs(await getOrderDocuments(selected))
+      getOrder(selected).then(setDetail)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
 
   // 새 소식 확인 — 기준 id 뒤의 새 주문·클레임을 알림에 쌓고, 화면이 안 보일 땐 브라우저 알림
   const checkUpdates = useCallback(async () => {
@@ -766,6 +742,20 @@ export default function OrderReceivePage() {
         </Section>
 
         <div className={`fit-col ${styles.side}`}>
+          {detail && o && (
+            <OrderMoney
+              key={o.id}
+              order={o}
+              purchases={purchases}
+              jiyuns={jiyuns}
+              docs={docs}
+              fx={fx}
+              onUpload={uploadDoc}
+              onShowRaw={() => setView('raw')}
+              onPurchase={openPurchase}
+              onJiyun={openJiyun}
+            />
+          )}
           <Section
             name="추적 기록"
             id="trace"
@@ -825,21 +815,6 @@ export default function OrderReceivePage() {
                   </dd>
                   <dt>결제 시각</dt>
                   <dd>{kst(o.paidAt || o.orderedAt)}</dd>
-                  <dt>금액</dt>
-                  <dd>
-                    {o.amount ? (
-                      <AmountBox
-                        amount={o.amount}
-                        market={o.market}
-                        settlementDate={o.settlementDate}
-                        cancelled={o.stage === 'cancelled'}
-                      />
-                    ) : o.totalPrice == null ? (
-                      '-'
-                    ) : (
-                      formatWon(o.totalPrice)
-                    )}
-                  </dd>
                   {o.claimType && (
                     <>
                       <dt>클레임</dt>
