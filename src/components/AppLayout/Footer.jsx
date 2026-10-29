@@ -15,7 +15,7 @@ const kstShort = (iso) =>
 
 // 마켓 1곳 — 마지막으로 가져온 시각 · 수동/자동. 그때 건수는 마우스를 올리면, 실패면 빨갛게
 function MarketRun({
-  market, // 'naver' | 'coupang'
+  market, // 'naver' | 'coupang' | 'shop'
   run, // object | null: 마지막 수집
 }) {
   if (!run) return <span className={styles.footWeak}>{MARKETS[market].label} 아직 안 가져옴</span>
@@ -73,6 +73,7 @@ export default function Footer() {
           <b>주문 수집</b>
           <MarketRun market="naver" run={status.lastRuns.naver} />
           <MarketRun market="coupang" run={status.lastRuns.coupang} />
+        <MarketRun market="shop" run={status.lastRuns.shop} />
           <span className={styles.footWeak}>
             자동 {status.pollMinutes ? `${status.pollMinutes}분마다` : '꺼짐'}
           </span>

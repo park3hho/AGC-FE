@@ -100,7 +100,11 @@ export const getOrders = async ({
     items: data.items.map(toOrder),
     total: data.total,
     pcccCounts: data.pccc_counts,
-    lastRuns: { naver: toRun(data.last_runs.naver), coupang: toRun(data.last_runs.coupang) },
+    lastRuns: {
+      naver: toRun(data.last_runs.naver),
+      coupang: toRun(data.last_runs.coupang),
+      shop: toRun(data.last_runs.shop),
+    },
     pollMinutes: data.poll_minutes,
   }
 }
@@ -144,7 +148,7 @@ const toDetail = (data) => ({
     : null,
 })
 
-export const collectOrders = async (markets = ['naver', 'coupang']) => {
+export const collectOrders = async (markets = ['naver', 'coupang', 'shop']) => {
   const data = await request('/orders/collect', {
     method: 'POST',
     body: { markets },
@@ -168,7 +172,11 @@ export const getCollectStatus = async () => {
     authRedirect: false,
   })
   return {
-    lastRuns: { naver: toRun(data.last_runs.naver), coupang: toRun(data.last_runs.coupang) },
+    lastRuns: {
+      naver: toRun(data.last_runs.naver),
+      coupang: toRun(data.last_runs.coupang),
+      shop: toRun(data.last_runs.shop),
+    },
     pollMinutes: data.poll_minutes,
   }
 }
@@ -184,6 +192,15 @@ export const confirmOrder = async (id) => {
     errorMsg: '발주확인을 보내지 못했어요',
   })
   return { ...toDetail(data), already: !!data.already }
+}
+
+// 자사몰 주문 배송 완료 표시 — 국내 송장 있는 집운 기록이 있어야. 고객 화면이 배송 완료로 바뀐다
+export const markDelivered = async (id) => {
+  const data = await request(`/orders/${id}/delivered`, {
+    method: 'POST',
+    errorMsg: '배송 완료로 표시하지 못했어요',
+  })
+  return toDetail(data)
 }
 
 // 주문 접수 화면 알림 — after(이벤트 id) 뒤 새 주문·새 클레임. after 없이 부르면 기준 id 만

@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import {
   collectOrders,
+  markDelivered,
   getOrder,
   getOrders,
   getOrderUpdates,
@@ -534,6 +535,19 @@ export default function OrderReceivePage() {
     setBusy('')
   }
 
+  // 자사몰 주문 배송 완료 표시 (마켓 주문은 마켓 상태로 바뀐다)
+  const delivered = async () => {
+    if (!window.confirm('이 자사몰 주문을 배송 완료로 표시할까요? 고객 화면이 배송 완료로 바뀌어요.')) return
+    setBusy('delivered')
+    try {
+      setDetail(await markDelivered(selected))
+      await load()
+    } catch (err) {
+      setError(err.message)
+    }
+    setBusy('')
+  }
+
   const counts = data?.pcccCounts || {}
   const allCount = Object.values(counts).reduce((a, b) => a + b, 0)
   const o = detail?.order
@@ -889,6 +903,17 @@ export default function OrderReceivePage() {
                   >
                     {busy === 'recheck' ? '검증 중…' : '통관부호 다시 검증'}
                   </button>
+                  {o.market === 'shop' && o.confirmed && o.marketStatus !== 'DELIVERED' && o.stage !== 'cancelled' && (
+                    <button
+                      type="button"
+                      className="btn-secondary btn-sm"
+                      onClick={delivered}
+                      disabled={busy === 'delivered'}
+                      title="국내 송장이 있는 집운 기록이 있어야 해요"
+                    >
+                      {busy === 'delivered' ? '표시 중…' : '배송 완료 표시'}
+                    </button>
+                  )}
                 </div>
               </div>
             )}

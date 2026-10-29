@@ -3,6 +3,7 @@
 export const MARKETS = {
   naver: { label: '네이버', short: 'N' },
   coupang: { label: '쿠팡', short: 'C' },
+  shop: { label: '자사몰', short: 'S' }, // eidofood.com (2026-10-29) — 발주확인 = 고객 즉시 취소 막힘, 배송 완료는 사람이 표시
 }
 
 export const PCCC_STATUS = {
@@ -31,6 +32,10 @@ export const MARKET_STATUS = {
   DEPARTURE: '배송지시',
   FINAL_DELIVERY: '배송완료',
   NONE_TRACKING: '추적 없음',
+  // 자사몰 — BE services/order/shop_orders.SHOP_STATUS
+  PAID: '결제완료',
+  CONFIRMED: '주문 확인',
+  CANCELLED: '취소',
 }
 
 export const ACTOR = {
@@ -61,6 +66,7 @@ export const EVENT_KIND = {
   jiyun_deleted: '집운 기록 삭제',
   market_confirmed: '발주확인',
   market_confirm_failed: '발주확인 실패',
+  delivered: '배송 완료 표시',
   claim: '클레임',
   stage: '단계 변경',
   dispatch_delayed: '발송지연',
