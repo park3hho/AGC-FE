@@ -61,34 +61,56 @@
   font-size: var(--font-sm);
 }
 
-/* 좁은 화면 — 제목이 줄어들지 않게 버튼을 아랫줄로 (터치 크기는 유지) */
-@media (max-width: 600px) {
+/* 모바일 (≤ 768px) — 이 줄이 위쪽 바를 대신한다 (위쪽 바는 숨김, AppLayout.module.css).
+   한 줄 44px: ← · 제목(넘치면 …) · 오른쪽 버튼. 설명(sub)은 숨긴다 (플레이북 'AGC 모바일 화면 설계' §3.2) */
+@media (max-width: 768px) {
   .header {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+    height: var(--topbar-h);
+    min-height: var(--topbar-h);
+    padding: 0 var(--space-3);
+  }
+
+  .back {
+    width: 36px;
+    height: 36px;
+    margin-left: calc(-1 * var(--space-1));
+    border: 0;
+    background: none;
+    color: var(--color-text);
   }
 
   .text {
-    flex: 1 1 220px;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
   }
 
   .title {
-    font-size: var(--font-md);
-    white-space: normal;
+    font-size: 17px;
+    white-space: nowrap;
   }
 
   .sub {
-    white-space: normal;
+    display: none;
   }
 
   .action {
-    flex-shrink: 1;
+    flex-shrink: 0;
   }
 
-  .action :global(.btn-md) {
-    min-height: 40px;
+  .action :global(.btn-md),
+  .action :global(.btn-sm) {
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    font-size: var(--font-sm);
+  }
+
+  /* 머리에 버튼이 여럿이면 대표(primary) 하나만 — 나머지는 화면 안에서 */
+  .action :global(.btn-secondary):not(:only-child) {
+    display: none;
   }
 }
-
 /* 제목 옆 ⓘ — 이 화면 작업 규칙 (InfoPanel) */
 .info {
   display: inline-grid;

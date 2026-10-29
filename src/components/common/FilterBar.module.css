@@ -1,0 +1,45 @@
+/* 모바일 — 검색칸이 남은 너비, 오른쪽에 '필터' 버튼 */
+.bar {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bar > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.fbtn {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font: inherit;
+  font-size: var(--font-sm);
+  cursor: pointer;
+}
+
+.fbtn b {
+  color: var(--color-primary);
+}
+
+/* 시트 안 — 드롭다운 한 줄에 하나, 꽉 차게 */
+.sheetFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sheetFields > * {
+  width: 100%;
+  max-width: none !important;
+  min-height: var(--touch-min);
+}

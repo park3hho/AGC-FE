@@ -17,7 +17,8 @@ export default function PageHeader({
   const [infoOpen, setInfoOpen] = useState(false)
 
   return (
-    <header className={styles.header}>
+    // data-page-header — 모바일에서는 이 줄이 위쪽 바 자리를 대신한다 (AppLayout.module.css, 플레이북 '모바일' §3.2)
+    <header className={styles.header} data-page-header>
       {back && (
         <button
           type="button"

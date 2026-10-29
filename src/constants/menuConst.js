@@ -8,7 +8,7 @@ export const MENU_GROUPS = [
 ]
 
 // 왼쪽 메뉴 · 아래 탭 · 더보기를 모두 이 목록 하나로 그린다
-//   tab: 모바일 아래 탭에 바로 보임 (나머지는 '더보기')
+//   tab: 모바일 아래 탭에 바로 보임 (나머지는 '더보기'). tab 숫자 = 탭 순서 — 홈 · 주문 · 디자인 · 제품 · 더보기 (2026-10-30, 플레이북 '모바일' §3.3)
 //   soon: 아직 없는 기능 — 메뉴에 '준비 중'으로만 보이고 누를 수 없음
 //   dev: 개발자 모드(내 계정 모달에서 켬)일 때만 보임 — 메뉴 글씨는 보라색 (--color-dev)
 export const MENU = [
@@ -21,7 +21,7 @@ export const MENU = [
     tone: 'primary',
     path: '/research/products',
     feature: FEATURE.RESEARCH,
-    tab: true,
+    tab: 3,
   },
   {
     key: 'price',
@@ -31,7 +31,6 @@ export const MENU = [
     tone: 'success',
     path: '/research/prices',
     feature: FEATURE.RESEARCH,
-    tab: true,
   },
   {
     key: 'pricing',
@@ -41,7 +40,6 @@ export const MENU = [
     tone: 'warning',
     path: '/pricing',
     feature: FEATURE.RESEARCH,
-    tab: true,
   },
   {
     key: 'design',
@@ -51,6 +49,7 @@ export const MENU = [
     tone: 'primary',
     path: '/design',
     feature: FEATURE.RESEARCH,
+    tab: 2,
   },
   // 상품 — 디자인(상세페이지)이 승인된 제품만 보인다 (DESIGN.md §4.7). 마켓 등록 기능은 다음 단계
   {
@@ -70,6 +69,7 @@ export const MENU = [
     tone: 'warning',
     path: '/orders',
     feature: FEATURE.ORDER,
+    tab: 1,
   },
   {
     key: 'purchases',

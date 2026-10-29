@@ -1,0 +1,116 @@
+/* 모바일 폼 · 상세 작은 부품 — 복사 · 붙여넣기 · 한 줄 버튼 · 접는 칸 */
+.copy {
+  flex: none;
+  min-width: 52px;
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.paste {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.paste input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding-right: 80px;
+}
+
+.paste button {
+  position: absolute;
+  right: 4px;
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.choice {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  min-height: var(--touch-min);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.choice button {
+  border: 0;
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font: inherit;
+  font-size: var(--font-sm);
+  cursor: pointer;
+}
+
+.choice button + button {
+  box-shadow: inset 1px 0 0 var(--color-border);
+}
+
+.choice button.on {
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.choice button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fold {
+  border-top: 1px solid var(--color-border);
+}
+
+.foldHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-md);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.foldHead small {
+  color: var(--color-text-weak);
+  font-weight: 400;
+}
+
+.foldMark {
+  flex: none;
+  color: var(--color-text-weak);
+  font-size: var(--font-sm);
+  font-weight: 400;
+}
+
+.foldBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+}
