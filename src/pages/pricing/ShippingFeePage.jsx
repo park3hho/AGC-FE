@@ -105,8 +105,10 @@ export default function ShippingFeePage() {
 
       {/* 타오바오 공식 집운 기준 — 표시용 (계산은 식품 요율) */}
       <Section name="공식 기준" id="guide" title={false} plain className={tabs.hide('guide')}>
-        <div className={styles.rule}>
-          <div className={styles.ruleTitle}>타오바오 공식 집운 · 해운 택배 (한국)</div>
+        <details className={`${styles.rule} ${styles.guide}`}>
+          <summary className={styles.ruleTitle}>
+            타오바오 공식 집운 기준 <span className={styles.hint}>· 해운 택배 (한국)</span>
+          </summary>
           {rule.eta && <div className={styles.hint}>{rule.eta}</div>}
           <div className={styles.guideRates}>
             {rule.rates.map((r) => (
@@ -143,7 +145,7 @@ export default function ShippingFeePage() {
               {rule.sourceChecked && ` · ${rule.sourceChecked} 확인`}
             </div>
           )}
-        </div>
+        </details>
       </Section>
 
       {/* 무게 구간별 요금표 */}

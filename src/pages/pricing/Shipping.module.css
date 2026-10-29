@@ -234,7 +234,7 @@
 
 .guideRate {
   display: grid;
-  grid-template-columns: 150px 72px minmax(0, 1fr);
+  grid-template-columns: 200px 72px minmax(0, 1fr);
   gap: var(--space-2);
   padding: var(--space-1) 0;
   border-bottom: 1px solid var(--color-border);
@@ -258,6 +258,7 @@
 }
 
 .guideTag {
+  white-space: nowrap;
   margin-left: var(--space-1);
   padding: 0 6px;
   border-radius: var(--radius);
@@ -273,4 +274,23 @@
   font-size: 12px;
   color: var(--color-text-sub);
   line-height: 1.6;
+}
+
+/* 공식 기준 — 기본은 접어 둔다 (요금표 높이를 지킨다) */
+.guide > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.guide > summary::-webkit-details-marker {
+  display: none;
+}
+
+.guide > summary::before {
+  content: '▸ ';
+  color: var(--color-text-sub);
+}
+
+.guide[open] > summary::before {
+  content: '▾ ';
 }
