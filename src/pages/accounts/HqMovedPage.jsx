@@ -43,7 +43,7 @@ export default function HqMovedPage() {
             회사 정보의 정본을 <b>HQ</b>({hq.replace(/^https?:\/\//, '')})로 옮겼어요. 사업자·인허가 번호, 계좌, 서류, 로그인 계정
             비밀번호, 마켓 API 키는 HQ 에서 보고 고쳐요. HQ 는 따로 로그인해요.
           </p>
-          <p className={` `}>
+          <p className={`${styles.weak} ${styles.desktop}`}>
             AGC 는 HQ 에서 필요한 값만 읽어 와요 — 주문 수집(네이버·쿠팡 API 키), 통관 조회(UNI-PASS), 상세페이지 등록번호.
           </p>
         </div>
