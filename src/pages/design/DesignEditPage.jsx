@@ -191,7 +191,7 @@ export default function DesignEditPage() {
         flash('마지막 제품이에요')
         return
       }
-      navigate(`/design/${next}`, { state: { ids } })
+      navigate(`/design/${next}`, { state: { ids, label: location.state?.label } })
     })
   const saveCommon = () =>
     run('common', async () => {
