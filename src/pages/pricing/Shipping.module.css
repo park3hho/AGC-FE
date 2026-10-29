@@ -223,3 +223,54 @@
 .historyRate {
   font-weight: 600;
 }
+
+/* 공식 기준 — 요금 3줄 (이름 · 범위 · 요금) + 규칙 목록 */
+.guideRates {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-1);
+  font-size: var(--font-sm);
+}
+
+.guideRate {
+  display: grid;
+  grid-template-columns: 150px 72px minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.guideRate:last-child {
+  border-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .guideRate {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .guideRate > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.guideOn {
+  font-weight: 600;
+}
+
+.guideTag {
+  margin-left: var(--space-1);
+  padding: 0 6px;
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.guideList {
+  margin: var(--space-1) 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--color-text-sub);
+  line-height: 1.6;
+}

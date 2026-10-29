@@ -17,6 +17,7 @@ const formatMl = (ml) => `${ml.toLocaleString('ko-KR')}ml`
 const MOBILE_TABS = [
   { id: 'table', name: '요금표' },
   { id: 'rule', name: '요금 규칙' },
+  { id: 'guide', name: '공식 기준' },
 ]
 
 // 배송비 — 무게 구간별 요금표. 위안은 BE 요금 규칙, 원화 = 위안 × 현재 환율 (환율을 바꾸면 같이 바뀐다)
@@ -80,9 +81,16 @@ export default function ShippingFeePage() {
             </div>
           )}
           <div className={styles.hint}>
-            {Number(rule.maxKg)}kg을 넘으면 이 요금표(집운 소형)로 보낼 수 없어요. 부피 무게 ·
-            관세는 반영하지 않아요.
+            {Number(rule.maxKg)}kg을 넘으면 이 요금표(집운 소형)로 보낼 수 없어요. 관세는 반영하지
+            않아요.
           </div>
+          {rule.volumetric && (
+            <div className={styles.hint}>
+              차(티백)는 부피 무게도 봐요 — 상자 {rule.volumetric.boxCm.join('×')}cm ÷{' '}
+              {rule.volumetric.divisor} = {rule.volumetric.boxWeightG / 1000}kg, 실제 무게와 큰
+              값으로 계산
+            </div>
+          )}
           <div className={styles.ruleFx}>
             <span>
               환율 <strong>1위안 = {formatFx(fx.cnyKrw)}원</strong>
@@ -92,6 +100,49 @@ export default function ShippingFeePage() {
               환율 설정
             </Link>
           </div>
+        </div>
+      </Section>
+
+      {/* 타오바오 공식 집운 기준 — 표시용 (계산은 식품 요율) */}
+      <Section name="공식 기준" id="guide" title={false} plain className={tabs.hide('guide')}>
+        <div className={styles.rule}>
+          <div className={styles.ruleTitle}>타오바오 공식 집운 · 해운 택배 (한국)</div>
+          {rule.eta && <div className={styles.hint}>{rule.eta}</div>}
+          <div className={styles.guideRates}>
+            {rule.rates.map((r) => (
+              <div key={r.cn} className={styles.guideRate}>
+                <span className={r.applied ? styles.guideOn : undefined}>
+                  {r.name} <span className={styles.hint}>{r.cn}</span>
+                  {r.applied && <span className={styles.guideTag}>AGC 계산</span>}
+                </span>
+                <span className={styles.hint}>{r.range}</span>
+                <span>{r.price}</span>
+              </div>
+            ))}
+          </div>
+          <ul className={styles.guideList}>
+            {rule.billableRule && <li>계산 무게: {rule.billableRule}</li>}
+            {rule.rounding.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+            {rule.sizeLimits.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+            {rule.taxNote && <li>{rule.taxNote}</li>}
+            {rule.notes.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+            {rule.volumetric && <li>부피 무게 나누는 값: {rule.volumetric.sourceNote}</li>}
+          </ul>
+          {rule.sourceUrl && (
+            <div className={styles.hint}>
+              출처{' '}
+              <a href={rule.sourceUrl} target="_blank" rel="noreferrer" className="btn-text">
+                타오바오 집운 안내
+              </a>
+              {rule.sourceChecked && ` · ${rule.sourceChecked} 확인`}
+            </div>
+          )}
         </div>
       </Section>
 
