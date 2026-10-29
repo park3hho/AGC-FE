@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { confirmOrder, getOrder } from '@/api/order'
 import { createPurchase, deletePurchase, getPurchase, updatePurchase } from '@/api/taobaoPurchase'
+import { getExchangeRate } from '@/api/exchangeRate'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import {
@@ -14,7 +15,10 @@ import {
   MARKETS,
   PCCC_STATUS,
 } from '@/constants/orderConst'
+import { useMobile } from '@/hooks/useMobile'
+import m from './FormMobile.module.css'
 import styles from './Orders.module.css'
+import PurchaseFormMobile from './PurchaseFormMobile'
 
 // ISO → <input type="datetime-local"> 값 (KST)
 const toLocal = (iso) =>
@@ -71,6 +75,13 @@ export default function PurchaseFormPage() {
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const mobile = useMobile()
+  const [fx, setFx] = useState(null) // 1위안 = 원 (모바일 결제 위안 옆 환산)
+  useEffect(() => {
+    getExchangeRate()
+      .then((d) => setFx(d.current?.cnyKrw || null))
+      .catch(() => setFx(null))
+  }, [])
 
   useEffect(() => {
     const load = async () => {
@@ -213,7 +224,7 @@ export default function PurchaseFormPage() {
         title={false}
         fill
         footer={
-          <div className={styles.formFoot}>
+          <div className={mobile ? `sticky-cta ${m.foot}` : styles.formFoot}>
             {error && <p className="form-error">{error}</p>}
             <button
               className="btn-primary btn-md btn-full"
@@ -231,6 +242,13 @@ export default function PurchaseFormPage() {
           </div>
         }
       >
+        {mobile ? (
+          <PurchaseFormMobile
+            {...{ form, setForm, set, setItem, setStatus, nowLocal, order, sourcing, receiver, editing }}
+            {...{ needsConfirm, confirm, confirming, confirmError, fx }}
+          />
+        ) : (
+          <>
         <div className={styles.fGroup}>
           <h3 className={styles.fTitle}>고객 주문</h3>
           <p className={styles.linkText}>{order ? orderLabel(order) : '불러오는 중…'}</p>
@@ -595,6 +613,8 @@ export default function PurchaseFormPage() {
             </div>
           </div>
         </div>
+          </>
+        )}
       </Section>
     </form>
   )

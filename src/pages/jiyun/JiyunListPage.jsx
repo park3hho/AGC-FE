@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getJiyunList } from '@/api/jiyun'
 import Badge from '@/components/Badge'
 import PageHeader from '@/components/common/PageHeader'
+import FilterBar from '@/components/common/FilterBar'
 import Section from '@/components/common/Section'
 import {
   CHARGED_STATUS,
@@ -12,7 +13,16 @@ import {
   PAY_METHOD,
   TRANSPORTS,
 } from '@/constants/orderConst'
+import { useMobile } from '@/hooks/useMobile'
 import styles from '../purchases/Purchases.module.css'
+
+// 모바일 글자 탭 4개 — 나머지(취소)는 필터 시트
+const M_TABS = [
+  ['all', '전체'],
+  ['requested', '요청'],
+  ['dispatched', '출고'],
+  ['problem', '문제'],
+]
 
 // 'MM-DD HH:mm' (KST)
 const kst = (iso) =>
@@ -25,6 +35,7 @@ export default function JiyunListPage() {
   const [params, setParams] = useSearchParams()
   const [items, setItems] = useState(null)
   const [error, setError] = useState('')
+  const mobile = useMobile()
 
   const status = params.get('status') || 'all'
   const q = params.get('q') || ''
@@ -78,6 +89,52 @@ export default function JiyunListPage() {
       />
 
       <Section name="검색·필터" id="filters" title={false}>
+        {mobile ? (
+          <div className={styles.mFilters}>
+            <div className={styles.ttabs} role="tablist" aria-label="집운 상태">
+              {M_TABS.map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="tab"
+                  aria-selected={status === k}
+                  className={`${styles.ttab} ${status === k ? styles.ttabOn : ''}`}
+                  onClick={() => set({ status: k })}
+                >
+                  {label} <small>{counts[k] || 0}</small>
+                </button>
+              ))}
+            </div>
+            <FilterBar
+              active={status === 'cancelled' ? 1 : 0}
+              onReset={() => set({ status: 'all' })}
+              count={`${rows.length}건 보기`}
+              search={
+                <input
+                  className="form-input"
+                  placeholder="집운 번호 · H B/L · 송장 · OR 코드"
+                  aria-label="집운 기록 검색"
+                  value={q}
+                  onChange={(e) => set({ q: e.target.value })}
+                />
+              }
+            >
+              <select
+                className="form-input"
+                aria-label="집운 상태"
+                value={status}
+                onChange={(e) => set({ status: e.target.value })}
+              >
+                <option value="all">상태 전체 {counts.all}</option>
+                {Object.entries(JIYUN_STATUS).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v.label} {counts[k] || 0}
+                  </option>
+                ))}
+              </select>
+            </FilterBar>
+          </div>
+        ) : (
         <div className={styles.filters}>
           <input
             className={`form-input ${styles.search}`}
@@ -87,7 +144,7 @@ export default function JiyunListPage() {
             onChange={(e) => set({ q: e.target.value })}
           />
           <select
-            className="form-input"
+            className={`form-input ${styles.statusSel}`}
             value={status}
             onChange={(e) => set({ status: e.target.value })}
             aria-label="집운 상태로 거르기"
@@ -100,6 +157,7 @@ export default function JiyunListPage() {
             ))}
           </select>
         </div>
+        )}
         {error && <p className="form-error">{error}</p>}
       </Section>
 
@@ -150,9 +208,16 @@ export default function JiyunListPage() {
                   </small>
                 </span>
                 <span role="cell" className={styles.main}>
-                  <Badge tone={JIYUN_STATUS[j.status]?.tone}>
-                    {JIYUN_STATUS[j.status]?.label || j.status}
-                  </Badge>
+                  {mobile ? (
+                    <span className={styles.st} data-tone={JIYUN_STATUS[j.status]?.tone}>
+                      <i />
+                      {JIYUN_STATUS[j.status]?.label || j.status}
+                    </span>
+                  ) : (
+                    <Badge tone={JIYUN_STATUS[j.status]?.tone}>
+                      {JIYUN_STATUS[j.status]?.label || j.status}
+                    </Badge>
+                  )}
                   <small>
                     {j.krTrackingNo
                       ? `${j.krCourierName} ${j.krTrackingNo}`.trim()

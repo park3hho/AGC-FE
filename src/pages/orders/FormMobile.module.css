@@ -1,0 +1,125 @@
+/* 모바일 폼 (타오바오 구매 · 집운 기록) — 한 줄 한 칸, 라벨은 칸 위 (플레이북 'AGC 모바일 화면 설계' §3.6 · M4) */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 0 var(--space-4);
+}
+
+.summary {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg-sub);
+  color: var(--color-text-sub);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.summary b {
+  color: var(--color-text);
+  font-size: var(--font-sm);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label,
+.label {
+  color: var(--color-text-sub);
+  font-size: 13px;
+}
+
+.field input,
+.field select {
+  min-height: var(--touch-min);
+  font-size: 15px;
+}
+
+.unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.unit input {
+  flex: 1;
+  width: 100%;
+  padding-right: 120px;
+}
+
+.unit span {
+  position: absolute;
+  right: var(--space-3);
+  color: var(--color-text-weak);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.now {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.now input {
+  flex: 1;
+  min-width: 0;
+}
+
+.now button {
+  flex: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px 84px 40px;
+  gap: var(--space-1);
+}
+
+.item input {
+  min-height: var(--touch-min);
+  min-width: 0;
+}
+
+.hint {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.ok {
+  color: var(--color-success);
+  font-size: 13px;
+}
+
+.wait {
+  color: var(--color-warning);
+  font-size: 13px;
+}
+
+.pkg {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.pkg > span {
+  flex: 1;
+}
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.confirmBtn {
+  margin-top: var(--space-2);
+}
+
+.currency {
+  flex: none !important;
+  width: 92px;
+}
+

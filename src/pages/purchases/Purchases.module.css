@@ -125,3 +125,124 @@
 .main small.warn {
   color: var(--color-warning);
 }
+
+/* 상태 드롭다운 — '상태 전체 0' 이 잘리지 않게 */
+.statusSel {
+  flex: none;
+  min-width: 140px;
+}
+
+/* ---------- 모바일 (≤ 768px) — 표 대신 행 목록 · 글자 탭 + 필터 시트 (플레이북 'AGC 모바일 화면 설계' §4.6) ---------- */
+.mFilters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ttabs {
+  display: flex;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ttab {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-sub);
+  font: inherit;
+  font-size: var(--font-sm);
+  cursor: pointer;
+}
+
+.ttab small {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.ttabOn {
+  color: var(--color-text);
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 var(--color-text);
+}
+
+.st {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.st i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-text-weak);
+}
+
+.st[data-tone='primary'] i {
+  background: var(--color-primary);
+}
+
+.st[data-tone='success'] i {
+  background: var(--color-success);
+}
+
+.st[data-tone='danger'] i {
+  background: var(--color-danger);
+}
+
+.st[data-tone='warning'] i {
+  background: var(--color-warning);
+}
+
+@media (max-width: 768px) {
+  .head {
+    display: none;
+  }
+
+  .row {
+    grid-template-areas:
+      'a c'
+      'b e';
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px var(--space-3);
+    min-height: 64px;
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-sm);
+  }
+
+  .row > :nth-child(1) {
+    grid-area: a;
+  }
+
+  .row > :nth-child(2) {
+    grid-area: b;
+  }
+
+  .row > :nth-child(3) {
+    grid-area: c;
+    align-items: flex-end;
+  }
+
+  .row > :nth-child(4) {
+    display: none;
+  }
+
+  .row > :nth-child(5) {
+    display: flex;
+    grid-area: e;
+  }
+
+  /* 상태 칸의 송장 줄 · 결제 칸의 위안 줄은 모바일에서 뺀다 (상세는 눌러서) */
+  .row > :nth-child(3) small,
+  .row > :nth-child(5) > span {
+    display: none;
+  }
+}

@@ -15,7 +15,10 @@ import {
   PAY_METHOD,
   TRANSPORTS,
 } from '@/constants/orderConst'
+import { useMobile } from '@/hooks/useMobile'
+import m from '../orders/FormMobile.module.css'
 import styles from '../orders/Orders.module.css'
+import JiyunFormMobile from './JiyunFormMobile'
 
 // ISO → <input type="datetime-local"> 값 (KST)
 const toLocal = (iso) =>
@@ -69,6 +72,7 @@ export default function JiyunFormPage() {
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const mobile = useMobile()
 
   useEffect(() => {
     const load = async () => {
@@ -167,7 +171,7 @@ export default function JiyunFormPage() {
         title={false}
         fill
         footer={
-          <div className={styles.formFoot}>
+          <div className={mobile ? `sticky-cta ${m.foot}` : styles.formFoot}>
             {error && <p className="form-error">{error}</p>}
             <button
               className="btn-primary btn-md btn-full"
@@ -179,6 +183,10 @@ export default function JiyunFormPage() {
           </div>
         }
       >
+        {mobile ? (
+          <JiyunFormMobile {...{ form, setForm, set, setStatus, nowLocal, order, editing }} />
+        ) : (
+          <>
         <div className={styles.fGroup}>
           <h3 className={styles.fTitle}>고객 주문</h3>
           <p className={styles.linkText}>{order ? orderLabel(order) : '불러오는 중…'}</p>
@@ -456,6 +464,8 @@ export default function JiyunFormPage() {
             <input id="memo" className="form-input" value={form.memo} onChange={set('memo')} />
           </div>
         </div>
+          </>
+        )}
       </Section>
     </form>
   )
