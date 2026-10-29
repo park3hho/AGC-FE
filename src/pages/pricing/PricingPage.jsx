@@ -177,7 +177,10 @@ function PriceBar({ parts, total, loss, wide }) {
 
 const EMPTY_MSG = { text: '', error: false }
 
-// 한 번에 맞추기 — 판매처마다 쓰는 방식 (자사몰은 '목표 차익'일 때 목표 마진 8%로, 2026-10-29 사용자 결정)
+// 목표 차익의 마진 바닥 — 판매처마다 (쿠팡·네이버 5%, 자사몰 8%)
+const floorPct = (p) => p.minMarginPct ?? PROFIT_MIN_MARGIN_PCT
+const floorText = (list) => list.map((p) => `${p.label} ${floorPct(p)}%`).join(' · ')
+// 한 번에 맞추기 — 판매처마다 쓰는 방식 (지금은 모두 같은 방식, bulkMode 를 두면 그 판매처만 다르게)
 const modeFor = (p, mode) => (mode === 'profit' && p.bulkMode ? p.bulkMode : mode)
 const initialFor = (p, m) => (m.key === 'profit' && p.bulkMode ? p.bulkInitial : m.initial)
 const unitFor = (p, mode) => BULK_MODES.find((m) => m.key === modeFor(p, mode)).unit
@@ -376,7 +379,7 @@ export default function PricingPage() {
               : salePriceForMargin(o, amount, st.settings)
           // 목표 차익: 마진이 바닥(5%) 아래면 바닥 마진이 되는 판매가로 올린다
           if (mode === 'profit' && price != null) {
-            const floor = salePriceForMargin(o, PROFIT_MIN_MARGIN_PCT, st.settings)
+            const floor = salePriceForMargin(o, floorPct(p), st.settings)
             if (floor != null && floor > price) {
               price = floor
               raised += 1
@@ -398,9 +401,7 @@ export default function PricingPage() {
       text: skipped
         ? `용량을 못 읽은 옵션 ${skipped}칸은 배송비를 몰라 그대로 뒀어요`
         : `${targets.map((p) => p.label).join('·')} 판매가를 바꿨어요${
-            raised
-              ? ` (마진 ${PROFIT_MIN_MARGIN_PCT}% 아래 ${raised}칸은 ${PROFIT_MIN_MARGIN_PCT}%로 올림)`
-              : ''
+            raised ? ` (마진 바닥 아래 ${raised}칸은 바닥까지 올림 — ${floorText(targets)})` : ''
           }. 저장해야 반영돼요`,
       error: false,
     })
@@ -973,7 +974,7 @@ export default function PricingPage() {
                   bulk.mode === 'sale'
                     ? '모든 옵션에 같은 판매가 · 비운 판매처는 그대로'
                     : bulk.mode === 'profit'
-                      ? `100원 단위로 올림 · 마진이 ${PROFIT_MIN_MARGIN_PCT}% 아래면 ${PROFIT_MIN_MARGIN_PCT}%로 · 비운 판매처는 그대로`
+                      ? `100원 단위로 올림 · 마진 바닥(${floorText(platforms)}) 아래면 바닥까지 · 비운 판매처는 그대로`
                       : '100원 단위로 올림 · 비운 판매처는 그대로'
                 }
               >
