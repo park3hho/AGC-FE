@@ -657,6 +657,10 @@ export default function PricingPage() {
                   </span>
                 )}
                 {warn && <span className={styles.optWarn}>{warn}</span>}
+                <div
+                  className={styles.mPRows}
+                  style={{ gridTemplateColumns: `repeat(${platforms.length}, minmax(0, 1fr))` }}
+                >
                 {platforms.map((p) => {
                   const cs = states[p.key]
                   const r = cs.results[o.id]
@@ -706,6 +710,7 @@ export default function PricingPage() {
                     </div>
                   )
                 })}
+                </div>
               </div>
             )
           })}
