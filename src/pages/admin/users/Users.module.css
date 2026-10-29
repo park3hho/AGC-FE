@@ -23,12 +23,13 @@
   }
 }
 
+/* 행 높이 고정 64px — 버튼 있는 행 · 없는 행(나) 높이가 달라 한 페이지 행 수가 흔들리며 끝없이 다시 그려지던 문제 (React #185, 2026-10-30 375×667) */
 .row {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 56px;
-  padding: var(--space-3) 0;
+  height: 64px;
+  padding: 0;
   border-bottom: 1px solid var(--color-border);
 }
 
