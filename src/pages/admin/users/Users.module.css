@@ -47,20 +47,31 @@
   color: var(--color-text-sub);
 }
 
+/* 상태 — 배지 대신 점 + 글자 (DESIGN.md §4.2-9, 2026-10-30 모바일 설계 §4.16) */
 .active,
 .inactive {
-  padding: 2px var(--space-2);
-  border-radius: var(--radius);
+  flex: none;
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.active::before,
+.inactive::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 1px;
 }
 
 .active {
-  background: var(--color-success-bg);
   color: var(--color-success);
 }
 
 .inactive {
-  background: var(--color-bg-sub);
-  color: var(--color-text-sub);
+  color: var(--color-text-weak);
 }

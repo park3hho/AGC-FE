@@ -8,7 +8,8 @@ import styles from './PageHeader.module.css'
 // 화면 머리 — 제목 · 한 줄 설명 · 오른쪽 버튼. 섹션이 아니라 화면 이름 자리라 이름표를 달지 않는다.
 export default function PageHeader({
   title, // string: 화면 제목
-  sub, // ReactNode?: 제목 아래 한 줄 설명
+  sub, // ReactNode?: 제목 아래 한 줄 설명 — 모바일에서는 숨긴다
+  subKeep, // boolean?: 모바일에서도 sub 를 보인다 (sub 가 화면 탭일 때 — 예: 배송 ShippingTabs)
   back, // boolean?: 이전 버튼 표시
   action, // ReactNode?: 오른쪽 영역
   info, // { title, updated?, source?, sections }?: 제목 옆 ⓘ — 누르면 이 화면 작업 규칙 패널 (components/InfoPanel)
@@ -44,7 +45,7 @@ export default function PageHeader({
             </button>
           )}
         </h1>
-        {sub && <p className={styles.sub}>{sub}</p>}
+        {sub && <div className={`${styles.sub} ${subKeep ? styles.subKeep : ''}`}>{sub}</div>}
       </div>
       {action && <div className={styles.action}>{action}</div>}
       {infoOpen && <InfoPanel {...info} onClose={() => setInfoOpen(false)} />}

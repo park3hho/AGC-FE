@@ -1,78 +1,62 @@
-/* 더보기 › 메뉴 — 묶음별 타일 격자 (한 화면에 들어가게) */
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
+/* 더보기 › 메뉴 — 묶음별 한 줄 메뉴 (2026-10-30 모바일 설계 §4.1) */
 .groupLabel {
+  padding: var(--space-3) var(--pane-pad-x) var(--space-1);
   color: var(--color-text-weak);
   font-size: 12px;
   font-weight: 600;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-2);
-}
-
-.tile {
+.row {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
-  min-width: 0;
-  padding: var(--space-1);
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-1) var(--pane-pad-x);
   border: 0;
-  border-radius: var(--radius);
+  border-bottom: 1px solid var(--color-border);
   background: none;
-  color: var(--color-text);
+  color: var(--color-text-sub);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-.tile:active:not(:disabled) {
+.row:active:not(:disabled) {
   background: var(--color-bg-sub);
 }
 
-.tile:disabled {
+.row:disabled {
   color: var(--color-text-weak);
   cursor: default;
 }
 
-.icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius);
-  background: var(--color-bg-sub);
-  color: var(--color-text-sub);
-}
-
 .label {
-  max-width: 100%;
-  font-size: 13px;
-  font-weight: 600;
-  text-align: center;
-  word-break: keep-all;
-}
-
-.soon {
-  font-size: 11px;
-}
-
-/* 더보기 › 내 계정 */
-.me {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  font-size: var(--font-sm);
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--color-text);
+  font-size: var(--font-md);
+  font-weight: 600;
+}
+
+.label small {
+  overflow: hidden;
+  color: var(--color-text-weak);
+  font-size: 12px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.go {
+  color: var(--color-text-weak);
+  font-size: 18px;
 }
 
 /* 개발자 모드 전용 메뉴 — 보라색 글씨 */
 .dev,
-.dev .icon {
+.dev .label {
   color: var(--color-dev);
 }

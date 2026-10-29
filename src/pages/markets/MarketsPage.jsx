@@ -1,5 +1,6 @@
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
+import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
 import { MARKETS } from '@/constants/marketConst'
 import styles from './Markets.module.css'
 
@@ -7,13 +8,23 @@ const host = (url) => url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
 // 설정 › 판매처 — 섹션: 마켓마다 하나 (네이버 스마트스토어 · 쿠팡). 구매자 화면 · 관리 센터 · 바로가기 링크
 export default function MarketsPage() {
+  // 모바일 — 마켓마다 탭 하나 (2026-10-30 모바일 설계 §4.14)
+  const tabs = useSectionTabs(MARKETS.map((m) => ({ id: m.key, name: m.name })))
   return (
     <main className="page-flat">
       <PageHeader title="판매처" sub="구매자가 보는 곳 · 내가 관리하는 곳" />
+      <SectionTabs {...tabs} />
 
       <div className={styles.grid}>
         {MARKETS.map((m) => (
-          <Section key={m.key} name={m.name} id={m.key} sub={m.storeName}>
+          <Section
+            key={m.key}
+            name={m.name}
+            id={m.key}
+            sub={m.storeName}
+            className={tabs.hide(m.key)}
+            fill={tabs.active(m.key) || undefined}
+          >
             <dl className={styles.kv}>
               <dt>구매자 화면</dt>
               <dd>

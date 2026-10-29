@@ -83,18 +83,19 @@ export default function ProductDetailPage() {
 
   const options = pricing?.options || []
   // 모바일 탭 글자는 짧게 (한 줄에 들어가게) — 섹션 이름(부르는 법)은 Section name 그대로
-  const tabs = useSectionTabs(
-    [
-      { id: 'photos', name: '사진' },
-      { id: 'info', name: '정보' },
-      { id: 'product-info', name: '제품정보' },
-      { id: 'price-summary', name: '판매가' },
-      options.length > 0 && { id: 'options', name: '옵션' },
-      { id: 'surveys', name: '조사' },
-    ].filter(Boolean),
-  )
-  // 데스크탑에서 남은 높이를 채우는 섹션 — 모바일은 지금 탭 하나만 채운다
-  const fillOf = (sectionId, desktop) => (tabs.mobile ? tabs.active(sectionId) : desktop)
+  // 2026-10-30 모바일 설계 §4.9: 탭 6개 → 4개 (정보 = 기본 정보 + 제품 정보, 가격 = 판매가 요약 + 옵션)
+  const tabs = useSectionTabs([
+    { id: 'photos', name: '사진' },
+    { id: 'info', name: '정보' },
+    { id: 'price', name: '가격' },
+    { id: 'surveys', name: '조사' },
+  ])
+  const TAB_OF = { photos: 'photos', info: 'info', 'product-info': 'info', 'price-summary': 'price', options: 'price', surveys: 'surveys' }
+  const hideOf = (sectionId) => tabs.hide(TAB_OF[sectionId])
+  // 데스크탑에서 남은 높이를 채우는 섹션 — 모바일은 지금 탭에서 마지막 섹션 하나만 채운다 (정보 탭은 제품 정보, 가격 탭은 옵션 · 옵션이 없으면 판매가)
+  const MOBILE_FILL = { photos: true, 'product-info': true, options: true, 'price-summary': options.length === 0, surveys: true }
+  const fillOf = (sectionId, desktop) =>
+    tabs.mobile ? tabs.active(TAB_OF[sectionId]) && !!MOBILE_FILL[sectionId] : desktop
 
   useEffect(() => {
     setData(null)
@@ -206,7 +207,7 @@ export default function ProductDetailPage() {
             id="photos"
             title={false}
             fill={fillOf('photos', true) && 'stretch'}
-            className={tabs.hide('photos')}
+            className={hideOf('photos')}
           >
             {hero ? (
               <button type="button" className={styles.hero} onClick={() => setOpened(hero)}>
@@ -296,7 +297,7 @@ export default function ProductDetailPage() {
             name="기본 정보"
             id="info"
             fill={fillOf('info', false)}
-            className={tabs.hide('info')}
+            className={hideOf('info')}
           >
             <dl className={styles.rows}>
               <dt>제품 코드</dt>
@@ -325,7 +326,7 @@ export default function ProductDetailPage() {
             product={product}
             onSaved={(p) => setData({ ...data, product: p })}
             fill={fillOf('product-info', false)}
-            className={tabs.hide('product-info')}
+            className={hideOf('product-info')}
           />
           <Section
             name="가격조사"
@@ -333,7 +334,7 @@ export default function ProductDetailPage() {
             sub={`${surveys.length}건`}
             flush
             fill={fillOf('surveys', false)}
-            className={tabs.hide('surveys')}
+            className={hideOf('surveys')}
             bodyRef={surveyRef}
             action={
               <button
@@ -378,7 +379,7 @@ export default function ProductDetailPage() {
             name="판매가 요약"
             id="price-summary"
             fill={fillOf('price-summary', false)}
-            className={tabs.hide('price-summary')}
+            className={hideOf('price-summary')}
           >
             {pricing === undefined && <p className={styles.hint}>불러오는 중…</p>}
             {pricing === null && <p className={styles.hint}>판매가를 불러오지 못했어요</p>}
@@ -416,7 +417,7 @@ export default function ProductDetailPage() {
               sub={`${options.length}종류 · 기준 조사 ${pricing.survey.code}`}
               flush
               fill={fillOf('options', true)}
-              className={tabs.hide('options')}
+              className={hideOf('options')}
               bodyRef={optionRef}
               footer={
                 <Pager

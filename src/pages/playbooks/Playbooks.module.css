@@ -162,3 +162,15 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 모바일 — 코드 블록은 줄바꿈 (가로로 밀지 않게). 표는 .md-table 칸 안에서만 가로로 민다 (문서라서 예외, 모바일 설계 §4.15) */
+@media (max-width: 768px) {
+  .doc :global(pre) {
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .doc :global(code) {
+    word-break: break-all;
+  }
+}

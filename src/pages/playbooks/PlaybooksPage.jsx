@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
+import { useMobile } from '@/hooks/useMobile'
 import { PLAYBOOKS } from '@/playbooks'
 import { renderMarkdown } from '@/utils/markdown'
 import styles from './Playbooks.module.css'
@@ -11,13 +12,24 @@ import styles from './Playbooks.module.css'
 //   문서는 src/playbooks/*.md (코드와 같이 커밋). 메뉴는 개발자 모드에서만 보인다 (menuConst dev: true)
 export default function PlaybooksPage() {
   const [params, setParams] = useSearchParams()
-  const current = PLAYBOOKS.find((p) => p.key === params.get('doc')) || PLAYBOOKS[0]
+  const navigate = useNavigate()
+  const mobile = useMobile()
+  const picked = PLAYBOOKS.find((p) => p.key === params.get('doc'))
+  const current = picked || PLAYBOOKS[0]
   const html = useMemo(() => (current ? renderMarkdown(current.text) : ''), [current])
+  // 모바일 — 목록 화면 / 본문 화면을 나눈다 (?doc 있으면 본문, 뒤로가면 목록. 2026-10-30 모바일 설계 §4.15)
+  const showList = !mobile || !picked
+  const showBody = !mobile || !!picked
 
   return (
     <main className="page-flat">
-      <PageHeader title="플레이북" sub="앞으로 같은 방식으로 일하기 위한 문서 · 개발자 전용" />
+      {mobile && picked ? (
+        <PageHeader title={picked.title} back />
+      ) : (
+        <PageHeader title="플레이북" sub="앞으로 같은 방식으로 일하기 위한 문서 · 개발자 전용" />
+      )}
       <div className={`fit-row ${styles.layout}`}>
+        {showList && (
         <Section name="목록" id="playbook-list" sub={`${PLAYBOOKS.length}개`} flush fill>
           <ul className={styles.list}>
             {PLAYBOOKS.map((p) => (
@@ -25,7 +37,7 @@ export default function PlaybooksPage() {
                 <button
                   type="button"
                   className={p.key === current?.key ? styles.on : undefined}
-                  onClick={() => setParams({ doc: p.key })}
+                  onClick={() => (mobile ? navigate(`?doc=${p.key}`) : setParams({ doc: p.key }))}
                 >
                   <b>{p.title}</b>
                   <span>{p.key}.md</span>
@@ -34,13 +46,21 @@ export default function PlaybooksPage() {
             ))}
           </ul>
         </Section>
-        <Section name="본문" id="playbook-body" title={current?.title || '본문'} fill="stretch">
+        )}
+        {showBody && (
+        <Section
+          name="본문"
+          id="playbook-body"
+          title={mobile ? false : current?.title || '본문'}
+          fill="stretch"
+        >
           {current ? (
             <article className={styles.doc} dangerouslySetInnerHTML={{ __html: html }} />
           ) : (
             <p className={styles.empty}>문서가 없어요. src/playbooks 에 .md 를 넣으면 여기에 보여요.</p>
           )}
         </Section>
+        )}
       </div>
     </main>
   )

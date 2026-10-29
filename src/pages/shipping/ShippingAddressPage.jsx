@@ -5,6 +5,7 @@ import { getShippingAddresses } from '@/api/shippingAddress'
 import Badge from '@/components/Badge'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
+import SectionTabs, { useSectionTabs } from '@/components/common/SectionTabs'
 import { FEATURE, hasFeature } from '@/constants/permissions'
 import { ADDRESS_USES } from '@/constants/shippingConst'
 import { useAuth } from '@/hooks/useAuth'
@@ -46,12 +47,21 @@ export default function ShippingAddressPage() {
 
   const loaded = address !== undefined
   const a = address
+  // 모바일 — 한 화면 한 섹션 (2026-10-30 모바일 설계 §4.14: 본문 비상 스크롤 없애기)
+  const tabs = useSectionTabs(
+    [
+      { id: 'check', name: '점검' },
+      a?.overseas && { id: 'route', name: '배송 경로' },
+      { id: 'address', name: '주소' },
+    ].filter(Boolean),
+  )
 
   return (
     <main className="page-flat">
       <PageHeader
         title="배송"
         sub={<ShippingTabs />}
+        subKeep
         back
         action={
           canEdit &&
@@ -66,9 +76,13 @@ export default function ShippingAddressPage() {
         }
       />
 
+      <SectionTabs {...tabs} />
+
       <Section
         name="구매대행 점검"
         id="check"
+        className={tabs.hide('check')}
+        fill={tabs.active('check') || undefined}
         title="구매대행 점검"
         sub="상품 등록 전에 맞춰 둘 것"
       >
@@ -89,6 +103,8 @@ export default function ShippingAddressPage() {
         <Section
           name="배송 경로"
           id="route"
+          className={tabs.hide('route')}
+          fill={tabs.active('route') || undefined}
           title="배송 경로"
           sub="마켓 송장 = 국내 택배사 + 국내 송장번호"
           action={
@@ -133,7 +149,14 @@ export default function ShippingAddressPage() {
         </Section>
       )}
 
-      <Section name="주소" id="address" title="출고지·반품지 주소" sub="둘 다 이 주소 하나" fill>
+      <Section
+        name="주소"
+        id="address"
+        title="출고지·반품지 주소"
+        sub="둘 다 이 주소 하나"
+        className={tabs.hide('address')}
+        fill
+      >
         {loaded && !a && <p className={styles.empty}>아직 주소가 없어요</p>}
         {a && (
           <div className={styles.body}>

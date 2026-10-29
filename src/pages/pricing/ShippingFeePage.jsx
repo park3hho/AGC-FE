@@ -40,7 +40,7 @@ export default function ShippingFeePage() {
   if (error) {
     return (
       <main className="page-flat">
-        <PageHeader title="배송" sub={<ShippingTabs />} back />
+        <PageHeader title="배송" sub={<ShippingTabs />} subKeep back />
         <p className="form-error">{error}</p>
       </main>
     )
@@ -57,7 +57,7 @@ export default function ShippingFeePage() {
 
   return (
     <main className="page-flat">
-      <PageHeader title="배송" sub={<ShippingTabs />} back />
+      <PageHeader title="배송" sub={<ShippingTabs />} subKeep back />
       <SectionTabs {...tabs} />
 
       {/* 요금 규칙 + 현재 환율 */}
