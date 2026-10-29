@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>AGC 모바일 화면 설계 — 목업 (2026-10-30)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  /* AGC 기본 테마 토큰을 흉내 낸 목업 (실제 값은 src/styles/variables.css) */
+  :root {
+    --p: #3182f6; --p-bg: #e8f3ff; --t: #191f28; --t2: #4e5968; --t3: #8b95a1;
+    --bd: #e5e8eb; --bg: #fff; --bg2: #f9fafb; --app: #f2f4f6;
+    --ok: #0a7a3e; --warn: #c27c00; --bad: #e5333d; --nv: #03c75a; --cp: #e52528; --shop: #191f28;
+    --r: 2px;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #d9dde2; color: var(--t); padding: 24px; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .lead { color: var(--t2); font-size: 13px; margin-bottom: 20px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 28px; }
+  .item { width: 375px; }
+  .cap { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .cap small { font-weight: 400; color: var(--t2); display: block; margin-top: 2px; line-height: 1.4; }
+  .phone { width: 375px; height: 720px; background: var(--bg); border: 1px solid #b8bec6; display: flex; flex-direction: column; overflow: hidden; position: relative; font-size: 14px; }
+  /* 위쪽 바 44px — 모바일: 뒤로 + 화면 이름 + 오른쪽 한 칸 */
+  .top { height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--bd); }
+  .top b { font-size: 16px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top .back { width: 32px; height: 32px; display: grid; place-items: center; font-size: 18px; }
+  .top .fx { font-size: 12px; color: var(--t2); }
+  .top .ic { width: 32px; height: 32px; display: grid; place-items: center; color: var(--t2); }
+  .body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .scroll { flex: 1; min-height: 0; overflow: hidden; }
+  /* 아래 탭 56px */
+  .tabbar { height: 56px; flex: none; border-top: 1px solid var(--bd); display: grid; grid-template-columns: repeat(5, 1fr); }
+  .tabbar div { display: grid; justify-items: center; align-content: center; gap: 2px; font-size: 11px; color: var(--t3); position: relative; }
+  .tabbar div i { font-style: normal; font-size: 18px; line-height: 1; }
+  .tabbar .on { color: var(--p); font-weight: 700; }
+  .tabbar em { position: absolute; top: 5px; left: 52%; background: var(--bad); color: #fff; font-style: normal; font-size: 10px; font-weight: 700; padding: 0 4px; border-radius: 8px; line-height: 15px; }
+  /* 글자 탭 (밑줄) */
+  .ttabs { display: flex; gap: 18px; padding: 0 16px; height: 42px; align-items: center; border-bottom: 1px solid var(--bd); flex: none; }
+  .ttabs span { font-size: 14px; color: var(--t2); height: 42px; display: flex; align-items: center; gap: 3px; }
+  .ttabs span small { color: var(--t3); font-size: 12px; }
+  .ttabs .on { color: var(--t); font-weight: 700; box-shadow: inset 0 -2px 0 var(--t); }
+  .search { display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--bd); flex: none; }
+  .search input { flex: 1; height: 40px; border: 1px solid var(--bd); border-radius: var(--r); padding: 0 10px; font: inherit; font-size: 14px; color: var(--t3); }
+  .search .f { height: 40px; padding: 0 12px; border: 1px solid var(--bd); border-radius: var(--r); display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--t2); }
+  .search .f b { color: var(--p); }
+  /* 행 목록 — 56px+ */
+  .row { display: flex; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--bd); align-items: center; min-height: 64px; }
+  .row .th { width: 44px; height: 44px; background: var(--bg2); border: 1px solid var(--bd); flex: none; }
+  .row .m { flex: 1; min-width: 0; }
+  .row .m b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .m span { display: block; font-size: 12px; color: var(--t2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .r { text-align: right; font-size: 12px; color: var(--t2); flex: none; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: 1px; }
+  .mk { width: 22px; height: 22px; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 800; border-radius: var(--r); flex: none; }
+  .next { color: var(--p); font-weight: 700; font-size: 12px; }
+  .pager { height: 44px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-top: 1px solid var(--bd); font-size: 13px; color: var(--t2); }
+  .pager b { color: var(--t); }
+  /* 고정 버튼 줄 */
+  .cta { flex: none; border-top: 1px solid var(--bd); padding: 8px 12px; display: flex; gap: 8px; background: var(--bg); }
+  .btn { height: 48px; border-radius: var(--r); display: grid; place-items: center; font-weight: 700; font-size: 15px; flex: 1; }
+  .btn.p { background: var(--p); color: #fff; }
+  .btn.s { background: var(--app); color: var(--t); }
+  .btn.n { flex: none; padding: 0 16px; }
+  .sec { padding: 12px 16px; border-bottom: 1px solid var(--bd); }
+  .sec h3 { font-size: 13px; color: var(--t2); font-weight: 600; margin-bottom: 8px; }
+  .kv { display: grid; grid-template-columns: 92px 1fr auto; gap: 8px 8px; font-size: 14px; align-items: center; }
+  .kv dt { color: var(--t2); font-size: 13px; }
+  .kv .cp { font-size: 12px; color: var(--p); border: 1px solid var(--bd); height: 28px; padding: 0 8px; display: grid; place-items: center; border-radius: var(--r); }
+  .todo { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--bd); }
+  .todo .n { font-size: 22px; font-weight: 800; width: 44px; text-align: center; }
+  .todo .m { flex: 1; }
+  .todo .m b { display: block; font-size: 15px; }
+  .todo .m span { font-size: 12px; color: var(--t2); }
+  .todo .go { color: var(--t3); font-size: 18px; }
+  /* 진행 단계 (11칸 → 모바일 6칸) */
+  .steps { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; margin: 4px 0 6px; }
+  .steps i { height: 6px; background: var(--bd); }
+  .steps i.on { background: var(--p); }
+  .steps i.now { background: #9fc5fb; }
+  .stepl { display: grid; grid-template-columns: repeat(6, 1fr); font-size: 10px; color: var(--t3); text-align: center; }
+  .stepl .on { color: var(--t); font-weight: 700; }
+  .nextbox { margin: 12px 16px; border: 1px solid var(--p); background: var(--p-bg); padding: 12px; border-radius: var(--r); }
+  .nextbox small { color: var(--p); font-weight: 700; font-size: 12px; }
+  .nextbox b { display: block; font-size: 15px; margin: 4px 0 2px; }
+  .nextbox span { font-size: 12px; color: var(--t2); }
+  .ev { display: flex; gap: 10px; padding: 9px 16px; border-bottom: 1px solid var(--bd); font-size: 13px; }
+  .ev time { color: var(--t3); width: 74px; flex: none; font-size: 12px; }
+  /* 폼 — 한 줄 한 칸, 라벨 위 */
+  .fg { padding: 10px 16px 0; }
+  .fg label { display: block; font-size: 13px; color: var(--t2); margin-bottom: 6px; }
+  .fg .in { height: 44px; border: 1px solid var(--bd); border-radius: var(--r); display: flex; align-items: center; padding: 0 12px; font-size: 15px; color: var(--t); gap: 8px; }
+  .fg .in.ph { color: var(--t3); }
+  .fg .in .u { margin-left: auto; color: var(--t3); font-size: 13px; }
+  .fg .in .pst { margin-left: auto; color: var(--p); font-size: 13px; font-weight: 700; }
+  .seg { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--bd); border-radius: var(--r); height: 40px; }
+  .seg span { display: grid; place-items: center; font-size: 13px; color: var(--t2); }
+  .seg span + span { box-shadow: inset 1px 0 0 var(--bd); }
+  .seg .on { background: var(--t); color: #fff; font-weight: 700; }
+  .fold { margin: 12px 16px 0; padding: 12px 0; border-top: 1px solid var(--bd); font-size: 14px; display: flex; justify-content: space-between; color: var(--t2); }
+  .ordref { margin: 0 16px; padding: 10px 12px; background: var(--bg2); border: 1px solid var(--bd); font-size: 12px; color: var(--t2); line-height: 1.5; }
+  .ordref b { color: var(--t); font-size: 13px; }
+  /* 상세페이지 미리보기 */
+  .pv { flex: 1; min-height: 0; overflow: hidden; background: #eef1f4; display: flex; justify-content: center; }
+  .pv .pg { width: 343px; background: #fff; }
+  .pv .hero { height: 250px; background: linear-gradient(160deg, #fde7c8, #f8b26a); display: grid; place-items: center; font-weight: 800; font-size: 22px; color: #6b3d0a; }
+  .pv .pt { padding: 16px; }
+  .pv .pt small { color: #3182f6; font-weight: 700; font-size: 11px; letter-spacing: .1em; }
+  .pv .pt b { display: block; font-size: 19px; margin: 4px 0 10px; }
+  .pv .pt p { font-size: 12px; color: var(--t2); line-height: 1.6; }
+  .prog { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--bd); font-size: 12px; color: var(--t2); }
+  .prog b { color: var(--warn); }
+  /* 가격 카드 */
+  .opt { padding: 12px 16px; border-bottom: 1px solid var(--bd); }
+  .opt .h { display: flex; justify-content: space-between; font-size: 14px; }
+  .opt .h span { color: var(--t2); font-size: 12px; }
+  .opt .pr { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  .opt .pr .in { flex: 1; height: 44px; border: 1px solid var(--bd); border-radius: var(--r); display: flex; align-items: center; padding: 0 12px; font-size: 16px; font-weight: 700; }
+  .opt .pr .in.chg { border-color: var(--p); }
+  .opt .pr .res { width: 112px; text-align: right; font-size: 12px; color: var(--t2); line-height: 1.5; }
+  .opt .pr .res b { color: var(--ok); font-size: 14px; }
+  .bar { height: 6px; display: flex; margin-top: 8px; }
+  .bar i:nth-child(1) { background: #7da7d9; } .bar i:nth-child(2) { background: #b6cbe3; } .bar i:nth-child(3) { background: #e3c27d; } .bar i:nth-child(4) { background: #5fbf8c; }
+  /* 바텀시트 */
+  .dim { position: absolute; inset: 0; background: rgba(0, 0, 0, .45); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; padding: 8px 16px 12px; }
+  .sheet .grab { width: 36px; height: 4px; background: var(--bd); margin: 0 auto 10px; border-radius: 2px; }
+  .sheet h4 { font-size: 16px; margin-bottom: 8px; }
+  .sheet .sel { height: 44px; border: 1px solid var(--bd); border-radius: var(--r); display: flex; align-items: center; justify-content: space-between; padding: 0 12px; margin-bottom: 8px; font-size: 14px; }
+  .sheet .sel span { color: var(--t2); font-size: 13px; }
+  .note { margin-top: 8px; font-size: 12px; color: var(--t2); line-height: 1.5; }
+  .note li { margin-left: 16px; }
+</style>
+</head>
+<body>
+<h1>AGC 모바일 화면 설계 — 목업</h1>
+<p class="lead">375×720 기준 · 기본 테마 · 값은 예시. 설계 설명은 src/playbooks/agc-mobile-design.md (AGC › 설정 › 플레이북). 2026-10-30</p>
+
+<div class="grid">
+
+<!-- M1 홈 -->
+<div class="item">
+  <div class="cap">M1 · 홈 (할 일 먼저)<small>위쪽 바는 화면 이름만 · 아래 탭 새 구성(홈·주문·디자인·제품·더보기) + 빨간 숫자</small></div>
+  <div class="phone">
+    <div class="top"><b>홈</b><span class="fx">1위안 201.37원</span><span class="ic">⋯</span></div>
+    <div class="body">
+      <div class="ttabs"><span class="on">할 일 <small>4</small></span><span>현황</span><span>진행 단계</span></div>
+      <div class="scroll">
+        <div class="todo"><span class="n" style="color:var(--bad)">2</span><div class="m"><b>새 주문 발주확인</b><span>네이버 1 · 쿠팡 1 · 오늘 09:12 수집</span></div><span class="go">›</span></div>
+        <div class="todo"><span class="n">1</span><div class="m"><b>타오바오 구매 기록하기</b><span>발주확인 끝, 구매기록 없음 · OR-261030-0001</span></div><span class="go">›</span></div>
+        <div class="todo"><span class="n">3</span><div class="m"><b>판매처 발송 · 입고 확인</b><span>중국 운송장 없음 2 · 입고 대기 1</span></div><span class="go">›</span></div>
+        <div class="todo"><span class="n" style="color:var(--warn)">106</span><div class="m"><b>상세페이지 검수</b><span>미리보기 보고 확인 · 다음</span></div><span class="go">›</span></div>
+        <div class="sec" style="border-bottom:0"><h3>오늘</h3>
+          <dl class="kv"><dt>새 주문</dt><dd>2건 · 51,900원</dd><dd></dd><dt>클레임</dt><dd style="color:var(--bad)">● 취소 요청 1</dd><dd></dd><dt>마지막 수집</dt><dd>09:12 자동 (5분마다)</dd><dd></dd></dl>
+        </div>
+      </div>
+    </div>
+    <div class="tabbar"><div class="on"><i>⌂</i>홈</div><div><i>▤</i>주문<em>2</em></div><div><i>✎</i>디자인<em style="background:var(--warn)">106</em></div><div><i>▣</i>제품</div><div><i>⋯</i>더보기</div></div>
+  </div>
+</div>
+
+<!-- M2 주문 목록 -->
+<div class="item">
+  <div class="cap">M2 · 주문 목록<small>목록만 한 화면 · 행마다 '다음 할 일' · 위쪽 바 오른쪽 '가져오기'</small></div>
+  <div class="phone">
+    <div class="top"><b>주문</b><span class="ic" style="width:auto;color:var(--p);font-weight:700">↻ 가져오기</span></div>
+    <div class="body">
+      <div class="ttabs"><span class="on">접수 <small>2</small></span><span>처리 <small>5</small></span><span>완료 <small>12</small></span><span>전체</span></div>
+      <div class="search"><input value="코드 · 주문번호 · 받는 분" /><span class="f">필터 <b>1</b></span></div>
+      <div class="scroll">
+        <div class="row"><span class="mk" style="background:var(--nv)">N</span><div class="m"><b>OR-261030-0002 · 헤이티 경과차 자몽 450ml×15</b><span>정*연 · ×1 · 10-30 09:05 · <span style="color:var(--ok)">● 통관부호 일치</span></span><span class="next">다음: 발주확인 보내기</span></div></div>
+        <div class="row"><span class="mk" style="background:var(--cp)">C</span><div class="m"><b>OR-261030-0001 · 북빙양 귤맛 330ml×6</b><span>김*수 · ×2 · 10-30 08:41 · <span style="color:var(--bad)">● 통관부호 불일치</span></span><span class="next" style="color:var(--bad)">다음: 고객에게 통관부호 확인</span></div></div>
+        <div class="row"><span class="mk" style="background:var(--shop)">S</span><div class="m"><b>OR-261029-0004 · 농부산천 NFC 오렌지 300ml×12</b><span>박*호 · ×1 · 10-29 22:10 · <span style="color:var(--ok)">● 일치</span></span><span class="next">다음: 타오바오 구매 기록</span></div></div>
+        <div class="row"><span class="mk" style="background:var(--nv)">N</span><div class="m"><b>OR-261029-0003 · 아삼 밀크티 500ml×15</b><span>이*진 · ×1 · 10-29 19:25 · <span style="color:var(--bad)">● 취소 요청</span></span><span class="next" style="color:var(--bad)">다음: 클레임 처리</span></div></div>
+      </div>
+      <div class="pager"><span>19건</span><span>이전 <b>1 / 4</b> 다음</span></div>
+    </div>
+    <div class="tabbar"><div><i>⌂</i>홈</div><div class="on"><i>▤</i>주문<em>2</em></div><div><i>✎</i>디자인</div><div><i>▣</i>제품</div><div><i>⋯</i>더보기</div></div>
+  </div>
+</div>
+
+<!-- M3 주문 상세 -->
+<div class="item">
+  <div class="cap">M3 · 주문 상세 (새 화면)<small>← 목록 · 진행 6칸 · '다음 할 일' 하나 · 탭 기록/금액/주문 정보 · 아래 고정 버튼</small></div>
+  <div class="phone">
+    <div class="top"><span class="back">←</span><b>OR-261030-0002</b><span class="ic">⋯</span></div>
+    <div class="body">
+      <div class="sec">
+        <div style="display:flex;gap:8px;align-items:center"><span class="mk" style="background:var(--nv)">N</span><b style="font-size:14px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">헤이티 경과차 자몽 철관음 450ml×15</b></div>
+        <div class="steps"><i class="on"></i><i class="now"></i><i></i><i></i><i></i><i></i></div>
+        <div class="stepl"><span class="on">접수</span><span class="on">발주확인</span><span>구매</span><span>창고</span><span>국제</span><span>배송</span></div>
+      </div>
+      <div class="nextbox"><small>다음 할 일</small><b>네이버에 발주확인 보내기</b><span>보내면 고객 화면이 상품준비중이 되어 즉시 취소가 막혀요. 그다음 타오바오 구매를 기록해요.</span></div>
+      <div class="ttabs"><span class="on">주문 정보</span><span>기록 <small>7</small></span><span>금액</span><span>원본</span></div>
+      <div class="scroll">
+        <div class="sec" style="border-bottom:0">
+          <dl class="kv">
+            <dt>받는 분</dt><dd>정*연</dd><dd class="cp">복사</dd>
+            <dt>통관용 전화</dt><dd>010-****-5821</dd><dd class="cp">복사</dd>
+            <dt>주소</dt><dd style="font-size:13px">(06236) 서울 강남구 테헤란로…</dd><dd class="cp">복사</dd>
+            <dt>통관부호</dt><dd><span style="color:var(--ok)">● 일치</span> P1234****56</dd><dd class="cp">복사</dd>
+            <dt>옵션 · 수량</dt><dd>자몽 철관음 × 1</dd><dd></dd>
+            <dt>타오바오</dt><dd style="color:var(--p)">喜茶官方旗舰店 ↗</dd><dd></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="cta"><span class="btn s n">⋯</span><span class="btn p">발주확인 보내기</span></div>
+  </div>
+</div>
+
+<!-- M4 타오바오 구매 추가 -->
+<div class="item">
+  <div class="cap">M4 · 타오바오 구매 기록 (폼)<small>한 줄 한 칸 · 붙여넣기 · 숫자 키패드 · 결제수단 한 줄 버튼 · 접는 칸</small></div>
+  <div class="phone">
+    <div class="top"><span class="back">←</span><b>타오바오 구매 기록</b></div>
+    <div class="body">
+      <div class="scroll" style="padding-top:10px">
+        <div class="ordref"><b>OR-261030-0002</b> · 네이버 · 정*연<br />살 것: 자몽 철관음 450ml×15 × 1 · 판매처 喜茶官方旗舰店</div>
+        <div class="fg"><label>타오바오 주문번호 · 필수</label><div class="in ph">3316…<span class="pst">붙여넣기</span></div></div>
+        <div class="fg"><label>결제 위안 (타오바오 표시 금액)</label><div class="in">96.50<span class="u">위안 ≈ 19,432원</span></div></div>
+        <div class="fg"><label>결제수단</label><div class="seg"><span class="on">카드</span><span>카카오페이</span><span>알리페이</span><span>기타</span></div></div>
+        <div class="fg"><label>구매 시각</label><div class="in">오늘 10:24 <span class="u">지금</span></div></div>
+        <div class="fold"><span>실제 청구 원화 · 중국 내 배송</span><span>펼치기 ⌄</span></div>
+      </div>
+    </div>
+    <div class="cta"><span class="btn p">구매 저장</span></div>
+  </div>
+</div>
+
+<!-- M5 디자인 검수 -->
+<div class="item">
+  <div class="cap">M5 · 디자인 (제품) — 모바일은 검수 모드<small>미리보기가 화면 전체 · 아래 수정 요청 / 확인 / 다음 · 편집은 탭으로 (짧은 글만)</small></div>
+  <div class="phone">
+    <div class="top"><span class="back">←</span><b>Aaaaapple NFC 사과주스</b><span class="ic">✎</span></div>
+    <div class="body">
+      <div class="prog"><span><b>● 검수 대기</b> · 확인 필요 0칸</span><span>검수 대기 106 중 3</span></div>
+      <div class="ttabs"><span class="on">미리보기</span><span>편집</span><span>기록</span></div>
+      <div class="pv"><div class="pg"><div class="hero">사과만 짜 낸 NFC</div><div class="pt"><small>POINT</small><b>이런 음료예요</b><p>사과를 그대로 짜서 물을 섞지 않은 착즙 주스예요. 한 병 300ml.</p></div></div></div>
+    </div>
+    <div class="cta"><span class="btn s n">수정 요청</span><span class="btn p">확인</span><span class="btn s n">다음 →</span></div>
+  </div>
+</div>
+
+<!-- M6 가격 책정 -->
+<div class="item">
+  <div class="cap">M6 · 가격 책정 (제품)<small>표 대신 옵션 카드 · 판매처는 글자 탭(쿠팡/네이버/자사몰) · 가로 스크롤 없음</small></div>
+  <div class="phone">
+    <div class="top"><span class="back">←</span><b>청바오 100% 주스</b><span class="ic">ⓘ</span></div>
+    <div class="body">
+      <div class="ttabs"><span class="on">쿠팡 <small>● 저장됨</small></span><span>네이버</span><span>자사몰</span><span>요약</span></div>
+      <div class="prog"><span>수수료 11.66% · 목표 차익 2,000원</span><span style="color:var(--p);font-weight:700">한 번에 맞추기</span></div>
+      <div class="scroll">
+        <div class="opt"><div class="h"><b>믹스 (복숭아·오렌지·사과)</b><span>원가 25,373원</span></div>
+          <div class="pr"><div class="in chg">31,200</div><div class="res">차익 <b>2,013</b><br />마진 6.5%</div></div>
+          <div class="bar"><i style="flex:81"></i><i style="flex:7"></i><i style="flex:5"></i><i style="flex:7"></i></div></div>
+        <div class="opt"><div class="h"><b>복숭아</b><span>원가 25,373원</span></div>
+          <div class="pr"><div class="in">31,000</div><div class="res">차익 <b>2,013</b><br />마진 6.5%</div></div>
+          <div class="bar"><i style="flex:81"></i><i style="flex:7"></i><i style="flex:5"></i><i style="flex:7"></i></div></div>
+        <div class="opt"><div class="h"><b>오렌지</b><span>원가 25,373원</span></div>
+          <div class="pr"><div class="in">31,000</div><div class="res">차익 <b>2,013</b><br />마진 6.5%</div></div>
+          <div class="bar"><i style="flex:81"></i><i style="flex:7"></i><i style="flex:5"></i><i style="flex:7"></i></div></div>
+      </div>
+    </div>
+    <div class="cta"><span class="btn s n">되돌리기</span><span class="btn p">저장</span><span class="btn s n">다음 →</span></div>
+  </div>
+</div>
+
+<!-- M7 목록 + 필터 시트 -->
+<div class="item">
+  <div class="cap">M7 · 목록 공통 + 필터 시트<small>검색 한 줄 + '필터' → 아래에서 올라오는 시트 · 행 64px · 상태는 점+글자</small></div>
+  <div class="phone">
+    <div class="top"><b>제품조사</b><span class="ic" style="width:auto;color:var(--p);font-weight:700">+ 추가</span></div>
+    <div class="body">
+      <div class="search"><input value="이름 · 코드 (중국어 가능)" /><span class="f">필터 <b>2</b></span></div>
+      <div class="scroll">
+        <div class="row"><span class="th"></span><div class="m"><b>헬로코코 청야자 재스민 330ml</b><span>PR-261029-0038 · 옵션 2 · ¥39.9~</span></div><span class="r"><span class="dot" style="background:var(--ok)"></span>완료</span></div>
+        <div class="row"><span class="th"></span><div class="m"><b>둥펑 부수이라 전해질 음료 555ml</b><span>PR-261029-0037 · 옵션 2 · ¥96~</span></div><span class="r"><span class="dot" style="background:var(--ok)"></span>완료</span></div>
+        <div class="row"><span class="th"></span><div class="m"><b>농부산천 젠자오 스포츠 음료</b><span>PR-261029-0036 · 옵션 2 · ¥92~</span></div><span class="r"><span class="dot" style="background:var(--warn)"></span>대기</span></div>
+      </div>
+      <div class="pager"><span>275개</span><span>이전 <b>1 / 69</b> 다음</span></div>
+    </div>
+    <div class="tabbar"><div><i>⌂</i>홈</div><div><i>▤</i>주문</div><div><i>✎</i>디자인</div><div class="on"><i>▣</i>제품</div><div><i>⋯</i>더보기</div></div>
+    <div class="dim"></div>
+    <div class="sheet"><div class="grab"></div><h4>필터</h4>
+      <div class="sel">가격 책정 <span>대기 (일부 포함) ⌄</span></div>
+      <div class="sel">정렬 <span>추가일 최근 순 ⌄</span></div>
+      <div class="cta" style="border:0;padding:4px 0 0"><span class="btn s n">초기화</span><span class="btn p">275개 보기</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- M8 회사 정보 -->
+<div class="item">
+  <div class="cap">M8 · 회사 정보 — 복사 위주<small>분류는 드롭다운 · 값 옆 '복사' · 수정·삭제는 ⋯ 시트로</small></div>
+  <div class="phone">
+    <div class="top"><b>회사 정보</b><span class="ic" style="width:auto;color:var(--p);font-weight:700">+ 추가</span></div>
+    <div class="body">
+      <div class="ttabs"><span class="on">기본 정보</span><span>로그인 계정</span><span>API 키</span></div>
+      <div class="search"><input value="이름 · 값 검색" /><span class="f">사업자 ⌄</span></div>
+      <div class="scroll">
+        <div class="row"><div class="m"><b>사업자등록번호</b><span style="color:var(--t);font-size:15px">715-07-03296</span></div><span class="r"><span class="kv"><span class="cp">복사</span></span></span><span class="r" style="font-size:18px">⋯</span></div>
+        <div class="row"><div class="m"><b>개인통관고유부호 (대표)</b><span style="color:var(--t);font-size:15px">P1900029*****</span><span><span class="dot" style="background:var(--warn)"></span>만료 D-248</span></div><span class="r"><span class="kv"><span class="cp">복사</span></span></span><span class="r" style="font-size:18px">⋯</span></div>
+        <div class="row"><div class="m"><b>수입식품 구매대행업 등록</b><span style="color:var(--t);font-size:15px">20260028639</span></div><span class="r"><span class="kv"><span class="cp">복사</span></span></span><span class="r" style="font-size:18px">⋯</span></div>
+        <div class="row"><div class="m"><b>사업자 계좌 (KB)</b><span style="color:var(--t);font-size:15px">484637-04-******</span></div><span class="r"><span class="kv"><span class="cp">복사</span></span></span><span class="r" style="font-size:18px">⋯</span></div>
+      </div>
+    </div>
+    <div class="tabbar"><div><i>⌂</i>홈</div><div><i>▤</i>주문</div><div><i>✎</i>디자인</div><div><i>▣</i>제품</div><div class="on"><i>⋯</i>더보기</div></div>
+  </div>
+</div>
+
+<!-- M9 더보기 -->
+<div class="item">
+  <div class="cap">M9 · 더보기<small>업무 순서 묶음 · 한 줄 메뉴(아이콘 격자 대신) · 맨 아래 내 계정</small></div>
+  <div class="phone">
+    <div class="top"><b>더보기</b></div>
+    <div class="body">
+      <div class="scroll">
+        <div class="sec" style="padding-bottom:4px;border:0"><h3>소싱</h3></div>
+        <div class="row" style="min-height:48px"><div class="m"><b>가격조사</b></div><span class="r">›</span></div>
+        <div class="row" style="min-height:48px"><div class="m"><b>가격 책정</b><span>대기 0 · 일부 3</span></div><span class="r">›</span></div>
+        <div class="sec" style="padding-bottom:4px;border:0"><h3>주문 처리</h3></div>
+        <div class="row" style="min-height:48px"><div class="m"><b>타오바오 구매기록</b></div><span class="r">›</span></div>
+        <div class="row" style="min-height:48px"><div class="m"><b>집운 기록</b></div><span class="r">›</span></div>
+        <div class="sec" style="padding-bottom:4px;border:0"><h3>설정</h3></div>
+        <div class="row" style="min-height:48px"><div class="m"><b>환율</b><span>201.37원 · 10-30 09:00</span></div><span class="r">›</span></div>
+        <div class="row" style="min-height:48px"><div class="m"><b>배송 · 판매처 · 회사 정보 · 사용자</b></div><span class="r">›</span></div>
+        <div class="row" style="min-height:52px"><div class="m"><b>관리자</b><span>테마 · 개발자 모드 · 로그아웃</span></div><span class="r">›</span></div>
+      </div>
+    </div>
+    <div class="tabbar"><div><i>⌂</i>홈</div><div><i>▤</i>주문</div><div><i>✎</i>디자인</div><div><i>▣</i>제품</div><div class="on"><i>⋯</i>더보기</div></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

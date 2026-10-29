@@ -2,7 +2,7 @@
 // 이 폴더에 .md 를 넣으면 목록에 자동으로 붙는다. 제목은 첫 '# ' 줄, 순서는 아래 ORDER (없으면 이름순)
 const files = import.meta.glob('./*.md', { query: '?raw', import: 'default', eager: true })
 
-const ORDER = ['shop-design-system']
+const ORDER = ['agc-mobile-design', 'shop-design-system']
 
 export const PLAYBOOKS = Object.entries(files)
   .map(([path, text]) => {
