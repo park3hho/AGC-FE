@@ -977,7 +977,7 @@ export default function PricingPage() {
                       : '100원 단위로 올림 · 비운 판매처는 그대로'
                 }
               >
-                쿠팡·네이버 한 번에 적용
+                한 번에 적용
               </button>
 
               {offers.length > 0 && (
