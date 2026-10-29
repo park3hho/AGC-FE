@@ -526,7 +526,8 @@ export default function OrderReceivePage() {
   const set = (patch) => {
     const next = new URLSearchParams(params)
     Object.entries(patch).forEach(([k, v]) =>
-      v == null || v === 'all' ? next.delete(k) : next.set(k, v),
+      // 'all' 은 필터(통관부호)에선 '없음'이지만 단계에선 '전체' 라는 값 — 지우면 기본값 '접수'로 돌아가 전체 탭이 안 먹던 버그
+      v == null || (v === 'all' && k !== 'stage') ? next.delete(k) : next.set(k, v),
     )
     setParams(next, { replace: true })
   }
