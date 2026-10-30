@@ -74,8 +74,10 @@ export const FX_TREND_DEFAULT = '1m'
 
 // 제품의 가격 책정 상태 — 목록 배지 · 필터 · 홈 숫자 (utils/pricing.pricingStatusOf)
 //   done: 모든 판매처 판매가 저장 · partial: 일부만 · pending: 조사는 있고 아직 안 정함 · nosurvey: 가격조사 없음
+//   noship: 옵션 용량을 못 읽어 배송비를 모름 — 판매가를 저장했어도 완료가 아님 (2026-10-30)
 export const PRICING_STATUS = {
   done: { label: '완료', tone: 'success' },
+  noship: { label: '배송비 모름', tone: 'danger' },
   partial: { label: '일부', tone: 'warning' },
   pending: { label: '대기', tone: 'warning' },
   nosurvey: { label: '조사 없음', tone: 'neutral' },
@@ -86,5 +88,6 @@ export const PRICING_STATUS_FILTERS = [
   { key: 'all', label: '가격 책정: 전체' },
   { key: 'todo', label: '대기 (일부 포함)' },
   { key: 'done', label: '완료' },
+  { key: 'noship', label: '배송비 모름' },
   { key: 'nosurvey', label: '조사 없음' },
 ]

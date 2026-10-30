@@ -40,7 +40,12 @@ const toProduct = (p) => ({
     : null,
   pricedPlatforms: p.priced_platforms || [], // 판매가를 저장한 판매처 키
   bundleUnpriced: p.bundle_unpriced || 0, // 채택한 묶음 중 판매가가 빈 칸 수 (판매처 × 묶음)
-  pricingStatus: pricingStatusOf(p.priced_platforms || [], !!p.latest_survey || p.survey_count > 0),
+  shippingUnknown: p.shipping_unknown || 0, // 최근 조사에서 용량을 못 읽어 배송비를 모르는 옵션 수
+  pricingStatus: pricingStatusOf(
+    p.priced_platforms || [],
+    !!p.latest_survey || p.survey_count > 0,
+    p.shipping_unknown || 0,
+  ),
 })
 
 // 제품 전부 (BE 는 100개씩 → 페이지를 다 받아 합친다)

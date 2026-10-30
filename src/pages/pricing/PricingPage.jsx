@@ -247,7 +247,7 @@ export default function PricingPage() {
         const todo = list.filter(
           (p) =>
             p.id !== Number(productId) &&
-            (['pending', 'partial'].includes(p.pricingStatus) || p.bundleUnpriced > 0),
+            (['pending', 'partial', 'noship'].includes(p.pricingStatus) || p.bundleUnpriced > 0),
         )
         setNext(todo.find((p) => list.indexOf(p) > here) || todo[0] || null)
       })

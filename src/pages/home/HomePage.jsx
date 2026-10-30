@@ -173,7 +173,7 @@ export default function HomePage() {
   const needFix = design?.changes || 0
   const count = (s) => products.filter((p) => s.includes(p.pricingStatus)).length
   const done = count(['done'])
-  const todo = count(['pending', 'partial'])
+  const todo = count(['pending', 'partial', 'noship'])
   const noSurvey = count(['nosurvey'])
   const today = products.filter((p) => p.addedAt === todayKst()).length
   const yesterday = products.filter((p) => p.addedAt === yesterdayKst()).length

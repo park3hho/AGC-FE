@@ -22,7 +22,9 @@ const matchStatus = (p, status) => {
   if (status === 'all') return true
   // 할 일 = 판매가를 아직 안 정했거나, 채택한 묶음 판매가가 빈 제품
   if (status === 'todo')
-    return p.pricingStatus === 'pending' || p.pricingStatus === 'partial' || p.bundleUnpriced > 0
+    return (
+      ['pending', 'partial', 'noship'].includes(p.pricingStatus) || p.bundleUnpriced > 0
+    )
   return p.pricingStatus === status
 }
 
