@@ -829,3 +829,10 @@
 .mOffer {
   background: var(--color-bg-sub);
 }
+
+/* 용량을 못 읽어 최소 상자(세 변 합 50cm)로 계산한 옵션 — 추정이라 주황 (2026-10-30) */
+.optNote {
+  display: block;
+  color: var(--color-warning);
+  font-size: 11px;
+}

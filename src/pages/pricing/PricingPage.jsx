@@ -638,7 +638,9 @@ export default function PricingPage() {
                 ? '용량을 못 읽어 배송비를 몰라요'
                 : o.overDutyFree
                   ? '상품가가 면세 한도($150)를 넘을 수 있어요'
-                  : ''
+                  : o.boxAssumed && o.weightG == null
+                    ? '용량을 못 읽어 최소 상자(세 변 합 50cm)로 계산'
+                    : ''
             return (
               <div key={o.id} className={styles.mCard}>
                 <div className={styles.mCardHead}>
@@ -656,7 +658,11 @@ export default function PricingPage() {
                     </button>
                   </span>
                 )}
-                {warn && <span className={styles.optWarn}>{warn}</span>}
+                {warn && (
+                  <span className={o.boxAssumed && o.shippingCny != null ? styles.optNote : styles.optWarn}>
+                    {warn}
+                  </span>
+                )}
                 <div
                   className={styles.mPRows}
                   style={{ gridTemplateColumns: `repeat(${platforms.length}, minmax(0, 1fr))` }}
@@ -899,6 +905,9 @@ export default function PricingPage() {
                         )}
                         {o.shippingCny == null && (
                           <span className={styles.optWarn}>용량을 못 읽어 배송비를 몰라요</span>
+                        )}
+                        {o.boxAssumed && o.weightG == null && o.shippingCny != null && (
+                          <span className={styles.optNote}>용량을 못 읽어 최소 상자(세 변 합 50cm)로 계산</span>
                         )}
                         {o.overLimit && (
                           <span className={styles.optWarn}>30kg 초과 — 집운 소형 불가</span>

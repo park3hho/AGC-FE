@@ -14,6 +14,7 @@ export const toShippingOption = (o) => ({
   billableKg: o.billable_kg ?? null, // 문자열 "6.5" — 요금 계산 무게
   shippingCny: o.shipping_cny ?? null, // 문자열 "55.00" (위안)
   overLimit: !!o.over_limit, // 30kg 초과 — 집운 소형으로 못 보냄
+  boxAssumed: !!o.box_assumed, // 용량을 못 읽어 최소 상자(세 변 합 50cm)로 계산한 값 (2026-10-30)
   dimWeightG: o.dim_weight_g ?? null, // 부피 무게 (g) — 차만. 계산 무게는 실제·부피 중 큰 값
 })
 
