@@ -397,6 +397,12 @@
   opacity: 0.35;
 }
 
+/* 기록은 없지만 뒤 단계가 있어 지나간 칸 — 빗금 (2026-10-31) */
+.pSkip {
+  background: repeating-linear-gradient(-45deg, var(--color-primary) 0 3px, transparent 3px 6px);
+  opacity: 0.6;
+}
+
 .pText {
   margin-top: 4px;
   font-size: 12px;

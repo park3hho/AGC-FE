@@ -121,6 +121,25 @@ const stepOf = (e) => {
 }
 const occurredOf = (e) => e.data?.occurred_at || e.at
 
+// 지워졌거나 취소된 타오바오 구매·집운 기록 — 그 기록의 이벤트는 진행 막대에서 뺀다 (2026-10-31)
+// 집운을 취소하고 다시 보낸 주문에서 옛 집운 등록이 '국제 발송' 칸을 계속 채워 칸 사이가 비던 문제.
+// 기록 자체(아래 추적 기록 줄)는 그대로 남긴다 — 막대만 살아 있는 기록 기준.
+function deadRecords(events) {
+  const purchase = new Set()
+  const jiyun = new Set()
+  for (const e of events) {
+    const d = e.data || {}
+    if (e.kind === 'purchase_deleted' && d.purchase_id) purchase.add(d.purchase_id)
+    if (e.kind === 'jiyun_deleted' && d.jiyun_id) jiyun.add(d.jiyun_id)
+    if (e.kind === 'purchase_changed' && d.changes?.cn_status?.to === 'cancelled') purchase.add(d.purchase_id)
+    if (e.kind === 'jiyun_changed' && d.changes?.status?.to === 'cancelled') jiyun.add(d.jiyun_id)
+  }
+  return (e) => {
+    const d = e.data || {}
+    return (d.purchase_id && purchase.has(d.purchase_id)) || (d.jiyun_id && jiyun.has(d.jiyun_id))
+  }
+}
+
 // 타오바오 구매 쪽 세부 단계 — 누르면 구매 기록(추가·수정) 화면으로
 const PURCHASE_STEPS = ['타오바오 구매', '중국 내 배송', '배대지 입고']
 
@@ -133,7 +152,9 @@ function TraceProgress({
   hasJiyun, // boolean: 이미 적은 집운 기록이 있는지
 }) {
   const first = {}
+  const isDead = deadRecords(events)
   for (const e of events) {
+    if (isDead(e)) continue
     const s = stepOf(e)
     if (!s) continue
     const t = occurredOf(e)
@@ -150,10 +171,14 @@ function TraceProgress({
     <div className={styles.progress} aria-label="진행 단계">
       <ol className={styles.pBar}>
         {TRACE_STEPS.map((x, i) => {
-          const cls = `${styles.pSeg} ${first[x.step] ? styles.pDone : i === lastDone + 1 ? styles.pNow : ''} ${
-            i > 0 && TRACE_STEPS[i - 1].stage !== x.stage ? styles.pGap : ''
+          // 뒤 단계가 기록됐는데 이 칸만 기록이 없으면 '지나감(기록 없음)' — 빈칸으로 두지 않는다
+          const skipped = !first[x.step] && i < lastDone
+          const cls = `${styles.pSeg} ${
+            first[x.step] ? styles.pDone : skipped ? styles.pSkip : i === lastDone + 1 ? styles.pNow : ''
+          } ${i > 0 && TRACE_STEPS[i - 1].stage !== x.stage ? styles.pGap : ''}`
+          const title = `${TRACE_STAGE[x.stage].label} › ${x.step}${
+            first[x.step] ? ` · ${kst(first[x.step])}` : skipped ? ' · 기록 없음 (뒤 단계가 있어 지나간 것으로 봐요)' : ''
           }`
-          const title = `${TRACE_STAGE[x.stage].label} › ${x.step}${first[x.step] ? ` · ${kst(first[x.step])}` : ''}`
           // 타오바오 구매 쪽 칸 → 타오바오 구매기록, 국제 발송 칸 → 집운 기록
           const go = PURCHASE_STEPS.includes(x.step)
             ? onPurchase
