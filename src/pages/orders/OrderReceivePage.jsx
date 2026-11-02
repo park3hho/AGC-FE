@@ -131,7 +131,8 @@ function deadRecords(events) {
     const d = e.data || {}
     if (e.kind === 'purchase_deleted' && d.purchase_id) purchase.add(d.purchase_id)
     if (e.kind === 'jiyun_deleted' && d.jiyun_id) jiyun.add(d.jiyun_id)
-    if (e.kind === 'purchase_changed' && d.changes?.cn_status?.to === 'cancelled') purchase.add(d.purchase_id)
+    if (e.kind === 'purchase_changed' && d.changes?.cn_status?.to === 'cancelled')
+      purchase.add(d.purchase_id)
     if (e.kind === 'jiyun_changed' && d.changes?.status?.to === 'cancelled') jiyun.add(d.jiyun_id)
   }
   return (e) => {
@@ -174,10 +175,20 @@ function TraceProgress({
           // 뒤 단계가 기록됐는데 이 칸만 기록이 없으면 '지나감(기록 없음)' — 빈칸으로 두지 않는다
           const skipped = !first[x.step] && i < lastDone
           const cls = `${styles.pSeg} ${
-            first[x.step] ? styles.pDone : skipped ? styles.pSkip : i === lastDone + 1 ? styles.pNow : ''
+            first[x.step]
+              ? styles.pDone
+              : skipped
+                ? styles.pSkip
+                : i === lastDone + 1
+                  ? styles.pNow
+                  : ''
           } ${i > 0 && TRACE_STEPS[i - 1].stage !== x.stage ? styles.pGap : ''}`
           const title = `${TRACE_STAGE[x.stage].label} › ${x.step}${
-            first[x.step] ? ` · ${kst(first[x.step])}` : skipped ? ' · 기록 없음 (뒤 단계가 있어 지나간 것으로 봐요)' : ''
+            first[x.step]
+              ? ` · ${kst(first[x.step])}`
+              : skipped
+                ? ' · 기록 없음 (뒤 단계가 있어 지나간 것으로 봐요)'
+                : ''
           }`
           // 타오바오 구매 쪽 칸 → 타오바오 구매기록, 국제 발송 칸 → 집운 기록
           const go = PURCHASE_STEPS.includes(x.step)
@@ -398,13 +409,19 @@ const NEXT_DESC = {
   pccc: '고객에게 연락해 통관부호·이름·전화를 바로잡은 뒤 다시 검증해요.',
   confirm: '배송지·통관부호를 보고 보내요. 보내면 고객이 바로 취소할 수 없어요.',
   purchase: '타오바오에서 산 뒤 주문번호와 결제 금액을 적어요.',
-  shipped: '판매처가 보냈으면 중국 운송장을 구매기록에 넣어요.',
-  arrived: '집운 창고에 들어오면 구매기록 상태를 입고로 바꿔요.',
-  jiyun: '창고에 모이면 집운에 배송을 요청하고 기록해요.',
-  tracking: '한국 택배 송장이 나오면 집운 기록에 넣어요.',
+  shipped: '판매처가 보내면 30분 점검이 중국 운송장을 기록해요. 할 일 없어요.',
+  arrived: '중국 택배로 창고에 가는 중이에요. 들어오면 30분 점검이 입고로 바꿔요. 할 일 없어요.',
+  jiyun:
+    '집운 앱(또는 PC)에서 창고에 들어온 이 고객 소포만 골라 결제해요. 결제하면 30분 점검이 기록해요.',
+  dispatch: '집운 결제는 끝났어요. 창고에서 출고되면 한국으로 출발해요. 할 일 없어요.',
+  tracking:
+    '한국으로 오는 중이에요. 국내 송장이 나오면 30분 점검이 쿠팡·네이버에 자동으로 발송처리해요. 할 일 없어요.',
   delivered: '고객이 받았으면 배송 완료로 표시해요. 고객 화면도 바뀌어요.',
   shipping: '국내 배송 중이에요. 마켓이 배송 완료를 알려 줘요.',
 }
+// 상세 '지금 상태' 칸 제목 · 목록 셋째 줄 앞말 (utils/nextAction kind)
+const KIND_TITLE = { todo: '내가 할 일', wait: '기다리는 중', none: '지금 상태' }
+const KIND_PREFIX = { todo: '할 일', wait: '기다림', none: '' }
 
 function MobileOrderDetail({
   detail, // getOrder 결과
@@ -429,7 +446,11 @@ function MobileOrderDetail({
     return (
       <main className="page-flat">
         <PageHeader back title="주문" />
-        {error ? <p className={`form-error ${styles.pad}`}>{error}</p> : <p className={styles.empty}>불러오는 중…</p>}
+        {error ? (
+          <p className={`form-error ${styles.pad}`}>{error}</p>
+        ) : (
+          <p className={styles.empty}>불러오는 중…</p>
+        )}
       </main>
     )
   }
@@ -452,12 +473,16 @@ function MobileOrderDetail({
   const primary = {
     claim: { label: '기록 보기', run: () => setTab('trace') },
     pccc: { label: busy === 'recheck' ? '검증 중…' : '통관부호 다시 검증', run: onRecheck },
-    confirm: { label: busy === 'confirm' ? '보내는 중…' : `${MARKETS[o.market].label}에 발주확인 보내기`, run: onConfirm },
+    confirm: {
+      label: busy === 'confirm' ? '보내는 중…' : `${MARKETS[o.market].label}에 발주확인 보내기`,
+      run: onConfirm,
+    },
     purchase: { label: '타오바오 구매 기록하기', run: () => onPurchase() },
     shipped: { label: '구매기록 열기', run: () => onPurchase() },
     arrived: { label: '구매기록 열기', run: () => onPurchase() },
-    jiyun: { label: '집운 기록하기', run: () => onJiyun() },
-    tracking: { label: '집운 기록 열기 (송장)', run: () => onJiyun() },
+    jiyun: { label: '집운 결제 기록하기', run: () => onJiyun() },
+    dispatch: { label: '집운 기록 열기', run: () => onJiyun() },
+    tracking: { label: '집운 기록 열기', run: () => onJiyun() },
     delivered: { label: busy === 'delivered' ? '표시 중…' : '배송 완료 표시', run: onDelivered },
   }[next?.key]
 
@@ -467,7 +492,12 @@ function MobileOrderDetail({
         back
         title={o.code || '코드 없음'}
         action={
-          <button type="button" className="btn-secondary btn-sm" onClick={() => setMore(true)} aria-label="더보기">
+          <button
+            type="button"
+            className="btn-secondary btn-sm"
+            onClick={() => setMore(true)}
+            aria-label="더보기"
+          >
             ⋯
           </button>
         }
@@ -497,8 +527,11 @@ function MobileOrderDetail({
 
       {next && !cancelled && (
         <div className={`${styles.mNext} ${next.tone === 'danger' ? styles.mNextBad : ''}`}>
-          <small>다음 할 일</small>
-          <b>{next.label}</b>
+          <small>{KIND_TITLE[next.kind] || '다음 할 일'}</small>
+          <b>
+            {next.label}
+            {next.info && ` · ${next.info}`}
+          </b>
           <span>
             {next.key === 'pccc' && o.pcccMessage ? `UNI-PASS: ${o.pcccMessage}. ` : ''}
             {NEXT_DESC[next.key]}
@@ -527,20 +560,32 @@ function MobileOrderDetail({
           <dl className={styles.mKv}>
             <dt>받는 분</dt>
             <dd>{rf?.name || o.receiver.name || '-'}</dd>
-            <dd><CopyButton value={rf?.name} /></dd>
+            <dd>
+              <CopyButton value={rf?.name} />
+            </dd>
             <dt>통관용 전화</dt>
             <dd>
-              {rf?.customsPhone ? <a href={`tel:${rf.customsPhone}`}>{fmtPhone(rf.customsPhone)}</a> : o.receiver.phone || '-'}
+              {rf?.customsPhone ? (
+                <a href={`tel:${rf.customsPhone}`}>{fmtPhone(rf.customsPhone)}</a>
+              ) : (
+                o.receiver.phone || '-'
+              )}
             </dd>
-            <dd><CopyButton value={rf?.customsPhone} /></dd>
+            <dd>
+              <CopyButton value={rf?.customsPhone} />
+            </dd>
             {rf?.contactPhone && rf.contactPhone !== rf.customsPhone && (
               <>
                 <dt>쇼핑몰 연락처</dt>
                 <dd>
                   <a href={`tel:${rf.contactPhone}`}>{fmtPhone(rf.contactPhone)}</a>
-                  {rf.contactPhone.startsWith('050') && <small className={styles.weak}> 안심번호</small>}
+                  {rf.contactPhone.startsWith('050') && (
+                    <small className={styles.weak}> 안심번호</small>
+                  )}
                 </dd>
-                <dd><CopyButton value={rf.contactPhone} /></dd>
+                <dd>
+                  <CopyButton value={rf.contactPhone} />
+                </dd>
               </>
             )}
             <dt>주소</dt>
@@ -548,12 +593,16 @@ function MobileOrderDetail({
               {(rf?.zip || o.receiver.zip) && `(${rf?.zip || o.receiver.zip}) `}
               {rf?.address || o.receiver.address || '-'}
             </dd>
-            <dd><CopyButton value={rf?.address} /></dd>
+            <dd>
+              <CopyButton value={rf?.address} />
+            </dd>
             <dt>통관부호</dt>
             <dd>
               <StatusDot tone={pc.tone}>{pc.short}</StatusDot> {rf?.pccc || o.receiver.pccc || '-'}
             </dd>
-            <dd><CopyButton value={rf?.pccc} /></dd>
+            <dd>
+              <CopyButton value={rf?.pccc} />
+            </dd>
             <dt>옵션 · 수량</dt>
             <dd>
               {o.optionName || '-'} × {o.quantity}
@@ -565,9 +614,14 @@ function MobileOrderDetail({
             <dt>마켓 주문</dt>
             <dd>
               {MARKETS[o.market].label} {o.orderNo}
-              <small className={styles.weak}> · {MARKET_STATUS[o.marketStatus] || o.marketStatus}</small>
+              <small className={styles.weak}>
+                {' '}
+                · {MARKET_STATUS[o.marketStatus] || o.marketStatus}
+              </small>
             </dd>
-            <dd><CopyButton value={o.orderNo} /></dd>
+            <dd>
+              <CopyButton value={o.orderNo} />
+            </dd>
             {src && (
               <>
                 <dt>타오바오</dt>
@@ -595,7 +649,12 @@ function MobileOrderDetail({
                 <dt>구매</dt>
                 <dd>
                   {purchases.map((p) => (
-                    <button key={p.id} type="button" className={styles.mLink} onClick={() => onPurchase(p.id)}>
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={styles.mLink}
+                      onClick={() => onPurchase(p.id)}
+                    >
                       {p.taobaoOrderNo || '구매'} · {CN_STATUS[p.cnStatus]?.label || p.cnStatus}
                     </button>
                   ))}
@@ -608,7 +667,12 @@ function MobileOrderDetail({
                 <dt>집운</dt>
                 <dd>
                   {jiyuns.map((j) => (
-                    <button key={j.id} type="button" className={styles.mLink} onClick={() => onJiyun(j.id)}>
+                    <button
+                      key={j.id}
+                      type="button"
+                      className={styles.mLink}
+                      onClick={() => onJiyun(j.id)}
+                    >
                       {j.jiyunNo || '집운'}
                       {j.krTrackingNo ? ` · 송장 ${j.krTrackingNo}` : ''}
                     </button>
@@ -631,7 +695,8 @@ function MobileOrderDetail({
                     {evOpen === e.id && (
                       <small>
                         {e.summary}
-                        {(ACTOR[e.actorType]?.label || e.actorType) && ` · ${ACTOR[e.actorType]?.label || e.actorType}`}
+                        {(ACTOR[e.actorType]?.label || e.actorType) &&
+                          ` · ${ACTOR[e.actorType]?.label || e.actorType}`}
                         {e.actorName && ` ${e.actorName}`}
                       </small>
                     )}
@@ -662,40 +727,78 @@ function MobileOrderDetail({
 
       {!cancelled && primary && (
         <div className={`sticky-cta ${styles.mCta}`}>
-          <button type="button" className="btn-secondary btn-md" onClick={() => setMore(true)} aria-label="더보기">
+          <button
+            type="button"
+            className="btn-secondary btn-md"
+            onClick={() => setMore(true)}
+            aria-label="더보기"
+          >
             ⋯
           </button>
-          <button type="button" className="btn-primary btn-md" disabled={!!busy} onClick={primary.run}>
+          <button
+            type="button"
+            className={`${next?.kind === 'todo' ? 'btn-primary' : 'btn-secondary'} btn-md`}
+            disabled={!!busy}
+            onClick={primary.run}
+          >
             {primary.label}
           </button>
         </div>
       )}
 
       <BottomSheet open={more} title={o.code} onClose={() => setMore(false)}>
-        <SheetItem onClick={() => { setMore(false); onRecheck() }} sub="UNI-PASS 로 다시 확인">
+        <SheetItem
+          onClick={() => {
+            setMore(false)
+            onRecheck()
+          }}
+          sub="UNI-PASS 로 다시 확인"
+        >
           통관부호 다시 검증
         </SheetItem>
         {o.confirmed && !cancelled && (
-          <SheetItem onClick={() => { setMore(false); onPurchase() }}>
+          <SheetItem
+            onClick={() => {
+              setMore(false)
+              onPurchase()
+            }}
+          >
             {purchases?.length ? '타오바오 구매기록 열기' : '타오바오 구매 기록하기'}
           </SheetItem>
         )}
         {purchases?.length > 0 && !cancelled && (
-          <SheetItem onClick={() => { setMore(false); onJiyun() }}>
+          <SheetItem
+            onClick={() => {
+              setMore(false)
+              onJiyun()
+            }}
+          >
             {jiyuns?.length ? '집운 기록 열기' : '집운 기록하기'}
           </SheetItem>
         )}
-        <SheetItem onClick={() => { setMore(false); setTab('money') }} sub="증빙 올리기">
+        <SheetItem
+          onClick={() => {
+            setMore(false)
+            setTab('money')
+          }}
+          sub="증빙 올리기"
+        >
           금액 보기
         </SheetItem>
         {devMode && detail.raw && (
-          <SheetItem onClick={() => { setMore(false); setTab('raw') }}>마켓 원본 보기</SheetItem>
+          <SheetItem
+            onClick={() => {
+              setMore(false)
+              setTab('raw')
+            }}
+          >
+            마켓 원본 보기
+          </SheetItem>
         )}
       </BottomSheet>
     </main>
   )
 }
-
 
 // 판매 › 주문 접수 — 섹션: 수집 · 접수 목록 · 금액 · 추적 기록 (머리 탭: 기록 · 주문 상세 · 마켓 원본)
 // 마켓 주문을 가져오면 새 주문·바뀐 주문은 BE 가 바로 통관부호(UNI-PASS)를 검증한다. 모든 동작은 추적 기록에 남는다.
@@ -879,7 +982,10 @@ export default function OrderReceivePage() {
 
   // 자사몰 주문 배송 완료 표시 (마켓 주문은 마켓 상태로 바뀐다)
   const delivered = async () => {
-    if (!window.confirm('이 자사몰 주문을 배송 완료로 표시할까요? 고객 화면이 배송 완료로 바뀌어요.')) return
+    if (
+      !window.confirm('이 자사몰 주문을 배송 완료로 표시할까요? 고객 화면이 배송 완료로 바뀌어요.')
+    )
+      return
     setBusy('delivered')
     try {
       setDetail(await markDelivered(selected))
@@ -958,11 +1064,7 @@ export default function OrderReceivePage() {
         sub="마켓 주문을 받아 통관부호를 바로 검증해요"
         action={
           <button className="btn-primary btn-md" onClick={collect} disabled={busy === 'collect'}>
-            {busy === 'collect'
-              ? '가져오는 중…'
-              : mobile
-                ? '↻ 가져오기'
-                : '지금 가져오기'}
+            {busy === 'collect' ? '가져오는 중…' : mobile ? '↻ 가져오기' : '지금 가져오기'}
           </button>
         }
       />
@@ -982,7 +1084,9 @@ export default function OrderReceivePage() {
                   key={x.eventId}
                   type="button"
                   className={styles.alertItem}
-                  onClick={() => (mobile ? navigate(`/orders/${x.orderId}`) : set({ stage: null, id: x.orderId }))}
+                  onClick={() =>
+                    mobile ? navigate(`/orders/${x.orderId}`) : set({ stage: null, id: x.orderId })
+                  }
                   title={x.summary}
                 >
                   {x.code}
@@ -1103,8 +1207,12 @@ export default function OrderReceivePage() {
                       const n = nextAction(it)
                       return (
                         n && (
-                          <small className={`${styles.mNextLine} ${n.tone === 'danger' ? styles.bad : n.tone === 'neutral' ? styles.weak : ''}`}>
-                            다음: {n.label}
+                          <small
+                            className={`${styles.mNextLine} ${n.tone === 'danger' ? styles.bad : n.tone === 'neutral' ? styles.weak : ''}`}
+                          >
+                            {KIND_PREFIX[n.kind] ? `${KIND_PREFIX[n.kind]}: ` : ''}
+                            {n.label}
+                            {n.info && ` · ${n.info}`}
                           </small>
                         )
                       )
@@ -1330,17 +1438,20 @@ export default function OrderReceivePage() {
                   >
                     {busy === 'recheck' ? '검증 중…' : '통관부호 다시 검증'}
                   </button>
-                  {o.market === 'shop' && o.confirmed && o.marketStatus !== 'DELIVERED' && o.stage !== 'cancelled' && (
-                    <button
-                      type="button"
-                      className="btn-secondary btn-sm"
-                      onClick={delivered}
-                      disabled={busy === 'delivered'}
-                      title="국내 송장이 있는 집운 기록이 있어야 해요"
-                    >
-                      {busy === 'delivered' ? '표시 중…' : '배송 완료 표시'}
-                    </button>
-                  )}
+                  {o.market === 'shop' &&
+                    o.confirmed &&
+                    o.marketStatus !== 'DELIVERED' &&
+                    o.stage !== 'cancelled' && (
+                      <button
+                        type="button"
+                        className="btn-secondary btn-sm"
+                        onClick={delivered}
+                        disabled={busy === 'delivered'}
+                        title="국내 송장이 있는 집운 기록이 있어야 해요"
+                      >
+                        {busy === 'delivered' ? '표시 중…' : '배송 완료 표시'}
+                      </button>
+                    )}
                 </div>
               </div>
             )}

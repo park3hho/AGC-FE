@@ -21,7 +21,7 @@ import { useFitRows } from '@/hooks/useFitRows'
 import { todayKst } from '@/utils/date'
 import { keyStatuses } from '@/utils/apiKey'
 import { infoStatus } from '@/utils/companyInfo'
-import { nextAction, NEXT_GROUPS } from '@/utils/nextAction'
+import { nextAction, NEXT_GROUPS, WAIT_GROUPS } from '@/utils/nextAction'
 import { formatCny, formatFx } from '@/utils/pricing'
 import styles from './HomePage.module.css'
 
@@ -243,8 +243,11 @@ export default function HomePage() {
     ]
   })
 
-  // 주문 처리 — 다음 할 일 묶음별 건수 (클레임·통관부호 → 발주확인 → 구매 기록 → 판매처·입고 → 집운·송장)
+  // 주문 처리 — '내가 할 일'은 할 일에, '기다리는 중'은 진행 중에 (utils/nextAction kind, 2026-11-02)
+  //   할 일: 클레임·통관부호 → 발주확인 → 구매 기록 → 집운 결제 → (자사몰) 배송 완료 표시
+  //   진행 중: 중국 안에서 오는 중(판매처 발송·입고) · 한국으로 오는 중(출고·국내 송장)
   const orderTodos = []
+  const orderWaits = []
   if (orders) {
     const all = [...orders.received, ...orders.processing]
     const byGroup = {}
@@ -252,7 +255,23 @@ export default function HomePage() {
       const n = nextAction(o)
       if (n?.group) (byGroup[n.group] ||= []).push(o)
     }
-    const STAGE_OF = { issue: 'all', confirm: 'received', purchase: 'received', cn: 'processing', ship: 'processing' }
+    const STAGE_OF = {
+      issue: 'all',
+      confirm: 'received',
+      purchase: 'received',
+      ship: 'processing',
+      delivered: 'processing',
+    }
+    for (const g of WAIT_GROUPS) {
+      const list = byGroup[g.key]
+      if (!list?.length) continue
+      orderWaits.push({
+        key: `wait-${g.key}`,
+        title: `${g.label} ${list.length}건`,
+        sub: g.sub,
+        orders: list,
+      })
+    }
     for (const g of NEXT_GROUPS) {
       const list = byGroup[g.key]
       if (!list?.length) continue
@@ -261,7 +280,10 @@ export default function HomePage() {
         icon: 'bag',
         tone: g.key === 'issue' ? 'warning' : 'primary',
         title: `${g.label} ${list.length}건`,
-        sub: `${g.sub} · ${list.slice(0, 2).map((o) => o.code).join(', ')}${list.length > 2 ? ' …' : ''}`,
+        sub: `${g.sub} · ${list
+          .slice(0, 2)
+          .map((o) => o.code)
+          .join(', ')}${list.length > 2 ? ' …' : ''}`,
         button: '처리하기',
         path: `/orders?stage=${STAGE_OF[g.key]}`,
       })
@@ -430,6 +452,38 @@ export default function HomePage() {
               </button>
             </div>
           ))}
+          {/* 진행 중 — 기다리는 주문 (사람이 할 일 없음). 할 일 아래 같은 칸에 이름 붙인 묶음으로 (2026-11-02) */}
+          {orderWaits.length > 0 && (
+            <div className={styles.waitBlock}>
+              <h3 className={styles.waitHead}>
+                진행 중 <small>기다리는 것 — 할 일 없음</small>
+              </h3>
+              {orderWaits.map((w) => (
+                <div key={w.key} className={styles.todo}>
+                  <span className={`${styles.todoIcon} ${styles.neutral}`}>
+                    <Icon name="bag" size={18} />
+                  </span>
+                  <span className={styles.todoText}>
+                    <b>{w.title}</b>
+                    <small>
+                      {w.sub} ·{' '}
+                      {w.orders
+                        .slice(0, 2)
+                        .map((o) => o.code)
+                        .join(', ')}
+                      {w.orders.length > 2 ? ' …' : ''}
+                    </small>
+                  </span>
+                  <button
+                    className="btn-ghost btn-sm"
+                    onClick={() => navigate('/orders?stage=processing')}
+                  >
+                    보기
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </Section>
       </div>
     </main>
