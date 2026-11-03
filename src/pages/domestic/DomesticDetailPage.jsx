@@ -184,7 +184,7 @@ export default function DomesticDetailPage() {
                     value={form.status}
                     onChange={set('status')}
                   >
-                    <option value="auto">자동 (마켓 · 배송 조회로)</option>
+                    <option value="auto">자동</option>
                     <option value="problem">문제 (오배송·분실·반송)</option>
                     <option value="cancelled">취소</option>
                   </select>
