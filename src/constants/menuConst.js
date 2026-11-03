@@ -92,6 +92,16 @@ export const MENU = [
     feature: FEATURE.ORDER,
   },
   {
+    key: 'domestic',
+    group: 'sales',
+    label: '국내 배송 기록', // 국내 택배 송장 · 마켓 발송처리 · 배송 조회 (2026-11-03)
+    dev: true,
+    icon: 'truck',
+    tone: 'success',
+    path: '/domestic',
+    feature: FEATURE.ORDER,
+  },
+  {
     key: 'shipping',
     group: 'settings',
     label: '배송', // 탭: 배송비 · 출고지·반품지

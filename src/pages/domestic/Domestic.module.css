@@ -1,0 +1,151 @@
+/* 판매 › 국내 배송 기록 › 상세 — 섹션: 송장 · 배송 조회 (DESIGN.md §4.6, 칸 = 1px 선, 알약 없음) */
+
+.split {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@media (max-width: 768px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  font-size: var(--font-sm);
+}
+
+.facts dt {
+  color: var(--color-text-weak);
+}
+
+.facts dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.facts small {
+  color: var(--color-text-weak);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-3);
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.foot {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-family: var(--font-num);
+  cursor: pointer;
+}
+
+.warn {
+  color: var(--color-warning);
+}
+
+.bad {
+  color: var(--color-danger);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.empty {
+  padding: var(--space-4) var(--pane-pad-x);
+  color: var(--color-text-sub);
+  font-size: var(--font-sm);
+}
+
+/* 배송 조회 단계 — 최신이 위 */
+.events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.events li {
+  display: grid;
+  grid-template-columns: 128px 96px minmax(0, 1fr);
+  gap: 2px var(--space-3);
+  padding: var(--space-2) var(--pane-pad-x);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+}
+
+.events time {
+  color: var(--color-text-weak);
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.events small {
+  grid-column: 2 / -1;
+  color: var(--color-text-weak);
+}
+
+.events li.now b {
+  color: var(--color-primary);
+}
+
+/* 상태 — 점 + 글자 */
+.st {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.st i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-text-weak);
+}
+
+.st[data-tone='primary'] i {
+  background: var(--color-primary);
+}
+
+.st[data-tone='success'] i {
+  background: var(--color-success);
+}
+
+.st[data-tone='danger'] i {
+  background: var(--color-danger);
+}
+
+.st[data-tone='warning'] i {
+  background: var(--color-warning);
+}

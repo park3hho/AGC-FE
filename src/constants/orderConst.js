@@ -64,6 +64,9 @@ export const EVENT_KIND = {
   jiyun_created: '집운 기록 등록',
   jiyun_changed: '집운 기록 수정',
   jiyun_deleted: '집운 기록 삭제',
+  domestic_created: '국내 배송 기록 등록',
+  domestic_changed: '국내 배송 기록 수정',
+  domestic_deleted: '국내 배송 기록 삭제',
   market_confirmed: '발주확인',
   market_confirm_failed: '발주확인 실패',
   delivered: '배송 완료 표시',
@@ -118,6 +121,9 @@ export const KIND_STEP = {
   market_dispatched: '국제 발송',
   customs_status: '통관',
   domestic_status: '국내 배송',
+  domestic_created: '국내 배송',
+  domestic_changed: '국내 배송',
+  domestic_deleted: '국내 배송',
   delivered: '도착',
   purchase_decided: '구매확정 · 정산',
   settled: '구매확정 · 정산',
@@ -192,6 +198,16 @@ export const CHARGED_STATUS = {
 }
 
 // 집운 기록 — BE core/jiyun_config.JIYUN_STATUS
+// 국내 배송 기록 상태 — BE core/domestic_config.DOMESTIC_STATUS. problem · cancelled 만 사람이 정하고 나머지는 자동
+export const DOMESTIC_STATUS = {
+  ready: { label: '송장 나옴', hint: '마켓 발송처리 전', tone: 'warning' },
+  dispatched: { label: '발송처리', hint: '마켓에 송장 등록됨', tone: 'primary' },
+  delivering: { label: '배송 중', hint: '택배사가 옮기는 중', tone: 'primary' },
+  delivered: { label: '배송 완료', hint: '고객이 받음', tone: 'success' },
+  problem: { label: '문제', hint: '오배송·분실·반송', tone: 'danger' },
+  cancelled: { label: '취소', hint: '', tone: 'neutral' },
+}
+
 export const JIYUN_STATUS = {
   requested: { label: '배송 요청', hint: '집운에 배송 요청·배송비 결제', tone: 'primary' },
   dispatched: { label: '집운 출고', hint: '한국으로 출발', tone: 'success' },

@@ -246,3 +246,8 @@
     display: none;
   }
 }
+
+/* 국내 배송 기록 — 칸 첫 줄 경고 글자 (발송처리 안 됨) */
+.main span.warn {
+  color: var(--color-warning);
+}

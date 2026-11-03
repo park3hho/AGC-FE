@@ -32,6 +32,8 @@ const PurchaseListPage = lazy(() => import('@/pages/purchases/PurchaseListPage')
 const PurchaseFormPage = lazy(() => import('@/pages/orders/PurchaseFormPage'))
 const JiyunListPage = lazy(() => import('@/pages/jiyun/JiyunListPage'))
 const JiyunFormPage = lazy(() => import('@/pages/jiyun/JiyunFormPage'))
+const DomesticListPage = lazy(() => import('@/pages/domestic/DomesticListPage'))
+const DomesticDetailPage = lazy(() => import('@/pages/domestic/DomesticDetailPage'))
 const ShippingAddressFormPage = lazy(() => import('@/pages/shipping/ShippingAddressFormPage'))
 const UserListPage = lazy(() => import('@/pages/admin/users/UserListPage'))
 const UserNewPage = lazy(() => import('@/pages/admin/users/UserNewPage'))
@@ -69,12 +71,14 @@ export default function App() {
               <Route path="/orders/:orderId/purchases/new" element={<PurchaseFormPage />} />
               <Route path="/orders/purchases/:id/edit" element={<PurchaseFormPage />} />
               <Route path="/jiyun" element={<JiyunListPage />} />
+              <Route path="/domestic" element={<DomesticListPage />} />
+              <Route path="/domestic/:id" element={<DomesticDetailPage />} />
               <Route path="/orders/:orderId/jiyun/new" element={<JiyunFormPage />} />
               <Route path="/orders/jiyun/:id/edit" element={<JiyunFormPage />} />
               <Route path="/shipping/addresses/edit" element={<ShippingAddressFormPage />} />
               <Route path="/exchange-rate" element={<ExchangeRatePage />} />
               <Route path="/markets" element={<MarketsPage />} />
-            <Route path="/playbooks" element={<PlaybooksPage />} />
+              <Route path="/playbooks" element={<PlaybooksPage />} />
             </Route>
 
             <Route element={<RequireAuth feature={FEATURE.ACCOUNT_VIEW} />}>

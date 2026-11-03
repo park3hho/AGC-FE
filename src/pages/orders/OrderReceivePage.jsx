@@ -260,6 +260,7 @@ function EventRow({
   event, // object: 주문 기록
   onPurchase, // function?: 타오바오 구매기록이면 그 구매 열기 (누르면 바로 이동)
   onJiyun, // function?: 집운 기록이면 그 집운 기록 열기 (누르면 바로 이동)
+  onDomestic, // function?: 국내 배송 기록이면 그 기록 열기 (2026-11-03)
   popOpen, // boolean: 내용 칸이 열려 있는지 (한 번에 하나 — 부모가 정함)
   onTogglePop, // function(open: boolean): 내용 칸 열기·닫기
 }) {
@@ -270,8 +271,12 @@ function EventRow({
   const actor = ACTOR[event.actorType] || ACTOR.system
   const d = event.data || {}
   // 누르면 바로 넘어갈 기록 (타오바오 구매기록 · 집운 기록)
-  const goTo = onPurchase || onJiyun
-  const goLabel = onPurchase ? '구매기록 보기 ›' : '집운 기록 보기 ›'
+  const goTo = onPurchase || onJiyun || onDomestic
+  const goLabel = onPurchase
+    ? '구매기록 보기 ›'
+    : onJiyun
+      ? '집운 기록 보기 ›'
+      : '국내 배송 기록 보기 ›'
   const hasData = Object.keys(d).length > 0
   const step = stepOf(event)
   const stage = d.stage || TRACE_STEPS.find((x) => x.step === step)?.stage
@@ -1476,6 +1481,11 @@ export default function OrderReceivePage() {
                       e.data?.purchase_id ? () => openPurchase(e.data.purchase_id) : undefined
                     }
                     onJiyun={e.data?.jiyun_id ? () => openJiyun(e.data.jiyun_id) : undefined}
+                    onDomestic={
+                      e.data?.domestic_id
+                        ? () => navigate(`/domestic/${e.data.domestic_id}`)
+                        : undefined
+                    }
                   />
                 ))}
               </ol>
