@@ -206,7 +206,22 @@ export const KR_COURIERS = {
   LOTTE: '롯데택배',
   EPOST: '우체국택배',
   KGB: '로젠택배',
+  TODAY: '투데이', // 타오바오 공식 집운 한국 해운 물량의 국내 배송 (2026-11-03)
 }
+
+// 배송 조회 — tracker.delivery 택배사 id (BE COURIERS.tracker 와 같게)
+export const KR_TRACKERS = {
+  CJGLS: 'kr.cjlogistics',
+  HANJIN: 'kr.hanjin',
+  LOTTE: 'kr.lotte',
+  EPOST: 'kr.epost',
+  KGB: 'kr.logen',
+  TODAY: 'kr.today',
+}
+export const trackingUrl = (courier, no) =>
+  courier && no && KR_TRACKERS[courier]
+    ? `https://tracker.delivery/#/${KR_TRACKERS[courier]}/${encodeURIComponent(no)}`
+    : null
 
 export const TRANSPORTS = { sea: '해운', air: '항공' }
 
