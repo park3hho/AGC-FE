@@ -51,7 +51,8 @@ export const NEXT = {
     kind: 'wait',
   },
   // 할 일 없음
-  shipping: { label: '배송 중 — 할 일 없음', tone: 'neutral', group: null, kind: 'none' },
+  // group 'domestic' — 홈 › 진행 중에 '국내 배송 중' 묶음으로 보이게 (2026-11-04 사용자 요청)
+  shipping: { label: '배송 중 — 할 일 없음', tone: 'neutral', group: 'domestic', kind: 'none' },
 }
 
 // 홈 › 할 일 묶음 — 사람이 실제로 할 것만 (주문 처리 먼저)
@@ -71,6 +72,7 @@ export const WAIT_GROUPS = [
     label: '한국으로 오는 중',
     sub: '창고 출고 · 국내 송장 기다리는 중 (송장 나오면 자동 발송처리)',
   },
+  { key: 'domestic', label: '국내 배송 중', sub: '국내 택배 송장 넘김 · 고객 도착 기다리는 중' },
 ]
 
 // 국내 택배 — '우체국택배 1234…' (없으면 '')
