@@ -105,8 +105,13 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!canOrder) return
-    Promise.all([getOrders({ stage: 'received' }), getOrders({ stage: 'processing' })])
-      .then(([r, p]) => setOrders({ received: r.items, processing: p.items }))
+    // 완료 단계도 불러온다 — '배송완료 · 구매확정 대기' 묶음 (2026-11-06)
+    Promise.all([
+      getOrders({ stage: 'received' }),
+      getOrders({ stage: 'processing' }),
+      getOrders({ stage: 'done' }),
+    ])
+      .then(([r, p, d]) => setOrders({ received: r.items, processing: p.items, done: d.items }))
       .catch(() => setOrders(null))
   }, [canOrder])
 
@@ -249,7 +254,7 @@ export default function HomePage() {
   const orderTodos = []
   const orderWaits = []
   if (orders) {
-    const all = [...orders.received, ...orders.processing]
+    const all = [...orders.received, ...orders.processing, ...(orders.done || [])]
     const byGroup = {}
     for (const o of all) {
       const n = nextAction(o)

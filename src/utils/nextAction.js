@@ -53,6 +53,14 @@ export const NEXT = {
   // 할 일 없음
   // group 'domestic' — 홈 › 진행 중에 '국내 배송 중' 묶음으로 보이게 (2026-11-04 사용자 요청)
   shipping: { label: '배송 중 — 할 일 없음', tone: 'neutral', group: 'domestic', kind: 'none' },
+  // 고객 도착 뒤 (2026-11-06 사용자 요청) — 마켓이 배송완료로 바꾼 뒤 구매확정(→ 정산)까지 기다림
+  decide_wait: {
+    label: '배송완료 · 구매확정 대기 중',
+    tone: 'success',
+    group: 'wait_decide',
+    kind: 'wait',
+  },
+  decided: { label: '구매확정 완료', tone: 'success', group: null, kind: 'none' },
 }
 
 // 홈 › 할 일 묶음 — 사람이 실제로 할 것만 (주문 처리 먼저)
@@ -73,7 +81,17 @@ export const WAIT_GROUPS = [
     sub: '창고 출고 · 국내 송장 기다리는 중 (송장 나오면 자동 발송처리)',
   },
   { key: 'domestic', label: '국내 배송 중', sub: '국내 택배 송장 넘김 · 고객 도착 기다리는 중' },
+  {
+    key: 'wait_decide',
+    label: '배송완료 · 구매확정 대기',
+    sub: '고객이 받음 · 구매확정(자동 포함) 되면 정산',
+  },
 ]
+
+// 마켓이 구매확정으로 본 주문 — 네이버 PURCHASE_DECIDED · 쿠팡은 상태가 배송완료에서 멈추므로
+//   매출내역(구매확정 뒤 생김)의 실제 정산액이 붙었는지로 본다
+export const isPurchaseDecided = (order) =>
+  order?.marketStatus === 'PURCHASE_DECIDED' || !!order?.amount?.actual || !!order?.settlementDate
 
 // 국내 택배 — '우체국택배 1234…' (없으면 '')
 export function trackingText(order, { jiyuns } = {}) {
@@ -125,7 +143,7 @@ export function nextAction(order, extra) {
   if (!order || order.stage === 'cancelled') return null
   const pick = (key) => ({ key, ...NEXT[key] })
   if (order.claimType) return pick('claim')
-  if (order.stage === 'done') return null
+  if (order.stage === 'done') return pick(isPurchaseDecided(order) ? 'decided' : 'decide_wait')
   if (['mismatch', 'missing'].includes(order.pcccStatus)) return pick('pccc')
   if (!order.confirmed) return pick('confirm')
   const st = orderState(order, extra)

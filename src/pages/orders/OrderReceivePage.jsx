@@ -1260,7 +1260,9 @@ export default function OrderReceivePage() {
                           ● {claimLabel(it)}{' '}
                         </span>
                       )}
-                      {!(it.stage === 'processing' && it.progress) && (
+                      {/* 완료 단계 — '배송완료 · 구매확정 대기 중' / '구매확정 완료' (utils/nextAction, 2026-11-06) */}
+                      {it.stage === 'done' && !it.claimType && nextAction(it)?.label}
+                      {it.stage !== 'done' && !(it.stage === 'processing' && it.progress) && (
                         <>
                           {MARKET_STATUS[it.marketStatus] || it.marketStatus}
                           {it.confirmed && ' · 발주확인됨'}
