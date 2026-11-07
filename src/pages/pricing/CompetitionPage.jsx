@@ -173,7 +173,7 @@ export default function CompetitionPage() {
               <span role="columnheader" className={styles.num}>
                 판매자 가격
               </span>
-              <span role="columnheader">구매대행 · 국내 재고</span>
+              <span role="columnheader" title="구매대행(해외 배송) · 국내 재고(창고 판매)">유형</span>
               <span role="columnheader">판정</span>
             </div>
             {rows.map((it) => {
