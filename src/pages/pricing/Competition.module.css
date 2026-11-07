@@ -1,0 +1,194 @@
+/* 판매 › 최저가 경쟁 — 섹션: 판매처·필터 · 제품 목록 (DESIGN.md §4.6, 칸 = 1px 선) */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.tab {
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-text-sub);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tabOn {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  padding: 3px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.chip small {
+  margin-left: 2px;
+  color: var(--color-text-weak);
+  font-family: var(--font-num);
+}
+
+.chipOn {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.search {
+  flex: 1 1 220px;
+  max-width: 320px;
+}
+
+.empty {
+  padding: var(--space-5);
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 104px 120px minmax(0, 1.4fr) 112px 96px 112px;
+  gap: var(--space-3);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.row:not(.head):hover {
+  background: var(--color-bg-app);
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-bg);
+  color: var(--color-text-weak);
+  font-size: 12px;
+  cursor: default;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.main b,
+.main small,
+.main a {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.main small {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.num {
+  align-items: flex-end;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.mono {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.vlink {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.vlink:hover {
+  text-decoration: underline;
+}
+
+.weak {
+  color: var(--color-text-weak);
+}
+
+.main small.bad {
+  color: var(--color-danger);
+}
+
+.st {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.st i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-text-weak);
+}
+
+.st[data-tone='primary'] i {
+  background: var(--color-primary);
+}
+
+.st[data-tone='success'] i {
+  background: var(--color-success);
+}
+
+.st[data-tone='warning'] i {
+  background: var(--color-warning);
+}
+
+.st[data-tone='danger'] i {
+  background: var(--color-danger);
+}
+
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) 96px 96px 104px;
+  }
+
+  .row > :nth-child(2),
+  .row > :nth-child(4),
+  .row > :nth-child(6) {
+    display: none;
+  }
+}

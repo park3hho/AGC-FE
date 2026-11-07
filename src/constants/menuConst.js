@@ -41,6 +41,16 @@ export const MENU = [
     path: '/pricing',
     feature: FEATURE.RESEARCH,
   },
+  // 최저가 경쟁 — 쿠팡·네이버 최저가 판매자와 우리 가격 (2026-11-07). 매일 새벽 3시 에이전트 점검이 채운다
+  {
+    key: 'competition',
+    group: 'sales',
+    label: '최저가 경쟁',
+    icon: 'tag',
+    tone: 'primary',
+    path: '/pricing/competition',
+    feature: FEATURE.RESEARCH,
+  },
   {
     key: 'design',
     group: 'sales',
