@@ -1253,3 +1253,94 @@
 .mCta :global(.btn-primary) {
   flex: 1;
 }
+
+/* 진행 막대 칸 설명 — 마우스 올리면 바로 뜸 (2026-11-08). body 위 fixed 라 섹션 스크롤에 잘리지 않음 */
+.stepTip {
+  position: fixed;
+  z-index: 1000;
+  width: 320px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 14%);
+  color: var(--color-text);
+  font-size: 13px;
+  line-height: 1.5;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.stepTipHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.stepTipHead b {
+  font-size: 14px;
+}
+
+.stepTipStage {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.stepTipState {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stepTipState[data-tone='success'] {
+  color: var(--color-success);
+}
+
+.stepTipState[data-tone='primary'] {
+  color: var(--color-primary);
+}
+
+.stepTipState[data-tone='neutral'] {
+  color: var(--color-text-weak);
+}
+
+.stepTipText {
+  margin: 0 0 4px;
+}
+
+.stepTipWho {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stepTipWho[data-who='me'] {
+  color: var(--color-warning);
+}
+
+.stepTipWho[data-who='auto'] {
+  color: var(--color-primary);
+}
+
+.stepTipWho[data-who='wait'] {
+  color: var(--color-text-sub);
+}
+
+.stepTipLast {
+  margin: 0;
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.stepTipClick {
+  margin: 4px 0 0;
+  color: var(--color-primary);
+  font-size: 12px;
+}
+
+.pSeg {
+  height: 10px;
+  cursor: default;
+}

@@ -39,6 +39,8 @@ import {
   TRACE_SOURCE,
   TRACE_STAGE,
   TRACE_STEPS,
+  TRACE_STEP_HELP,
+  TRACE_WHO,
   PCCC_STATUS,
   VIA,
 } from '@/constants/orderConst'
@@ -144,6 +146,45 @@ function deadRecords(events) {
 // 타오바오 구매 쪽 세부 단계 — 누르면 구매 기록(추가·수정) 화면으로
 const PURCHASE_STEPS = ['타오바오 구매', '중국 내 배송', '배대지 입고']
 
+// 진행 막대 칸 설명 (마우스 올리면 바로) — 단계 · 상태 · 무슨 일인지 · 누가 하는지 · 최근 기록
+const TIP_STATE = {
+  done: { label: '완료', tone: 'success' },
+  now: { label: '지금 이 단계', tone: 'primary' },
+  skip: { label: '지나감 (기록 없음)', tone: 'neutral' },
+  todo: { label: '아직', tone: 'neutral' },
+}
+function StepTip({ x, y, step, state, at, lastEvent, clickable }) {
+  const help = TRACE_STEP_HELP[step.step]
+  const who = help && TRACE_WHO[help.who]
+  const st = TIP_STATE[state]
+  const left = Math.min(Math.max(x, 170), window.innerWidth - 170)
+  return (
+    <div className={styles.stepTip} style={{ left, top: y + 8 }} role="tooltip">
+      <div className={styles.stepTipHead}>
+        <span className={styles.stepTipStage}>{TRACE_STAGE[step.stage].label}</span>
+        <b>{step.step}</b>
+        <span className={styles.stepTipState} data-tone={st.tone}>
+          {st.label}
+          {at ? ` · ${kst(at).slice(5, 16)}` : ''}
+        </span>
+      </div>
+      {help && <p className={styles.stepTipText}>{help.text}</p>}
+      {who && (
+        <p className={styles.stepTipWho} data-who={help.who}>
+          {who.label} — {who.hint}
+        </p>
+      )}
+      {lastEvent && (
+        <p className={styles.stepTipLast}>
+          최근 기록 · {kst(occurredOf(lastEvent)).slice(5, 16)} · {lastEvent.summary || eventTitle(lastEvent)}
+        </p>
+      )}
+      {state === 'skip' && <p className={styles.stepTipLast}>뒤 단계가 기록돼서 지나간 것으로 봐요.</p>}
+      {clickable && <p className={styles.stepTipClick}>눌러서 기록 열기</p>}
+    </div>
+  )
+}
+
 // 추적 기록 위 진행 막대 — 세부 단계 11칸, 단계마다 처음 일어난 날. 타오바오 구매 칸은 눌러서 기록
 function TraceProgress({
   events, // Array: 주문 기록
@@ -153,6 +194,7 @@ function TraceProgress({
   hasJiyun, // boolean: 이미 적은 집운 기록이 있는지
 }) {
   const first = {}
+  const last = {} // 단계마다 가장 최근 기록 — 마우스 올렸을 때 '최근 기록'으로 보여 준다
   const isDead = deadRecords(events)
   for (const e of events) {
     if (isDead(e)) continue
@@ -160,7 +202,15 @@ function TraceProgress({
     if (!s) continue
     const t = occurredOf(e)
     if (!first[s] || t < first[s]) first[s] = t
+    if (!last[s] || t > occurredOf(last[s])) last[s] = e
   }
+  // 칸 설명 — 마우스를 올리거나 키보드로 고르면 바로 뜬다 (title 기본 툴팁은 늦고 작아서, 2026-11-08)
+  const [tip, setTip] = useState(null) // { i, x, y }
+  const showTip = (i) => (ev) => {
+    const r = ev.currentTarget.getBoundingClientRect()
+    setTip({ i, x: r.left + r.width / 2, y: r.bottom })
+  }
+  const hideTip = () => setTip(null)
   const lastDone = TRACE_STEPS.reduce((n, x, i) => (first[x.step] ? i : n), -1)
   const now = TRACE_STEPS[lastDone + 1]
   const done = TRACE_STEPS[lastDone]
@@ -197,20 +247,47 @@ function TraceProgress({
               ? onJiyun
               : null
           const goName = PURCHASE_STEPS.includes(x.step) ? '타오바오 구매기록' : '집운 기록'
+          const hover = { onMouseEnter: showTip(i), onMouseLeave: hideTip }
           return go ? (
-            <li key={x.step} className={cls}>
+            <li key={x.step} className={cls} {...hover}>
               <button
                 type="button"
                 className={styles.pBtn}
-                title={`${title} — 눌러서 ${goName}`}
+                aria-label={`${title} — 눌러서 ${goName}`}
                 onClick={go}
+                onFocus={showTip(i)}
+                onBlur={hideTip}
               />
             </li>
           ) : (
-            <li key={x.step} className={cls} title={title} />
+            <li key={x.step} className={cls} aria-label={title} {...hover} />
           )
         })}
       </ol>
+      {tip &&
+        createPortal(
+          <StepTip
+            x={tip.x}
+            y={tip.y}
+            step={TRACE_STEPS[tip.i]}
+            state={
+              first[TRACE_STEPS[tip.i].step]
+                ? 'done'
+                : tip.i < lastDone
+                  ? 'skip'
+                  : tip.i === lastDone + 1
+                    ? 'now'
+                    : 'todo'
+            }
+            at={first[TRACE_STEPS[tip.i].step]}
+            lastEvent={last[TRACE_STEPS[tip.i].step]}
+            clickable={
+              (PURCHASE_STEPS.includes(TRACE_STEPS[tip.i].step) && !!onPurchase) ||
+              (TRACE_STEPS[tip.i].step === '국제 발송' && !!onJiyun)
+            }
+          />,
+          document.body,
+        )}
       <div className={styles.pText}>
         {done ? (
           <>
