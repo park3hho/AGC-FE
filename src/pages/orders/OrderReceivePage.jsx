@@ -154,7 +154,9 @@ const TIP_STATE = {
   todo: { label: '아직', tone: 'neutral' },
 }
 function StepTip({ x, y, step, state, at, lastEvent, clickable }) {
-  const help = TRACE_STEP_HELP[step.step]
+  const base = TRACE_STEP_HELP[step.step]
+  // 지금 이 단계(아직 안 일어남) = 이 단계를 기다리는 중 — 설명·누가 하는지가 다르다
+  const help = state === 'now' || state === 'todo' ? base?.now || base : base
   const who = help && TRACE_WHO[help.who]
   const st = TIP_STATE[state]
   const left = Math.min(Math.max(x, 170), window.innerWidth - 170)
