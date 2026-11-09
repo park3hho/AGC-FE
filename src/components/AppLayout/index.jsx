@@ -4,6 +4,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { findScreen } from '@/constants/screenConst'
 import { ScreenContext } from '@/contexts/ScreenContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import LoadingBuddy, { PendingBuddy } from '@/components/LoadingBuddy'
 import Footer from './Footer'
 import Sidebar from './Sidebar'
 import TabBar from './TabBar'
@@ -26,10 +27,12 @@ export default function AppLayout() {
           {/* 화면 코드를 받는 동안에도 틀은 그대로 둔다 */}
           <div className={styles.content}>
             <ErrorBoundary key={pathname}>
-              <Suspense fallback={null}>
+              <Suspense fallback={<LoadingBuddy />}>
                 <Outlet />
               </Suspense>
             </ErrorBoundary>
+            {/* 화면이 데이터를 기다리는 동안 — 0.4초 넘게 걸릴 때만 보바가 뜬다 */}
+            <PendingBuddy />
           </div>
           <Footer />
         </div>

@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
+import LoadingBuddy from '@/components/LoadingBuddy'
 import { hasFeature } from '@/constants/permissions'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -11,7 +12,7 @@ export default function RequireAuth({
   const { user, checking } = useAuth()
   const location = useLocation()
 
-  if (checking) return null
+  if (checking) return <LoadingBuddy full />
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />
   if (feature && !hasFeature(user, feature)) return <Navigate to="/" replace />
   return <Outlet />

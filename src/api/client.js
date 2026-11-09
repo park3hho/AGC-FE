@@ -74,6 +74,19 @@ export async function postForm(path, form, { errorMsg } = {}) {
 //   · GET 이 아닌 요청(저장·삭제 등)을 보내면 기억을 전부 지운다 → 고친 뒤 목록이 옛 값으로 보이지 않게
 //   · 늘 새로 받아야 하면 { fresh: true }
 const GET_TTL_MS = 30 * 1000
+
+// 기다리는 GET 수 — 로딩 캐릭터(components/LoadingBuddy PendingBuddy)가 본다
+let pending = 0
+const pendingSubs = new Set()
+const setPending = (d) => {
+  pending += d
+  pendingSubs.forEach((f) => f())
+}
+export const pendingCount = () => pending
+export const subscribePending = (f) => {
+  pendingSubs.add(f)
+  return () => pendingSubs.delete(f)
+}
 const getCache = new Map() // path → { at, promise }
 export const clearRequestCache = () => getCache.clear()
 
@@ -100,7 +113,12 @@ export async function request(
   }
   const hit = getCache.get(path)
   if (!fresh && hit && Date.now() - hit.at < GET_TTL_MS) return hit.promise
+  setPending(1)
   const promise = send()
+  promise.then(
+    () => setPending(-1),
+    () => setPending(-1),
+  )
   getCache.set(path, { at: Date.now(), promise })
   promise.catch(() => getCache.get(path)?.promise === promise && getCache.delete(path)) // 실패는 기억하지 않는다
   return promise

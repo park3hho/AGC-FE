@@ -1,4 +1,6 @@
 import { lazy, Suspense } from 'react'
+
+import LoadingBuddy from '@/components/LoadingBuddy'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import AppLayout from '@/components/AppLayout'
@@ -41,7 +43,7 @@ const UserNewPage = lazy(() => import('@/pages/admin/users/UserNewPage'))
 
 export default function App() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<LoadingBuddy full />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
 

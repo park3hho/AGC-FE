@@ -20,6 +20,7 @@
 
 /* 화면 본문 자리 — 위쪽 바 아래 남은 높이 전부 */
 .content {
+  position: relative; /* 로딩 캐릭터(PendingBuddy)가 가운데에 뜬다 */
   display: flex;
   flex: 1 1 0;
   flex-direction: column;

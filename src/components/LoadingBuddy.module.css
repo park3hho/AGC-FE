@@ -1,0 +1,204 @@
+/* 로딩 캐릭터 '보바' — 색은 토큰만 (DESIGN.md §4.8, 기본 · 넷러너) */
+
+.wrap {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 180px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* 본문 위에 띄움 — 뒤 화면은 그대로 보이고 클릭은 통과 */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  min-height: 0;
+  pointer-events: none;
+  /* 캐릭터 둘레만 살짝 가린다 — 뒤 목록 글자와 겹쳐 보이지 않게 */
+  background: radial-gradient(
+    circle at center,
+    var(--color-bg) 0,
+    var(--color-bg) 90px,
+    transparent 150px
+  );
+}
+
+.full {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--color-bg);
+}
+
+.buddy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.buddy svg {
+  overflow: visible;
+  transform-origin: 50% 100%;
+  animation: hop 0.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.straw {
+  fill: var(--color-primary);
+}
+
+.lid {
+  fill: var(--color-bg);
+  stroke: var(--color-text);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+
+.cup {
+  fill: var(--color-bg);
+  stroke: var(--color-text);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+}
+
+.tea {
+  fill: var(--color-warning-bg);
+}
+
+.boba circle {
+  fill: var(--color-text);
+  animation: bob 0.9s ease-in-out infinite;
+}
+
+.boba circle:nth-child(2n) {
+  animation-delay: 0.15s;
+}
+
+.boba circle:nth-child(3n) {
+  animation-delay: 0.3s;
+}
+
+.eyes ellipse {
+  fill: var(--color-text);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 3.2s infinite;
+}
+
+.shine {
+  fill: var(--color-bg);
+  animation: blinkShine 3.2s infinite;
+}
+
+.cheek {
+  fill: var(--color-danger);
+  opacity: 0.28;
+}
+
+.mouth {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.shadow {
+  width: 40px;
+  height: 6px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: var(--color-text);
+  opacity: 0.12;
+  animation: shadow 0.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.text {
+  margin: 0;
+  color: var(--color-text-sub);
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+@keyframes hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.06, 0.94);
+  }
+  15% {
+    transform: translateY(0) scale(0.97, 1.03);
+  }
+  50% {
+    transform: translateY(-16px) scale(1, 1);
+  }
+  85% {
+    transform: translateY(0) scale(1.02, 0.98);
+  }
+}
+
+@keyframes shadow {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.14;
+  }
+  50% {
+    transform: scaleX(0.6);
+    opacity: 0.06;
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+}
+
+@keyframes blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes blinkShine {
+  0%,
+  89%,
+  100% {
+    opacity: 1;
+  }
+  92%,
+  96% {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buddy svg,
+  .shadow,
+  .boba circle,
+  .eyes ellipse,
+  .shine {
+    animation: none;
+  }
+}
