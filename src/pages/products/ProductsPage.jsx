@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { getDetailPages } from '@/api/detailPage'
-import { getListings } from '@/api/listing'
+import { getListingsBrief } from '@/api/listing'
 import Icon from '@/components/Icon'
 import Thumb from '@/components/Thumb'
 import ListItem from '@/components/common/ListItem'
@@ -33,7 +33,7 @@ export default function ProductsPage() {
     getDetailPages()
       .then(setData)
       .catch((err) => setError(err.message))
-    getListings()
+    getListingsBrief()
       .then(setListings)
       .catch(() => setListings([])) // 마켓 칸만 비고 목록은 보인다
   }, [])

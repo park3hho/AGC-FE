@@ -21,6 +21,19 @@ const toListing = (x) => ({
   memo: x.memo || '',
 })
 
+// 전체의 짧은 판 — { id, productId, platform, listedAt } 만 (상품 목록 마켓 칸, 2026-11-09)
+export const getListingsBrief = async () => {
+  const data = await request('/listings?brief=true', {
+    errorMsg: '마켓 등록 기록을 불러오지 못했어요',
+  })
+  return data.items.map((x) => ({
+    id: x.id,
+    productId: x.product_id,
+    platform: x.platform,
+    listedAt: x.listed_at,
+  }))
+}
+
 // productId 를 주면 그 제품 것만
 export const getListings = async (productId) => {
   const q = productId ? `?product_id=${productId}` : ''
