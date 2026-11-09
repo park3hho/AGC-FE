@@ -31,7 +31,7 @@ export default function AppLayout() {
                 <Outlet />
               </Suspense>
             </ErrorBoundary>
-            {/* 화면이 데이터를 기다리는 동안 — 0.4초 넘게 걸릴 때만 보바가 뜬다 */}
+            {/* 화면이 데이터를 기다리는 동안 — 바로 보바가 뜬다 */}
             <PendingBuddy />
           </div>
           <Footer />
