@@ -32,6 +32,16 @@ export const MENU = [
     path: '/research/prices',
     feature: FEATURE.RESEARCH,
   },
+  // 매출 현황 — 기간별 매출·정산·이익·마진율·건수 (2026-11-10)
+  {
+    key: 'salesBoard',
+    group: 'sales',
+    label: '매출 현황',
+    icon: 'chart',
+    tone: 'success',
+    path: '/sales',
+    feature: FEATURE.ORDER,
+  },
   {
     key: 'pricing',
     group: 'sales',

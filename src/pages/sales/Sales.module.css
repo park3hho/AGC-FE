@@ -1,0 +1,424 @@
+/* 판매 › 매출 현황 — 섹션: 기간 · 요약 · 날짜별 · 판매처별 · 제품별 · 주문별 (DESIGN.md §4.6, 칸 = 1px 선) */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chipOn {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.dates {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--color-text-weak);
+}
+
+.dates input {
+  width: 150px;
+}
+
+/* 요약 카드 */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+}
+
+.kpis[aria-busy='true'] {
+  opacity: 0.55;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+
+.kpiLabel {
+  color: var(--color-text-sub);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kpiValue {
+  font-family: var(--font-num);
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.kpi[data-tone='success'] .kpiValue {
+  color: var(--color-success);
+}
+
+.kpi[data-tone='primary'] .kpiValue {
+  color: var(--color-primary);
+}
+
+.kpi[data-tone='warning'] .kpiValue {
+  color: var(--color-warning);
+}
+
+.kpi[data-tone='danger'] .kpiValue {
+  color: var(--color-danger);
+}
+
+.kpiSub {
+  color: var(--color-text-weak);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.goal {
+  position: relative;
+  height: 22px;
+  margin-top: var(--space-3);
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--color-bg-app);
+  border: 1px solid var(--color-border);
+}
+
+.goal i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--color-success);
+  opacity: 0.85;
+}
+
+.goal i.goalFc {
+  background: var(--color-success);
+  opacity: 0.25;
+}
+
+.goal span {
+  position: relative;
+  display: block;
+  padding: 0 var(--space-3);
+  font-size: 12px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  margin-top: var(--space-2);
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.empty {
+  padding: var(--space-5);
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
+/* 날짜별 막대 */
+.chartWrap {
+  overflow-x: auto;
+}
+
+.chart {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(28px, 1fr));
+  gap: 4px;
+  min-width: calc(var(--n) * 32px);
+  height: 180px;
+  align-items: end;
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  gap: 2px;
+}
+
+.barTrack {
+  position: relative;
+  flex: 1;
+  width: 70%;
+  max-width: 28px;
+}
+
+.barTrack i {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 3px 3px 0 0;
+}
+
+.barRev {
+  background: var(--color-primary);
+  opacity: 0.22;
+}
+
+.barProfit {
+  background: var(--color-success);
+}
+
+.barProfit.neg {
+  background: var(--color-danger);
+}
+
+.barCount {
+  min-height: 14px;
+  color: var(--color-text-sub);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.barDate {
+  color: var(--color-text-weak);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.legend {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+
+.legend i.barRev {
+  opacity: 0.35;
+}
+
+/* 표 */
+.grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+}
+
+.mrow {
+  grid-template-columns: minmax(60px, 1fr) 70px 100px 100px 60px;
+}
+
+.prow {
+  grid-template-columns: minmax(0, 2fr) 48px 96px 90px 56px;
+}
+
+.orow {
+  grid-template-columns: 130px minmax(0, 2fr) 84px 84px 84px 80px 84px 56px;
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-bg);
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.click {
+  cursor: pointer;
+}
+
+.click:hover {
+  background: var(--color-bg-app);
+}
+
+.cancel {
+  color: var(--color-text-weak);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.main b,
+.main small {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.main small {
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.num em {
+  display: block;
+  color: var(--color-warning);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.mono {
+  font-family: var(--font-num);
+}
+
+.weak {
+  color: var(--color-text-weak);
+}
+
+.bad {
+  color: var(--color-danger);
+}
+
+.warn {
+  color: var(--color-warning);
+}
+
+@media (max-width: 1100px) {
+  .grid2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 모바일: 주문 표는 카드(주문·상품 / 매출·이익·마진 / 구매·집운·정산) */
+@media (max-width: 700px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+
+  .kpiValue {
+    font-size: 20px;
+  }
+
+  .dates input {
+    width: 130px;
+  }
+
+  .mrow {
+    grid-template-columns: minmax(50px, 1fr) 44px 88px 80px 48px;
+    gap: var(--space-2);
+  }
+
+  .prow {
+    grid-template-columns: minmax(0, 1fr) 84px 52px;
+    gap: var(--space-2);
+  }
+
+  .prow > :nth-child(2),
+  .prow > :nth-child(3) {
+    display: none;
+  }
+
+  .orow.head {
+    display: none;
+  }
+
+  .orow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      'code prod prod'
+      'rev profit margin'
+      'buy ship settle';
+    gap: 6px var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .orow > :nth-child(1) {
+    grid-area: code;
+  }
+
+  .orow > :nth-child(2) {
+    grid-area: prod;
+  }
+
+  .orow > :nth-child(3) {
+    grid-area: rev;
+  }
+
+  .orow > :nth-child(4) {
+    grid-area: settle;
+  }
+
+  .orow > :nth-child(5) {
+    grid-area: buy;
+  }
+
+  .orow > :nth-child(6) {
+    grid-area: ship;
+  }
+
+  .orow > :nth-child(7) {
+    grid-area: profit;
+  }
+
+  .orow > :nth-child(8) {
+    grid-area: margin;
+  }
+
+  .orow .num {
+    text-align: left;
+  }
+
+  .orow .num[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--color-text-weak);
+    font-size: 11px;
+  }
+}

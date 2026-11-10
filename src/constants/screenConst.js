@@ -32,6 +32,7 @@ export const SCREENS = [
     group: '소싱',
     parent: '/research/prices',
   },
+  { path: '/sales', name: '매출 현황', group: '판매' },
   { path: '/pricing', name: '가격 책정', group: '판매' },
   { path: '/pricing/competition', name: '최저가 경쟁', group: '판매' },
   { path: '/pricing/:productId', name: '가격 책정 (제품)', group: '판매', parent: '/pricing' },

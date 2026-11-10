@@ -25,6 +25,7 @@ const PATHS = {
     </>
   ),
   yuan: <path d="M6 4l6 8 6-8M12 12v8M8 13h8M8 17h8" />,
+  chart: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
   building: (
     <>
       <path d="M4 21V5l8-2v18M12 7l8 2v12M2 21h20" />
