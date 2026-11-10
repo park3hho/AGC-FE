@@ -196,20 +196,20 @@ export default function CompetitionPage() {
                       {it.p.optionCount > 1 ? ` 외 ${it.p.optionCount - 1}` : ''}
                     </small>
                   </span>
-                  <span role="cell" className={`${styles.num} ${styles.main}`}>
+                  <span role="cell" className={`${styles.num} ${styles.main}`} data-label="최소가">
                     <span>{won(m.minPrice)}</span>
                     <small title={m.costBasis === 'survey' ? '조사가 기준' : '실제 구매가 기준'}>
                       원가 {won(m.cost)}
                       {m.costBasis && m.costBasis !== 'survey' ? ' · 실구매' : ''}
                     </small>
                   </span>
-                  <span role="cell" className={`${styles.num} ${styles.main}`}>
+                  <span role="cell" className={`${styles.num} ${styles.main}`} data-label="우리">
                     <span>{won(m.ourPrice)}</span>
                     <small className={m.marginPct != null && m.marginPct < 5 ? styles.bad : ''}>
                       {m.marginPct != null ? `마진 ${m.marginPct}% · ${won(m.profit)}` : ''}
                     </small>
                   </span>
-                  <span role="cell" className={styles.main}>
+                  <span role="cell" className={`${styles.main} ${styles.seller}`} data-label="판매자">
                     {c?.status === 'found' ? (
                       <>
                         {c.vendorUrl ? (
@@ -233,7 +233,7 @@ export default function CompetitionPage() {
                       </span>
                     )}
                   </span>
-                  <span role="cell" className={`${styles.num} ${styles.main}`}>
+                  <span role="cell" className={`${styles.num} ${styles.main}`} data-label="최저가">
                     <span>{c?.status === 'found' ? won(c.vendorPrice) : '-'}</span>
                     <small className={diff != null && diff < 0 ? styles.bad : ''}>
                       {diff != null ? `${diff > 0 ? '+' : ''}${diff.toLocaleString()}원` : ''}

@@ -192,3 +192,87 @@
     display: none;
   }
 }
+
+/* 모바일: 표 대신 카드 — 1줄 제품·판정, 2줄 우리 판매가·최저가·최소가, 3줄 최저가 판매자 */
+@media (max-width: 600px) {
+  .search {
+    max-width: none;
+  }
+
+  .head {
+    display: none;
+  }
+
+  .row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      'prod prod verdict'
+      'our vend min'
+      'seller seller seller';
+    gap: 6px var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .row > :nth-child(1) {
+    grid-area: prod;
+  }
+
+  .row > :nth-child(2) {
+    display: flex;
+    grid-area: min;
+  }
+
+  .row > :nth-child(3) {
+    grid-area: our;
+  }
+
+  .row > :nth-child(4) {
+    display: flex;
+    grid-area: seller;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .row > :nth-child(5) {
+    grid-area: vend;
+  }
+
+  .row > :nth-child(6) {
+    display: none;
+  }
+
+  .row > :nth-child(7) {
+    grid-area: verdict;
+    align-items: flex-end;
+    align-self: start;
+  }
+
+  .row > :nth-child(1) b {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .num {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .main[data-label]::before {
+    content: attr(data-label);
+    color: var(--color-text-weak);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .seller small {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .main small {
+    font-size: 11px;
+  }
+}
