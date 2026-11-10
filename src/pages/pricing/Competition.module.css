@@ -267,6 +267,12 @@
     white-space: nowrap;
   }
 
+  .seller > a,
+  .seller > b {
+    flex: 0 0 auto;
+    max-width: 55%;
+  }
+
   .seller small {
     flex: 1 1 auto;
     min-width: 0;
