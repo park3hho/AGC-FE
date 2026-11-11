@@ -124,11 +124,19 @@ export function orderState(order, { purchases, jiyuns } = {}) {
   if (jiyuns) {
     const live = jiyuns.filter((j) => j.status !== 'cancelled')
     st.jiyun = live.length > 0
+    // 창고에 들어온 소포 중 어느 집운에도 안 묶인 것 (상자를 나눠 보낸 주문의 두 번째 상자) (2026-11-11)
+    if (purchases && st.jiyun) {
+      const paid = new Set(live.flatMap((j) => j.packages || []).map((x) => String(x).trim().toUpperCase()))
+      st.jiyunPending = purchases.some(
+        (p) => p.cnStatus === 'arrived' && p.cnTrackingNo && !paid.has(p.cnTrackingNo.trim().toUpperCase()),
+      )
+    }
     st.dispatched = live.some((j) => j.status === 'dispatched')
     st.tracking = live.some((j) => !!j.krTrackingNo)
   } else {
     const p = order.progress
     st.jiyun = !!p?.jiyun
+    st.jiyunPending = !!p?.jiyun_pending
     st.dispatched = !!p && p.step >= 3
     st.tracking = !!p?.tracking
   }
@@ -150,7 +158,7 @@ export function nextAction(order, extra) {
   if (!st.purchase) return pick('purchase')
   if (!st.shipped) return pick('shipped')
   if (!st.arrived) return pick('arrived')
-  if (!st.jiyun) return pick('jiyun')
+  if (!st.jiyun || st.jiyunPending) return pick('jiyun')
   if (!st.dispatched && !st.tracking) return pick('dispatch')
   if (!st.tracking) return pick('tracking')
   const info = trackingText(order, extra)
