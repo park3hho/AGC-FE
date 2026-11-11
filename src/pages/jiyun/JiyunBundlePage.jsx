@@ -7,6 +7,7 @@ import {
   getJiyunList,
   updateJiyunBundle,
 } from '@/api/jiyun'
+import { setOrderBundle } from '@/api/order'
 import PageHeader from '@/components/common/PageHeader'
 import Section from '@/components/common/Section'
 import { JIYUN_STATUS, KR_COURIERS, MARKETS, TRANSPORTS } from '@/constants/orderConst'
@@ -90,6 +91,7 @@ export default function JiyunBundlePage() {
             open={openKey === g.key}
             onToggle={() => setOpenKey(openKey === g.key ? null : g.key)}
             mobile={mobile}
+            onChanged={load}
             onSaved={(items) => {
               setDone(
                 `${g.receiver} ${items.length}건을 집운 ${baseNo(items[0].jiyunNo)} 하나로 기록했어요`,
@@ -120,7 +122,7 @@ export default function JiyunBundlePage() {
   )
 }
 
-function BundleGroup({ g, open, onToggle, onSaved, mobile }) {
+function BundleGroup({ g, open, onToggle, onSaved, onChanged, mobile }) {
   // 고른 소포 — 창고에 들어온 것만 기본으로
   const [picked, setPicked] = useState(() => {
     const s = {}
@@ -241,6 +243,24 @@ function BundleGroup({ g, open, onToggle, onSaved, mobile }) {
                     {o.productName}
                     {o.optionName && ` · ${o.optionName}`} ×{o.quantity}
                   </span>
+                  {g.orders.length > 1 && (
+                    <button
+                      type="button"
+                      className={styles.alone}
+                      title="이 주문만 묶음에서 빼서 따로 집운 보내기"
+                      onClick={async () => {
+                        if (!window.confirm(`${o.code} 를 묶음에서 빼서 따로 보낼까요?`)) return
+                        try {
+                          await setOrderBundle(o.id, null)
+                          onChanged()
+                        } catch (err) {
+                          setError(err.message)
+                        }
+                      }}
+                    >
+                      따로 보내기
+                    </button>
+                  )}
                   <label className={styles.wInput}>
                     <input
                       inputMode="decimal"

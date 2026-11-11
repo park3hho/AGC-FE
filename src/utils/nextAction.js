@@ -31,6 +31,13 @@ export const NEXT = {
   },
   delivered: { label: '배송 완료 표시', tone: 'primary', group: 'delivered', kind: 'todo' },
   // 기다리는 중
+  // 집운 묶음 (2026-11-11) — 같은 고객 주문 상자가 다 들어와야 집운 결제. 하나만 와도 결제하지 않게
+  bundle_wait: {
+    label: '묶음 — 나머지 상자 기다리는 중 (다 오면 한 번에 집운 결제)',
+    tone: 'neutral',
+    group: 'wait_bundle',
+    kind: 'wait',
+  },
   shipped: { label: '판매처 발송 기다리는 중', tone: 'neutral', group: 'wait_cn', kind: 'wait' },
   arrived: {
     label: '중국 배송 중 — 창고 입고 기다리는 중',
@@ -78,6 +85,11 @@ export const NEXT_GROUPS = [
 // 홈 › 진행 중 묶음 — 기다리는 것 (사람이 할 일 없음)
 export const WAIT_GROUPS = [
   { key: 'wait_cn', label: '중국 안에서 오는 중', sub: '판매처 발송 · 창고 입고 기다리는 중' },
+  {
+    key: 'wait_bundle',
+    label: '집운 묶음 · 나머지 상자 대기',
+    sub: '같은 고객 주문 상자가 다 들어오면 그때 한 번에 집운 결제',
+  },
   {
     key: 'wait_ship',
     label: '한국으로 오는 중',
@@ -193,7 +205,12 @@ export function nextAction(order, extra) {
   if (!st.purchase) return pick('purchase')
   if (!st.shipped) return pick('shipped')
   if (!st.arrived) return pick('arrived')
-  if (!st.jiyun || st.jiyunPending) return pick('jiyun')
+  // 묶음이면 묶음 상자가 전부 입고돼야 집운 결제 (2026-11-11)
+  const b = order.progress?.bundle
+  if (!st.jiyun && b && !b.sent && !b.ready)
+    return { ...pick('bundle_wait'), info: `입고 ${b.arrived}/${b.total} · ${b.codes.join(', ')}` }
+  if (!st.jiyun || st.jiyunPending)
+    return b && !st.jiyun ? { ...pick('jiyun'), info: `묶음 ${b.size}건 · ${b.codes.join(', ')}` } : pick('jiyun')
   if (!st.dispatched && !st.tracking) return pick('dispatch')
   if (!st.tracking) return pick('tracking')
   const info = trackingText(order, extra)

@@ -112,6 +112,7 @@ const toCandidate = (g) => ({
     optionName: o.option_name || '',
     quantity: o.quantity,
     hasJiyun: o.has_jiyun,
+    bundleKey: o.bundle_key || '',
     shipDueAt: o.ship_due_at,
     parcels: o.parcels.map((p) => ({
       purchaseId: p.purchase_id,

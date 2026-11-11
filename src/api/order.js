@@ -236,3 +236,11 @@ export const getOrderUpdates = async (after) => {
     claims: data.claims.map(toUpdate),
   }
 }
+
+// 집운 묶음 바꾸기 (2026-11-11) — key 없음 = 따로 보내기, key = 다른 주문 코드의 묶음에 넣기
+export const setOrderBundle = (id, key = null) =>
+  request(`/orders/${id}/bundle`, {
+    method: 'PATCH',
+    body: { key },
+    errorMsg: '집운 묶음을 바꾸지 못했어요',
+  })
