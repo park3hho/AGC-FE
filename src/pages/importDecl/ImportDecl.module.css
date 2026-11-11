@@ -1,0 +1,171 @@
+/* 수입신고 (2026-11-11) */
+.pad {
+  padding: 0 var(--space-4);
+}
+
+.empty {
+  padding: var(--space-4);
+  color: var(--color-text-weak);
+  font-size: var(--font-sm);
+}
+
+.hint {
+  margin: 8px 0 0;
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+.weak {
+  color: var(--color-text-weak);
+  font-weight: 400;
+}
+
+.ok {
+  color: #03a94d;
+}
+
+.bad {
+  color: #f04452;
+}
+
+.mono {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.lines {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.line {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.line:hover {
+  text-decoration: underline;
+}
+
+.pRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+}
+
+.pBl {
+  font-family: var(--font-num);
+  font-weight: 600;
+}
+
+.pCodes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pCodes a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.select {
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  font-size: 13px;
+}
+
+.table {
+  font-size: 13px;
+}
+
+.tr {
+  display: grid;
+  grid-template-columns: 110px 150px 50px 130px 1.4fr 80px 110px;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 10px var(--space-4);
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tr > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.th {
+  color: var(--color-text-weak);
+  font-size: 12px;
+  cursor: default;
+}
+
+.more {
+  padding: 8px var(--space-4) 14px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-app);
+}
+
+.more dl {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.more dt {
+  color: var(--color-text-weak);
+}
+
+.more dd {
+  margin: 0;
+}
+
+.oLink {
+  display: block;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.acts {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .tr {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tr > span:nth-child(3),
+  .tr > span:nth-child(6) {
+    display: none;
+  }
+
+  .more dl {
+    grid-template-columns: 90px 1fr;
+  }
+}

@@ -112,6 +112,15 @@ export const MENU = [
     feature: FEATURE.ORDER,
   },
   {
+    key: 'importDecl',
+    group: 'sales',
+    label: '수입신고', // 수입식품 구매대행 수입신고서 — 주문(받는 사람 · B/L)마다 통관 전에 (2026-11-11)
+    icon: 'book',
+    tone: 'primary',
+    path: '/import-declarations',
+    feature: FEATURE.ORDER,
+  },
+  {
     key: 'domestic',
     group: 'sales',
     label: '국내 배송 기록', // 국내 택배 송장 · 마켓 발송처리 · 배송 조회 (2026-11-03)

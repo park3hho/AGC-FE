@@ -30,6 +30,8 @@ export const NEXT = {
     kind: 'todo',
   },
   delivered: { label: '배송 완료 표시', tone: 'primary', group: 'delivered', kind: 'todo' },
+  // 수입식품 구매대행 수입신고 (2026-11-11) — 집운 출고 · B/L 있음 · 통관 전인데 신고서 없음
+  decl: { label: '수입신고 내기 — 통관 전에 유니패스', tone: 'danger', group: 'decl', kind: 'todo' },
   // 기다리는 중
   // 집운 묶음 (2026-11-11) — 같은 고객 주문 상자가 다 들어와야 집운 결제. 하나만 와도 결제하지 않게
   bundle_wait: {
@@ -79,6 +81,7 @@ export const NEXT_GROUPS = [
   { key: 'confirm', label: '새 주문 발주확인', sub: '배송지·통관부호 보고 마켓에 확인 보내기' },
   { key: 'purchase', label: '타오바오 구매 기록하기', sub: '발주확인 끝, 구매기록 없음' },
   { key: 'ship', label: '집운 결제', sub: '창고에 들어온 소포를 고객별로 결제 (앱이나 PC)' },
+  { key: 'decl', label: '수입신고', sub: '통관 전에 유니패스 신고 (30분 점검이 냄 · 못 내면 시정명령)' },
   { key: 'delivered', label: '자사몰 배송 완료 표시', sub: '고객이 받은 주문을 배송 완료로' },
 ]
 
@@ -211,6 +214,7 @@ export function nextAction(order, extra) {
     return { ...pick('bundle_wait'), info: `입고 ${b.arrived}/${b.total} · ${b.codes.join(', ')}` }
   if (!st.jiyun || st.jiyunPending)
     return b && !st.jiyun ? { ...pick('jiyun'), info: `묶음 ${b.size}건 · ${b.codes.join(', ')}` } : pick('jiyun')
+  if (order.progress?.decl_missing) return pick('decl')
   if (!st.dispatched && !st.tracking) return pick('dispatch')
   if (!st.tracking) return pick('tracking')
   const info = trackingText(order, extra)

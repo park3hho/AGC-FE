@@ -49,11 +49,12 @@
 
 ## 5. 끝나고
 
-- 신청번호(WCANB-26-…)와 수리 결과를 AGC 주문에 기록한다.
+- AGC **판매 › 수입신고**(/import-declarations, API `/import-declarations`)에 기록한다 — 신고서 1장 = 1건, 같은 B/L 로 온 같은 고객 주문은 order_ids 로 같이. 칸: decl_no(WCANB-…) · kind(pre/main) · status(sent→accepted→approved, fix·rejected) · bl_no · vessel · arrival_date · items[{name_en, maker_en, country, qty, unit}] · seller_site · shipper_site. 신고서 화면 캡처/PDF 는 주문 증빙 kind `import_decl` 로 올린다.
+- 낼 것 목록: `GET /import-declarations/pending` (집운 출고 · B/L · 통관 전 · 그 B/L 신고 없음). 주문 목록 `progress.decl_missing` 이면 홈 할 일 '수입신고'.
 - 보완 요청이 오면 처리현황에서 내용 확인 후 같은 신고서로 보완 전송.
 - 정밀검사 대상이 되면 고객에게 알리고 동의를 받는다(샘플은 식약처가 창고에서 직접 가져감).
 
 ## 6. 아직 안 된 것
 
-- AGC 할 일에 "수입신고" 단계 추가(집운 출고 + B/L 생기면 할 일로 뜨게).
+- ~~AGC 할 일에 "수입신고" 단계 추가~~ → 2026-11-11 완료 (판매 › 수입신고, 홈 할 일, 주문 상세 '수입신고' 줄). 30분 점검이 pending 을 보고 낸다.
 - 유니패스에 등록된 업체 주소가 옛 인천 서구 주소. 바꾸려면 세관 승인 필요.

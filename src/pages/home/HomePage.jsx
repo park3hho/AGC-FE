@@ -288,7 +288,7 @@ export default function HomePage() {
       orderTodos.push({
         key: `order-${g.key}`,
         icon: 'bag',
-        tone: g.key === 'issue' ? 'warning' : 'primary',
+        tone: g.key === 'issue' || g.key === 'decl' ? 'warning' : 'primary',
         title: `${g.label} ${list.length}건`,
         sub: `${g.sub} · ${list
           .slice(0, 2)
@@ -296,7 +296,12 @@ export default function HomePage() {
           .join(', ')}${list.length > 2 ? ' …' : ''}`,
         button: '처리하기',
         // 집운 결제는 묶음 화면으로 — 같은 고객 주문은 한 번에 (2026-11-11)
-        path: g.key === 'ship' ? '/jiyun/bundle' : `/orders?stage=${STAGE_OF[g.key]}`,
+        path:
+          g.key === 'ship'
+            ? '/jiyun/bundle'
+            : g.key === 'decl'
+              ? '/import-declarations'
+              : `/orders?stage=${STAGE_OF[g.key]}`,
       })
     }
   }

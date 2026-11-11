@@ -25,6 +25,7 @@ import { useMobile } from '@/hooks/useMobile'
 import { nextAction, SETTLE_STAGES, settleRemain, STEPS6, stepsDone } from '@/utils/nextAction'
 import { collectMode, diffLines, eventTitle } from '@/utils/orderEvent'
 import Section from '@/components/common/Section'
+import DeclLine from '@/pages/importDecl/DeclLine'
 import {
   ACTOR,
   CLAIM_TYPE,
@@ -761,6 +762,15 @@ function MobileOrderDetail({
                       {j.krTrackingNo ? ` · 송장 ${j.krTrackingNo}` : ''}
                     </button>
                   ))}
+                </dd>
+                <dd />
+              </>
+            )}
+            {jiyuns?.some((j) => j.status === 'dispatched') && (
+              <>
+                <dt>수입신고</dt>
+                <dd>
+                  <DeclLine order={detail.order} />
                 </dd>
                 <dd />
               </>
@@ -1543,6 +1553,11 @@ export default function OrderReceivePage() {
                     {o.pcccMessage || '-'}
                     {o.pcccValidTo && ` · 유효기간 ${o.pcccValidTo}`}
                     <span className={styles.weak}> · {kst(o.pcccCheckedAt)}</span>
+                  </dd>
+                  {/* 수입식품 구매대행 수입신고 (2026-11-11) */}
+                  <dt>수입신고</dt>
+                  <dd>
+                    <DeclLine order={o} />
                   </dd>
                 </dl>
                 <div className={styles.dActs}>
