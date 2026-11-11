@@ -60,7 +60,10 @@ export const NEXT = {
     group: 'wait_decide',
     kind: 'wait',
   },
-  decided: { label: '구매확정 완료', tone: 'success', group: null, kind: 'none' },
+  // 정산 단계 (2026-11-11) — 구매확정 → (쿠팡) 정산 70% → 정산완료. BE order.settle.stage
+  decided: { label: '구매확정 · 정산 대기', tone: 'success', group: 'wait_settle', kind: 'wait' },
+  settle_70: { label: '정산 70% 받음 · 30% 대기', tone: 'success', group: 'wait_final', kind: 'wait' },
+  settled: { label: '정산완료', tone: 'success', group: null, kind: 'none' },
 }
 
 // 홈 › 할 일 묶음 — 사람이 실제로 할 것만 (주문 처리 먼저)
@@ -86,7 +89,33 @@ export const WAIT_GROUPS = [
     label: '배송완료 · 구매확정 대기',
     sub: '고객이 받음 · 구매확정(자동 포함) 되면 정산',
   },
+  { key: 'wait_settle', label: '구매확정 · 정산 대기', sub: '정산 예정일에 들어옴 (쿠팡은 70% 먼저)' },
+  { key: 'wait_final', label: '쿠팡 30% 유보 대기', sub: '70%는 받음 · 나머지 30% 지급예정일에 들어옴' },
 ]
+
+// 완료 주문의 정산 4단계 — 주문 › 완료 탭 걸러보기 · 홈 받을 돈 (2026-11-11)
+export const SETTLE_STAGES = [
+  { key: 'delivered', label: '배송완료', sub: '구매확정 대기' },
+  { key: 'decided', label: '구매확정', sub: '정산 대기' },
+  { key: 'paid70', label: '정산 70%', sub: '쿠팡 30% 대기' },
+  { key: 'paid', label: '정산완료', sub: '끝' },
+]
+const md = (iso) => (iso ? `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}` : '')
+// 받을(남은) 정산 — 70% 받은 쿠팡은 30%만
+export function settleRemain(o) {
+  const amt = o?.settle?.amount ?? o?.amount?.settlement ?? 0
+  if (o?.settle?.stage === 'paid') return 0
+  if (o?.settle?.stage === 'paid70') return Math.round(amt * 0.3)
+  return amt
+}
+export function settleText(o) {
+  const s = o?.settle
+  if (!s) return ''
+  if (s.stage === 'decided') return s.dueOn ? `${md(s.dueOn)} 정산 예정` : ''
+  if (s.stage === 'paid70') return s.finalOn ? `30% ${md(s.finalOn)} 예정` : ''
+  if (s.stage === 'paid') return s.paidOn ? `${md(s.paidOn)} 받음` : ''
+  return ''
+}
 
 // 마켓이 구매확정으로 본 주문 — 네이버 PURCHASE_DECIDED · 쿠팡은 상태가 배송완료에서 멈추므로
 //   매출내역(구매확정 뒤 생김)의 실제 정산액이 붙었는지로 본다
@@ -151,7 +180,13 @@ export function nextAction(order, extra) {
   if (!order || order.stage === 'cancelled') return null
   const pick = (key) => ({ key, ...NEXT[key] })
   if (order.claimType) return pick('claim')
-  if (order.stage === 'done') return pick(isPurchaseDecided(order) ? 'decided' : 'decide_wait')
+  if (order.stage === 'done') {
+    const st = order.settle?.stage
+    if (st === 'paid') return { ...pick('settled'), info: settleText(order) }
+    if (st === 'paid70') return { ...pick('settle_70'), info: settleText(order) }
+    if (st === 'decided' || (!st && isPurchaseDecided(order))) return { ...pick('decided'), info: settleText(order) }
+    return pick('decide_wait')
+  }
   if (['mismatch', 'missing'].includes(order.pcccStatus)) return pick('pccc')
   if (!order.confirmed) return pick('confirm')
   const st = orderState(order, extra)

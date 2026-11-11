@@ -21,7 +21,7 @@ import { useFitRows } from '@/hooks/useFitRows'
 import { todayKst } from '@/utils/date'
 import { keyStatuses } from '@/utils/apiKey'
 import { infoStatus } from '@/utils/companyInfo'
-import { nextAction, NEXT_GROUPS, WAIT_GROUPS } from '@/utils/nextAction'
+import { nextAction, NEXT_GROUPS, settleRemain, WAIT_GROUPS } from '@/utils/nextAction'
 import { formatCny, formatFx } from '@/utils/pricing'
 import styles from './HomePage.module.css'
 
@@ -270,9 +270,14 @@ export default function HomePage() {
     for (const g of WAIT_GROUPS) {
       const list = byGroup[g.key]
       if (!list?.length) continue
+      // 정산 대기 묶음은 받을 돈도 (2026-11-11)
+      const money =
+        g.key === 'wait_settle' || g.key === 'wait_final'
+          ? list.reduce((a, o) => a + settleRemain(o), 0)
+          : 0
       orderWaits.push({
         key: `wait-${g.key}`,
-        title: `${g.label} ${list.length}건`,
+        title: `${g.label} ${list.length}건${money > 0 ? ` · ${money.toLocaleString()}원` : ''}`,
         sub: g.sub,
         orders: list,
       })

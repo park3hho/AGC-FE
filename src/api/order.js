@@ -29,6 +29,17 @@ const toOrder = (o) => ({
       }
     : null,
   settlementDate: o.settlement_date || null,
+  // 정산 단계 (완료 주문만, 2026-11-11) — stage: delivered(구매확정 대기) · decided(정산 대기) · paid70(쿠팡 30% 유보 대기) · paid
+  settle: o.settle
+    ? {
+        stage: o.settle.stage,
+        recognizedOn: o.settle.recognized_on,
+        dueOn: o.settle.due_on,
+        finalOn: o.settle.final_on,
+        paidOn: o.settle.paid_on,
+        amount: o.settle.amount,
+      }
+    : null,
   // 처리 단계 진행 위치 (목록만) — { step 0~3, label '타오바오 구매'·'판매처 발송'·'집운 입고'·'국제 발송', total 4 } · 없으면 null
   progress: o.progress || null,
   claimType: o.claim_type || null, // 클레임 (CANCEL · RETURN · EXCHANGE · STOP_SHIPPING …) · 없으면 null

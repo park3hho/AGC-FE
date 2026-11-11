@@ -22,7 +22,7 @@ import { CopyButton } from '@/components/common/MobileBits'
 import PageHeader from '@/components/common/PageHeader'
 import { useDevMode } from '@/hooks/useDevMode'
 import { useMobile } from '@/hooks/useMobile'
-import { nextAction, STEPS6, stepsDone } from '@/utils/nextAction'
+import { nextAction, SETTLE_STAGES, settleRemain, STEPS6, stepsDone } from '@/utils/nextAction'
 import { collectMode, diffLines, eventTitle } from '@/utils/orderEvent'
 import Section from '@/components/common/Section'
 import {
@@ -910,6 +910,7 @@ export default function OrderReceivePage() {
   const stage = params.get('stage') || 'received' // 목록 단계 탭
   const filter = params.get('pccc') || 'all'
   const search = params.get('q') || '' // 자사 코드 · 마켓 주문번호
+  const settleF = params.get('ss') || 'all' // 완료 탭 — 정산 단계 걸러보기 (2026-11-11)
   // ?id= (데스크톱 목록에서 고름) 가 먼저, 없으면 주소의 /orders/:orderId
   const selected = Number(params.get('id')) || Number(orderId) || null
 
@@ -1257,6 +1258,28 @@ export default function OrderReceivePage() {
             })()}
           </div>
           {error && <p className={`form-error ${styles.pad}`}>{error}</p>}
+          {/* 완료 탭 — 정산 4단계 (배송완료 · 구매확정 · 정산 70% · 정산완료) + 단계별 받을 돈 (2026-11-11) */}
+          {stage === 'done' && data && (
+            <div className={styles.settleChips} role="group" aria-label="정산 단계로 걸러보기">
+              {[{ key: 'all', label: '전체' }, ...SETTLE_STAGES].map((s) => {
+                const list =
+                  s.key === 'all' ? data.items : data.items.filter((o) => o.settle?.stage === s.key)
+                const sum = list.reduce((a, o) => a + settleRemain(o), 0)
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    className={`${styles.settleChip} ${settleF === s.key ? styles.settleOn : ''}`}
+                    onClick={() => set({ ss: s.key === 'all' ? null : s.key, id: null })}
+                    title={s.sub}
+                  >
+                    {s.label} <b>{list.length}</b>
+                    {s.key !== 'all' && s.key !== 'paid' && sum > 0 && <small>{formatWon(sum)}</small>}
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
           {data && data.items.length === 0 && (
             <p className={styles.empty}>
@@ -1268,7 +1291,9 @@ export default function OrderReceivePage() {
             </p>
           )}
           <div className={styles.rows} role="list">
-            {(data?.items || []).map((it) => (
+            {(data?.items || [])
+              .filter((it) => stage !== 'done' || settleF === 'all' || it.settle?.stage === settleF)
+              .map((it) => (
               <button
                 key={it.id}
                 type="button"
@@ -1340,7 +1365,12 @@ export default function OrderReceivePage() {
                         </span>
                       )}
                       {/* 완료 단계 — '배송완료 · 구매확정 대기 중' / '구매확정 완료' (utils/nextAction, 2026-11-06) */}
-                      {it.stage === 'done' && !it.claimType && nextAction(it)?.label}
+                      {it.stage === 'done' &&
+                        !it.claimType &&
+                        (() => {
+                          const n = nextAction(it)
+                          return n ? `${n.label}${n.info ? ` · ${n.info}` : ''}` : ''
+                        })()}
                       {it.stage !== 'done' && !(it.stage === 'processing' && it.progress) && (
                         <>
                           {MARKET_STATUS[it.marketStatus] || it.marketStatus}

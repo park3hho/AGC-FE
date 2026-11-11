@@ -1344,3 +1344,42 @@
   height: 10px;
   cursor: default;
 }
+
+/* 완료 탭 — 정산 단계 칩 (2026-11-11) */
+.settleChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.settleChip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.settleChip b {
+  font-family: var(--font-num);
+  font-weight: 600;
+}
+
+.settleChip small {
+  color: var(--color-text-weak);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.settleOn {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: 600;
+}
