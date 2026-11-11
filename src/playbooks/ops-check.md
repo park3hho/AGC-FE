@@ -84,7 +84,7 @@
 
 - **절차·칸 값은 `import-declaration.md` 를 매번 읽고 따른다.**
 - 매 회차 `GET /api/import-declarations/pending` (집운 출고 · B/L 있음 · 통관 전 · 그 B/L 신고 없음).
-- B/L 마다 관세청 화물 조회(`services.order.customs.cargo_progress(hbl, 2026)` 또는 유니패스): 화물이 잡혔으면(입항적재화물목록 제출 — 보통 출고 다음 날 20~21시) **그 회차에 바로** 유니패스 '인터넷 구매대행 수입식품등의 수입신고서' 전송. 입항 전이면 사전신고(pre), 입항 뒤면 본신고(main). 수입신고수리(통관)는 보통 그다음 날 저녁 — 창이 약 22시간.
+- **pending 에 B/L 이 보이면 그 회차에 바로 사전신고(pre)를 낸다 — 관세청 화물 조회에 잡힐 때까지 기다리지 않는다**(11-12 사용자 "수입신고 하라고"). 사전신고는 선명·보관창고·입항일·반입일이 유니패스 고정값으로 자동 입력돼서 B/L 만 있으면 된다. 이미 입항(`customs.cargo_progress` 에 입항보고 수리)했으면 본신고(main). 통관은 보통 출고 이틀 뒤 저녁이라 늦으면 못 낸다.
 - 같은 B/L 로 온 같은 고객 주문은 신고서 1장에 품목 여러 줄.
 - 전송 후 처리현황 '기관발송(전송완료)' 확인 → `POST /api/import-declarations {order_ids, decl_no, kind, status:"sent", bl_no, vessel, arrival_date, items:[{name_en, maker_en, country, qty, unit}], seller_site, shipper_site}` + 신고서 캡처를 주문 증빙(`POST /api/orders/{id}/documents`, kind=import_decl). 낸 건 1회 보고.
 - 다음 회차부터 처리현황에서 접수·수리를 보면 `PATCH /api/import-declarations/{id} {status:"accepted"|"approved", receipt_no}`. 보완 요청이면 status "fix" + 보고.
