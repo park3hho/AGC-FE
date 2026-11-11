@@ -36,6 +36,7 @@ const PurchaseListPage = lazy(() => import('@/pages/purchases/PurchaseListPage')
 const PurchaseFormPage = lazy(() => import('@/pages/orders/PurchaseFormPage'))
 const JiyunListPage = lazy(() => import('@/pages/jiyun/JiyunListPage'))
 const JiyunFormPage = lazy(() => import('@/pages/jiyun/JiyunFormPage'))
+const JiyunBundlePage = lazy(() => import('@/pages/jiyun/JiyunBundlePage'))
 const DomesticListPage = lazy(() => import('@/pages/domestic/DomesticListPage'))
 const DomesticDetailPage = lazy(() => import('@/pages/domestic/DomesticDetailPage'))
 const ShippingAddressFormPage = lazy(() => import('@/pages/shipping/ShippingAddressFormPage'))
@@ -77,6 +78,7 @@ export default function App() {
               <Route path="/orders/:orderId/purchases/new" element={<PurchaseFormPage />} />
               <Route path="/orders/purchases/:id/edit" element={<PurchaseFormPage />} />
               <Route path="/jiyun" element={<JiyunListPage />} />
+          <Route path="/jiyun/bundle" element={<JiyunBundlePage />} />
               <Route path="/domestic" element={<DomesticListPage />} />
               <Route path="/domestic/:id" element={<DomesticDetailPage />} />
               <Route path="/orders/:orderId/jiyun/new" element={<JiyunFormPage />} />

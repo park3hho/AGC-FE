@@ -295,7 +295,8 @@ export default function HomePage() {
           .map((o) => o.code)
           .join(', ')}${list.length > 2 ? ' …' : ''}`,
         button: '처리하기',
-        path: `/orders?stage=${STAGE_OF[g.key]}`,
+        // 집운 결제는 묶음 화면으로 — 같은 고객 주문은 한 번에 (2026-11-11)
+        path: g.key === 'ship' ? '/jiyun/bundle' : `/orders?stage=${STAGE_OF[g.key]}`,
       })
     }
   }

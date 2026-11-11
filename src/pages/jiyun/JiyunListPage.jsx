@@ -82,9 +82,14 @@ export default function JiyunListPage() {
         title="집운 기록"
         sub="집운 배송 요청 · 배송비 결제 · 출고 · 국내 송장"
         action={
-          <button className="btn-secondary btn-md" onClick={() => navigate('/orders')}>
-            주문 접수에서 집운 기록 추가
-          </button>
+          <span style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-primary btn-md" onClick={() => navigate('/jiyun/bundle')}>
+              묶어서 보내기
+            </button>
+            <button className="btn-secondary btn-md" onClick={() => navigate('/orders')}>
+              주문 접수에서 집운 기록 추가
+            </button>
+          </span>
         }
       />
 

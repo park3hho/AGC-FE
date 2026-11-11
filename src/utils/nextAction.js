@@ -24,7 +24,7 @@ export const NEXT = {
   confirm: { label: '발주확인 보내기', tone: 'primary', group: 'confirm', kind: 'todo' },
   purchase: { label: '타오바오 구매 기록', tone: 'primary', group: 'purchase', kind: 'todo' },
   jiyun: {
-    label: '집운 결제하기 — 이 고객 소포만 따로 묶기',
+    label: '집운 결제하기 — 같은 고객 소포는 한 번에 묶기',
     tone: 'primary',
     group: 'ship',
     kind: 'todo',

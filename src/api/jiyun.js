@@ -96,3 +96,66 @@ export const updateJiyun = async (id, form) => {
 
 export const deleteJiyun = (id) =>
   request(`/jiyun-shipments/${id}`, { method: 'DELETE', errorMsg: '집운 기록을 삭제하지 못했어요' })
+
+// ---- 집운 묶음 (2026-11-11) — 받는 사람이 같은 주문 여러 건을 집운 한 번에
+const toCandidate = (g) => ({
+  key: g.key,
+  receiver: g.receiver,
+  region: g.region || '',
+  ready: g.ready, // 창고에 들어온(아직 집운 안 묶인) 소포 수
+  coming: g.coming, // 아직 오는 중 (판매처 발송 전 포함)
+  orders: g.orders.map((o) => ({
+    id: o.id,
+    code: o.code || '',
+    market: o.market,
+    productName: o.product_name,
+    optionName: o.option_name || '',
+    quantity: o.quantity,
+    hasJiyun: o.has_jiyun,
+    shipDueAt: o.ship_due_at,
+    parcels: o.parcels.map((p) => ({
+      purchaseId: p.purchase_id,
+      taobaoOrderNo: p.taobao_order_no,
+      no: p.no || '',
+      cnCourier: p.cn_courier || '',
+      cnStatus: p.cn_status, // ordered · shipped · arrived
+      ready: p.ready,
+      arrivedAt: p.arrived_at,
+    })),
+  })),
+})
+
+export const getBundleCandidates = async () => {
+  const data = await request('/jiyun-shipments/bundle-candidates', {
+    errorMsg: '묶을 주문을 불러오지 못했어요',
+  })
+  return data.groups.map(toCandidate)
+}
+
+// orders: [{ orderId, packages: [...], weightKg }] · 금액은 묶음 합계 (BE 가 무게 비율로 나눔)
+export const createJiyunBundle = async (form, orders) => {
+  const { packages: _p, weight_kg: _w, ...rest } = toBody(form)
+  const data = await request('/jiyun-shipments/bundle', {
+    method: 'POST',
+    body: {
+      ...rest,
+      orders: orders.map((o) => ({
+        order_id: o.orderId,
+        packages: o.packages,
+        weight_kg: orNull(o.weightKg),
+      })),
+    },
+    errorMsg: '집운 묶음을 저장하지 못했어요',
+  })
+  return data.items.map(toJiyun)
+}
+
+// 한 상자에 같은 값(상태 · 출고 · H B/L · 국내 택배사·송장)을 묶음 전체에
+export const updateJiyunBundle = async (id, patch) => {
+  const data = await request(`/jiyun-shipments/${id}/bundle`, {
+    method: 'PATCH',
+    body: patch,
+    errorMsg: '집운 묶음을 수정하지 못했어요',
+  })
+  return data.items.map(toJiyun)
+}
