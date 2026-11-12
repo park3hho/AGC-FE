@@ -13,7 +13,7 @@
 - AGC FE https://agc-fe.vercel.app — 브라우저 로그인 쿠키로 `fetch('/api/...')`. 서버는 이 PC Docker(agc_app, agc_db, fin_db).
 - 마켓 API: `docker exec -i -w /app -e PYTHONPATH=/app agc_app python -` 에서 `from services.order.market_clients import _naver_auth, NAVER_BASE, _coupang_call`. `_naver_auth()` 는 토큰 문자열 → 헤더 `{"Authorization": f"Bearer {t}", "Content-Type": "application/json"}`. `_coupang_call(method, path, query="", body=None)` — body 는 4번째 인자. 쿠팡 vendorId A01774978.
 - HQ 키: `C:\Users\iwill\.hq\agent_key` (헤더 X-Service-Key) → http://127.0.0.1:8400/svc. 비밀번호·카드값은 HQ 에서 읽고 출력하지 않는다.
-- 영수증 폴더: `C:\Users\iwill\.aside\u\0\sessions\2026-10-24_ln3FPQWmjusKxVh3\artifacts\receipts\` — 파일명 `{YYYYMMDD}_{주문코드}_{구매|집운}_주문상세_{타오바오번호}.pdf`.
+- 영수증 폴더: `C:\Users\iwill\AGC\receipts\` (세션 폴더 아님 — 옛 세션 폴더는 11-12 세션 삭제로 사라짐. git 에는 안 올라감) — 파일명 `{YYYYMMDD}_{주문코드}_{구매|집운}_주문상세_{타오바오번호}.pdf`.
 - AGC `/api/orders` 의 receiver 는 가린 값 → 고객 원본은 마켓 API(네이버 product-orders/query 의 shippingAddress·individualCustomUniqueCode, 쿠팡 ordersheets 의 receiver·overseaShippingInfoDto)로.
 
 ## 1. 테스트 주문
