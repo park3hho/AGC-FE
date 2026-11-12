@@ -87,6 +87,8 @@
 - **pending 에 B/L 이 보이면 그 회차에 바로 사전신고(pre)를 낸다 — 관세청 화물 조회에 잡힐 때까지 기다리지 않는다**(11-12 사용자 "수입신고 하라고"). 사전신고는 선명·보관창고·입항일·반입일이 유니패스 고정값으로 자동 입력돼서 B/L 만 있으면 된다. 이미 입항(`customs.cargo_progress` 에 입항보고 수리)했으면 본신고(main). 통관은 보통 출고 이틀 뒤 저녁이라 늦으면 못 낸다.
 - 같은 B/L 로 온 같은 고객 주문은 신고서 1장에 품목 여러 줄.
 - 전송 후 처리현황 '기관발송(전송완료)' 확인 → `POST /api/import-declarations {order_ids, decl_no, kind, status:"sent", bl_no, vessel, arrival_date, items:[{name_en, maker_en, country, qty, unit}], seller_site, shipper_site}` + 신고서 캡처를 주문 증빙(`POST /api/orders/{id}/documents`, kind=import_decl). 낸 건 1회 보고.
+- **제품 URL 은 우리 네이버 상품 상세 주소(로그인 없이 보임) + 품목 사진 첨부** — 티몰·타오바오 주소는 오류통보 사유(11-12).
+- **매 회차 처리현황(신청일자 1주일)에서 '오류통보'를 찾는다** — 오류내역은 팝업 textarea 값. 보이면 그 회차에 고쳐서 새 원본으로 다시 내고(import-declaration.md 8절) 보고. 통관 전에 못 고치면 끝이다.
 - 다음 회차부터 처리현황에서 접수·수리를 보면 `PATCH /api/import-declarations/{id} {status:"accepted"|"approved", receipt_no}`. 보완 요청이면 status "fix" + 보고.
 - 통관(수입신고수리)까지 못 냈으면 `POST ... {status:"missed", kind:"main", bl_no, order_ids, memo:사유}` 기록하고 **바로 보고**.
 - 유니패스 로그인·인증서에서 막히면 그 회차 멈추고 바로 보고(통관 전에 사람이 내야 함).
