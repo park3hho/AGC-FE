@@ -99,6 +99,7 @@
   - (a) 집운 결제 전 + 타오바오 소포 창고 입고 전 → 승인(쿠팡 출고중지 `PUT .../returnRequests/{receiptId}/stoppedShipment {vendorId, receiptId, cancelCount}`, 네이버 `POST .../product-orders/{line_no}/claim/cancel/approve`) → 조회로 확인 → 보고 → 아래 타오바오 환불.
   - (b) 중국 창고에서 이미 출고 → **승인 금지**. 쿠팡 `PATCH .../returnRequests/{receiptId}/completedShipment {vendorId, receiptId, deliveryCompanyCode, invoiceNumber}`(이미출고 → 반품으로), 네이버는 그 송장으로 발송처리(취소 거부). 보고.
   - (c) 집운 결제됐는데 출고 전 → 승인하지 말고 보고(집운 취소 가능 여부는 사용자 판단).
+- **이미 끝난 취소도 매 회차 본다(11-13 누락 사고):** 쿠팡은 발주확인 뒤라도 고객이 앱에서 취소하면 RU(출고중지요청)를 거치지 않고 바로 `RETURNS_COMPLETED`(status=CC)가 되고 AGC 주문은 stage `cancelled` 로 바뀐다 → RU 만 보면 놓친다(OR-261112-0002 가 00:46 취소됐는데 8시간 동안 아무 회차도 退款 안 함). 매 회차 `GET /api/orders?stage=cancelled&include_test=true` 에서 claim_at 이 최근 7일인 주문마다 그 타오바오 구매 memo 에 `[退款 신청` 이 없고 cn_status 가 cancelled 가 아니면 → 아래 타오바오 환불 규칙대로 그 회차에 바로 처리(미발송이면 退款, 운송 중이면 拦截 退款, 입고·집운·출고 뒤면 신청 말고 보고). 네이버도 같은 방식(claim_type CANCEL/RETURN 완료).
 - 쿠팡 출고중지요청은 매 회차 `GET .../returnRequests?createdAtFrom={30일 전}&createdAtTo={오늘}&status=RU`. API 로 안 되면 Wing(https://wing.coupang.com/tenants/sfl-portal/stop-shipment/list, HQ #2) '출고중지' 버튼.
 - 타오바오 환불(결제용): 클레임 완료 + 소포 창고 입고 전이면 주문상세 → '退换/退款' → 未收到货 · 不想要了 · 전액 · 退款说明("客户取消了订单，包裹还在运输途中（{택배사} {운송장}），麻烦帮忙拦截退回，谢谢！" / 미발송 "客户取消了订单，请不要发货，谢谢！") → 提交 → 退款编号 확인 → 구매기록 memo "[退款 신청 YYYY-MM-DD HH:MM] 退款编号 …, ¥금액, 사유" → 보고. 이미 입고·집운·출고면 신청하지 말고 보고만. 요청 단계 클레임은 한 번만 보고.
 - 환불 추적: https://refund2.taobao.com/dispute/buyerDisputeList.htm — 거절·추가 요구는 바로 보고, 退款成功 새로 보이면 memo "[退款成功 YYYY-MM-DD HH:MM] ¥금액" + 보고.
