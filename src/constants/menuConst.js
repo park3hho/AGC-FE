@@ -43,6 +43,15 @@ export const MENU = [
     feature: FEATURE.ORDER,
   },
   {
+    key: 'shopAnalytics',
+    group: 'sales',
+    label: '자사몰 분석', // eidofood.com 방문자 · 유입 경로 · 구매 단계 (2026-11-15)
+    icon: 'chart',
+    tone: 'primary',
+    path: '/shop-analytics',
+    feature: FEATURE.ORDER,
+  },
+  {
     key: 'pricing',
     group: 'sales',
     label: '가격 책정',

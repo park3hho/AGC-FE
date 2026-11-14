@@ -1,0 +1,80 @@
+/* 판매 › 자사몰 분석 — Sales.module.css 를 같이 쓰고, 여기엔 이 화면만의 것 (칸 = 1px 선, 알약 없음, 색 토큰만) */
+
+.chart {
+  height: 150px;
+}
+
+.barVisit {
+  background: var(--color-primary);
+}
+
+.barVal {
+  color: var(--color-text-sub);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.hrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(60px, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: 7px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+}
+
+.hname {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.htrack {
+  position: relative;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--color-bg-app);
+}
+
+.htrack i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px;
+  background: var(--color-primary);
+  opacity: 0.75;
+}
+
+.foot {
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-text-weak);
+  font-size: 12px;
+}
+
+/* 지금 접속 — 점 + 글자 */
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-sub);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.live i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-weak);
+}
+
+.live i[data-on='true'] {
+  background: var(--color-success);
+}
