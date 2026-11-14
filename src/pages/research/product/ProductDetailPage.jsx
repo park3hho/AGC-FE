@@ -22,6 +22,7 @@ import {
 } from '@/utils/pricing'
 import research from '../Research.module.css'
 import styles from './ProductDetail.module.css'
+import LabelSection from './LabelSection'
 import ProductInfoSection from './ProductInfoSection'
 
 // 데스크탑에서 가격조사 섹션 한 페이지 건수 (섹션이 남은 높이를 채우지 않아 고정)
@@ -90,7 +91,7 @@ export default function ProductDetailPage() {
     { id: 'price', name: '가격' },
     { id: 'surveys', name: '조사' },
   ])
-  const TAB_OF = { photos: 'photos', info: 'info', 'product-info': 'info', 'price-summary': 'price', options: 'price', surveys: 'surveys' }
+  const TAB_OF = { photos: 'photos', info: 'info', 'product-info': 'info', 'label-info': 'info', 'price-summary': 'price', options: 'price', surveys: 'surveys' }
   const hideOf = (sectionId) => tabs.hide(TAB_OF[sectionId])
   // 데스크탑에서 남은 높이를 채우는 섹션 — 모바일은 지금 탭에서 마지막 섹션 하나만 채운다 (정보 탭은 제품 정보, 가격 탭은 옵션 · 옵션이 없으면 판매가)
   const MOBILE_FILL = { photos: true, 'product-info': true, options: true, 'price-summary': options.length === 0, surveys: true }
@@ -327,6 +328,12 @@ export default function ProductDetailPage() {
             onSaved={(p) => setData({ ...data, product: p })}
             fill={fillOf('product-info', false)}
             className={hideOf('product-info')}
+          />
+          <LabelSection
+            product={product}
+            onSaved={(p) => setData({ ...data, product: p })}
+            fill={false}
+            className={hideOf('label-info')}
           />
           <Section
             name="가격조사"

@@ -21,6 +21,10 @@ const toProduct = (p) => ({
   allergens: p.allergens || '',
   shelfLife: p.shelf_life || '',
   storage: p.storage || '',
+  // 수입신고용 성분 자료 — 신고 때 있으면 쓰고, 없으면 찾아서 여기 저장 (2026-11-14)
+  labelPaths: p.label_images || [], // 성분표·영양성분표 이미지 — BE 값 그대로
+  labelImages: (p.label_images || []).map(fileUrl), // 화면에 띄울 주소
+  nutrition: p.nutrition || '',
   // 분류 — 자사몰 메뉴가 이 값으로 거른다 (코드 목록: getProductCategories)
   category: p.category || 'beverage',
   subcategory: p.subcategory || '',
@@ -130,6 +134,19 @@ export const updateProductInfo = async (id, info) => {
       tea_form: info.category === 'tea' ? info.teaForm || null : null,
     },
     errorMsg: '제품 정보를 저장하지 못했어요',
+  })
+  return toProduct(data.product)
+}
+
+// 성분표 이미지·영양성분 저장 — 보낸 것만 바뀜다 (이미지는 목록 전체 교체)
+export const updateProductLabels = async (id, { labelPaths, nutrition }) => {
+  const body = {}
+  if (labelPaths !== undefined) body.label_images = labelPaths
+  if (nutrition !== undefined) body.nutrition = nutrition && nutrition.trim() ? nutrition.trim() : null
+  const data = await request(`/products/${id}`, {
+    method: 'PATCH',
+    body,
+    errorMsg: '성분 자료를 저장하지 못했어요',
   })
   return toProduct(data.product)
 }
