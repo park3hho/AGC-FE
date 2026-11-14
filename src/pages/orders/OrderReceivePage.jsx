@@ -921,6 +921,7 @@ export default function OrderReceivePage() {
   const filter = params.get('pccc') || 'all'
   const search = params.get('q') || '' // 자사 코드 · 마켓 주문번호
   const settleF = params.get('ss') || 'all' // 완료 탭 — 정산 단계 걸러보기 (2026-11-11)
+  const progF = params.get('ps') ?? 'all' // 처리 탭 — 진행 단계 걸러보기 (진행 막대 칸 번호, 2026-11-14)
   // ?id= (데스크톱 목록에서 고름) 가 먼저, 없으면 주소의 /orders/:orderId
   const selected = Number(params.get('id')) || Number(orderId) || null
 
@@ -1216,7 +1217,7 @@ export default function OrderReceivePage() {
                   role="tab"
                   aria-selected={stage === s.key}
                   className={`${styles.tTab} ${stage === s.key ? styles.tOn : ''}`}
-                  onClick={() => set({ stage: s.key === 'received' ? null : s.key, id: null })}
+                  onClick={() => set({ stage: s.key === 'received' ? null : s.key, id: null, ps: null, ss: null })}
                 >
                   {s.label}
                 </button>
@@ -1291,6 +1292,47 @@ export default function OrderReceivePage() {
             </div>
           )}
 
+          {/* 처리 탭 — 진행 막대 지금 칸(타오바오 구매 · 판매처 발송 · 집운 입고 · 국제 발송)별 건수 + 판매가 합계. 완료 탭 칩과 같은 모양 (2026-11-14) */}
+          {stage === 'processing' && data && (() => {
+            const total = (o) => (o.amount?.total ?? o.totalPrice ?? 0)
+            const labels =
+              data.items.find((o) => o.progress)?.progress?.labels || [
+                '타오바오 구매',
+                '판매처 발송',
+                '집운 입고',
+                '국제 발송',
+              ]
+            const chips = [
+              { key: 'all', label: '전체', list: data.items },
+              ...labels.map((label, i) => ({
+                key: String(i),
+                label,
+                list: data.items.filter((o) => (o.progress?.step ?? -1) === i),
+              })),
+            ]
+            const none = data.items.filter((o) => !o.progress)
+            if (none.length) chips.push({ key: 'none', label: '기록 없음', list: none })
+            return (
+              <div className={styles.settleChips} role="group" aria-label="진행 단계로 걸러보기">
+                {chips.map((c) => {
+                  const sum = c.list.reduce((a, o) => a + total(o), 0)
+                  return (
+                    <button
+                      key={c.key}
+                      type="button"
+                      className={`${styles.settleChip} ${progF === c.key ? styles.settleOn : ''}`}
+                      onClick={() => set({ ps: c.key === 'all' ? null : c.key, id: null })}
+                      title="판매가(고객 결제 전 총액) 합계"
+                    >
+                      {c.label} <b>{c.list.length}</b>
+                      {sum > 0 && <small>{formatWon(sum)}</small>}
+                    </button>
+                  )
+                })}
+              </div>
+            )
+          })()}
+
           {data && data.items.length === 0 && (
             <p className={styles.empty}>
               {search
@@ -1303,6 +1345,12 @@ export default function OrderReceivePage() {
           <div className={styles.rows} role="list">
             {(data?.items || [])
               .filter((it) => stage !== 'done' || settleF === 'all' || it.settle?.stage === settleF)
+              .filter(
+                (it) =>
+                  stage !== 'processing' ||
+                  progF === 'all' ||
+                  (progF === 'none' ? !it.progress : String(it.progress?.step ?? '') === progF),
+              )
               .map((it) => (
               <button
                 key={it.id}
