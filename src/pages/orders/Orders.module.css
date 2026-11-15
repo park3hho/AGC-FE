@@ -1383,3 +1383,58 @@
   color: var(--color-text);
   font-weight: 600;
 }
+
+/* 주문 접수 › 상품 상세 (2026-11-16) — 사진 + 이름 · 옵션 · 링크 한 줄 */
+.prodRow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.prodPhoto {
+  display: block;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg-sub);
+  object-fit: cover;
+}
+
+.prodBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.prodName {
+  overflow: hidden;
+  font-size: var(--font-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prodSub {
+  color: var(--color-text-sub);
+  font-size: 13px;
+}
+
+.prodLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--space-3);
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.prodLinks a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.prodLinks a:hover {
+  text-decoration: underline;
+}

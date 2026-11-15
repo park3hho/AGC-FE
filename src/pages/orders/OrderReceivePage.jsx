@@ -47,6 +47,7 @@ import {
 } from '@/constants/orderConst'
 import { formatWon } from '@/utils/pricing'
 import OrderMoney from './OrderMoney'
+import OrderProduct from './OrderProduct'
 import styles from './Orders.module.css'
 
 // 'YYYY-MM-DD HH:mm' (KST)
@@ -641,6 +642,7 @@ function MobileOrderDetail({
 
       <div className={styles.mBody}>
         {error && <p className="form-error">{error}</p>}
+        {tab === 'info' && <OrderProduct order={o} sourcing={detail.sourcing} />}
         {tab === 'info' && (
           <dl className={styles.mKv}>
             <dt>받는 분</dt>
@@ -1465,6 +1467,7 @@ export default function OrderReceivePage() {
 
         {/* 모바일 목록 화면에서는 오른쪽(금액 · 추적 기록)을 숨긴다 — 주문을 누르면 /orders/:id 상세 화면 */}
         <div className={`fit-col ${styles.side} ${mobile ? 'mobile-hidden' : ''}`}>
+          {detail && o && <OrderProduct key={`p${o.id}`} order={o} sourcing={detail.sourcing} />}
           {detail && o && (
             <OrderMoney
               key={o.id}

@@ -148,6 +148,9 @@ const toDetail = (data) => ({
         productCode: data.sourcing.product_code,
         productTitle: data.sourcing.product_title || '',
         taobaoUrl: data.sourcing.taobao_url || '',
+        photoUrl: data.sourcing.photo_url || '', // 주문 상세 '상품 상세' 섹션 (2026-11-16)
+        marketUrl: data.sourcing.market_url || '',
+        purchaseUrl: data.sourcing.purchase_url || '',
         optionId: data.sourcing.option_id ?? null,
         option1: data.sourcing.option1 || '',
         option2: data.sourcing.option2 || '',
