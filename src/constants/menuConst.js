@@ -4,6 +4,7 @@ import { FEATURE } from '@/constants/permissions'
 export const MENU_GROUPS = [
   { key: 'sourcing', label: '소싱' },
   { key: 'sales', label: '판매' },
+  { key: 'dashboard', label: '대시보드' }, // 매출 현황 · 자사몰 분석 (2026-11-15 사용자: 판매에서 빼서 설정 위로)
   { key: 'settings', label: '설정' },
 ]
 
@@ -33,24 +34,6 @@ export const MENU = [
     feature: FEATURE.RESEARCH,
   },
   // 매출 현황 — 기간별 매출·정산·이익·마진율·건수 (2026-11-10)
-  {
-    key: 'salesBoard',
-    group: 'sales',
-    label: '매출 현황',
-    icon: 'chart',
-    tone: 'success',
-    path: '/sales',
-    feature: FEATURE.ORDER,
-  },
-  {
-    key: 'shopAnalytics',
-    group: 'sales',
-    label: '자사몰 분석', // eidofood.com 방문자 · 유입 경로 · 구매 단계 (2026-11-15)
-    icon: 'chart',
-    tone: 'primary',
-    path: '/shop-analytics',
-    feature: FEATURE.ORDER,
-  },
   {
     key: 'pricing',
     group: 'sales',
@@ -137,6 +120,24 @@ export const MENU = [
     icon: 'truck',
     tone: 'success',
     path: '/domestic',
+    feature: FEATURE.ORDER,
+  },
+  {
+    key: 'salesBoard',
+    group: 'dashboard',
+    label: '매출 현황',
+    icon: 'chart',
+    tone: 'success',
+    path: '/sales',
+    feature: FEATURE.ORDER,
+  },
+  {
+    key: 'shopAnalytics',
+    group: 'dashboard',
+    label: '자사몰 분석', // eidofood.com 방문자 · 유입 경로 · 구매 단계 (2026-11-15)
+    icon: 'chart',
+    tone: 'primary',
+    path: '/shop-analytics',
     feature: FEATURE.ORDER,
   },
   {
