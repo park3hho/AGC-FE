@@ -54,3 +54,23 @@
 | 회색 | 아직 |
 
 지운 기록, 취소한 기록(구매 `cancelled`, 집운 `cancelled`)은 막대에서 빠져요.
+
+## 묶음 번호 PRE_LP… (2026-11-16)
+- 집운 물류 주문(LP 번호) 1건 = 묶음 1개. 결제 전에는 **예약 번호 PRE_LP + 대문자·숫자 10자리**(예: PRE_LP7K3QZ9A1BX)로 부르고, 집운 결제 기록을 저장하면 그 묶음에 LP 번호(-2/-3 뗀 번호)가 1번 붙는다.
+- 새 주문이 들어오면 서버가 같은 받는 사람(이름 + 우편번호)의 '모으는 중' 묶음에 넣는다 — 날짜 상관없이(다음 날 연속 주문도 같이). 예상 무게 합이 25kg(설정 JIYUN_BUNDLE_MAX_KG)를 넘게 되면 새 묶음을 연다(30kg 넘으면 大件操作费 ¥60).
+- 상태: 모으는 중(open) → 확정 · 결제 대기(confirmed, 더 안 받음) → 집운 결제(paid) → 출고(dispatched) → 배송 완료(done) / 취소. 결제 뒤 상태는 집운 기록 · 주문 단계로 서버가 정한다(5분 수집 때마다).
+- 결제 전 묶음에서 취소된 주문은 자동으로 빠진다. 결제 뒤에는 기록으로 남는다.
+- 옮기기: 결제 전만, 받는 사람이 같은 묶음끼리만 — API `POST /api/jiyun-bundles/move`.
+- **사용자 화면에는 묶음 번호를 안 띄운다** (사용자: "집운 코드를 내가 볼 필요 없어, 너 일할 때 체계적으로 하라고 준 번호"). 화면의 '묶음 n건' · 집운 결제 할 일은 전과 같다. 에이전트는 아래 API로 묶음 번호 기준으로 일한다.
+
+### 에이전트용 API (헤더는 다른 AGC API 와 같음, 권한 order)
+| 할 일 | 요청 |
+|---|---|
+| 진행 중 묶음 목록 (번호 · 구성 주문 코드 · 소포 입고 n/m · 예상 무게 · 상태 · LP) | `GET /api/jiyun-bundles?status=active` (status: active · open · confirmed · paid · dispatched · done) |
+| 묶음 하나 (구성 주문 · 주문별 소포 송장·입고 · 집운 결제 기록) | `GET /api/jiyun-bundles/{PRE_LP…}` |
+| 주문 코드로 그 주문의 묶음 | `GET /api/jiyun-bundles/by-order/{OR-…}` |
+| 확정(더 안 받음) / 풀기 | `POST /api/jiyun-bundles/{code}/confirm` · `/reopen` |
+| LP 번호 · 집운 결제 주문번호(tradeId) · 메모 | `PATCH /api/jiyun-bundles/{code}` `{lp_no, jiyun_trade_id, memo}` (보낸 칸만. 보통은 집운 결제 기록 저장 때 LP 가 자동으로 붙음) |
+| 주문 옮기기 / 따로 | `POST /api/jiyun-bundles/move` `{order_id, target}` — target = 묶음 번호 · 그 묶음의 주문 코드 · null(새 묶음) |
+- 집운 결제 기록 저장은 지금처럼 `POST /api/jiyun-shipments/bundle`(여러 주문) · `POST /api/jiyun-shipments`(1건). 저장하면 서버가 그 주문들의 묶음에 LP 번호를 붙이고 상태를 '집운 결제'로 바꾼다. 보고는 "PRE_LP… = LP…" 로 짝지어 적는다.
+- 주문의 `bundle_key` 는 묶음 번호와 같다(예전 화면 호환). 집운 기록은 지금처럼 주문마다 1건(`jiyun_shipment.bundle_id` 로 묶음에 연결), FIN 지출 ext_key `AGC-jiyun-{집운 기록 id}` 는 그대로.
