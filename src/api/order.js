@@ -42,6 +42,7 @@ const toOrder = (o) => ({
     : null,
   // 처리 단계 진행 위치 (목록만) — { step 0~3, label '타오바오 구매'·'판매처 발송'·'집운 입고'·'국제 발송', total 4 } · 없으면 null
   progress: o.progress || null,
+  autoDecide: o.auto_decide || null, // 자동 구매확정 예정일 (2026-11-16)
   claimType: o.claim_type || null, // 클레임 (CANCEL · RETURN · EXCHANGE · STOP_SHIPPING …) · 없으면 null
   claimStatus: o.claim_status || null,
   claimAt: o.claim_at || null,

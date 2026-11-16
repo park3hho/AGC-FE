@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 
 import Section from '@/components/common/Section'
 import { MARKETS } from '@/constants/orderConst'
+import { autoDecideText } from '@/utils/nextAction'
 import { formatWon } from '@/utils/pricing'
 import styles from './Orders.module.css'
 
@@ -208,6 +209,18 @@ export default function OrderMoney({
           <span className={styles.mVal}>
             {cancelled ? '없음 (취소·반품)' : settle == null ? '-' : formatWon(settle)}
             {a?.actual && o.settlementDate && <small>{o.settlementDate}</small>}
+            {/* 자동 구매확정 예정일 (2026-11-16) */}
+            {!cancelled &&
+              o.autoDecide &&
+              (() => {
+                const ad = autoDecideText(o.autoDecide)
+                return (
+                  <small className={`${styles.adLine} ${styles['ad_' + ad.tone]}`} title={ad.title}>
+                    <i className={styles.adDot} />
+                    {ad.text}
+                  </small>
+                )
+              })()}
           </span>
         </div>
 

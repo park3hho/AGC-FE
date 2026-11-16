@@ -237,3 +237,15 @@ export function stepsDone(order, extra) {
   if (n === 5 && st.tracking) n = 6
   return n
 }
+
+// 자동 구매확정 예정일 (2026-11-16) — BE order.auto_decide { state, delivered_on, due_on, d_day, source, decided_on, extendable }
+//   목록 · 금액 섹션에서 '자동 확정 11/24 (D-8)' / '예정일 지남' / '확정됨 11/16'. 네이버는 구매자가 연장하면 1회 10일씩 늦어질 수 있음
+export function autoDecideText(ad) {
+  if (!ad) return null
+  if (ad.state === 'decided') return { text: ad.decided_on ? `구매확정 ${md(ad.decided_on)}` : '구매확정됨', tone: 'success' }
+  if (ad.state === 'unknown') return { text: '자동 확정일 모름 (배송완료일 없음)', tone: 'weak' }
+  const d = ad.d_day === 0 ? 'D-day' : ad.d_day > 0 ? `D-${ad.d_day}` : `D+${-ad.d_day}`
+  const title = `배송완료 ${md(ad.delivered_on)} (${ad.source}) + ${ad.extendable ? '8일 · 구매자가 연장하면 1회 10일씩 늦어질 수 있어요' : '7일'}`
+  if (ad.state === 'overdue') return { text: `자동 확정 예정일 지남 (${md(ad.due_on)}, ${d})`, tone: 'warning', title }
+  return { text: `자동 확정 ${md(ad.due_on)} (${d})`, tone: 'info', title }
+}

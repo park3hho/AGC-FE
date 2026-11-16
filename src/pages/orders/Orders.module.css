@@ -1438,3 +1438,34 @@
 .prodLinks a:hover {
   text-decoration: underline;
 }
+
+/* 자동 구매확정 예정일 — 점 + 글자 (2026-11-16) */
+.adLine {
+  white-space: nowrap;
+}
+
+.adDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 1px;
+}
+
+.ad_info {
+  color: var(--color-primary);
+}
+
+.ad_warning {
+  color: var(--color-warning);
+}
+
+.ad_success {
+  color: var(--color-success);
+}
+
+.ad_weak {
+  color: var(--color-text-weak);
+}

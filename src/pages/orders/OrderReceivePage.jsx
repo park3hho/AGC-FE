@@ -22,7 +22,7 @@ import { CopyButton } from '@/components/common/MobileBits'
 import PageHeader from '@/components/common/PageHeader'
 import { useDevMode } from '@/hooks/useDevMode'
 import { useMobile } from '@/hooks/useMobile'
-import { nextAction, SETTLE_STAGES, settleRemain, STEPS6, stepsDone } from '@/utils/nextAction'
+import { autoDecideText, nextAction, SETTLE_STAGES, settleRemain, STEPS6, stepsDone } from '@/utils/nextAction'
 import { collectMode, diffLines, eventTitle } from '@/utils/orderEvent'
 import Section from '@/components/common/Section'
 import DeclLine from '@/pages/importDecl/DeclLine'
@@ -1429,7 +1429,19 @@ export default function OrderReceivePage() {
                         !it.claimType &&
                         (() => {
                           const n = nextAction(it)
-                          return n ? `${n.label}${n.info ? ` · ${n.info}` : ''}` : ''
+                          const ad = it.settle?.stage === 'delivered' ? autoDecideText(it.autoDecide) : null
+                          return (
+                            <>
+                              {n ? `${n.label}${n.info ? ` · ${n.info}` : ''}` : ''}
+                              {ad && (
+                                <span className={`${styles.adLine} ${styles['ad_' + ad.tone]}`} title={ad.title}>
+                                  {' · '}
+                                  <i className={styles.adDot} />
+                                  {ad.text}
+                                </span>
+                              )}
+                            </>
+                          )
                         })()}
                       {it.stage !== 'done' && !(it.stage === 'processing' && it.progress) && (
                         <>
