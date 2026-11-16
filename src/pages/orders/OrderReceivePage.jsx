@@ -1432,7 +1432,8 @@ export default function OrderReceivePage() {
                           const ad = it.settle?.stage === 'delivered' ? autoDecideText(it.autoDecide) : null
                           return (
                             <>
-                              {n ? `${n.label}${n.info ? ` · ${n.info}` : ''}` : ''}
+                              {/* 예정일이 있으면 '배송완료 · 자동 확정 11/22 (D-6)' 로 짧게 — 줄이 금액 칸을 넘지 않게 */}
+                              {ad ? '배송완료' : n ? `${n.label}${n.info ? ` · ${n.info}` : ''}` : ''}
                               {ad && (
                                 <span className={`${styles.adLine} ${styles['ad_' + ad.tone]}`} title={ad.title}>
                                   {' · '}

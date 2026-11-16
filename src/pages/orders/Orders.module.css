@@ -1469,3 +1469,13 @@
 .ad_weak {
   color: var(--color-text-weak);
 }
+
+.mVal small.ad_info,
+small.ad_info {
+  color: var(--color-primary);
+}
+
+.mVal small.ad_warning,
+small.ad_warning {
+  color: var(--color-warning);
+}
