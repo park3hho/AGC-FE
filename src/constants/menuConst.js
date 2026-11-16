@@ -94,15 +94,6 @@ export const MENU = [
     feature: FEATURE.ORDER,
   },
   {
-    key: 'jiyunBundles',
-    group: 'sales',
-    label: '집운 묶음', // PRE_LP… — 받는 사람별 한 상자, 결제하면 LP 번호 (2026-11-16)
-    icon: 'truck',
-    tone: 'primary',
-    path: '/jiyun/bundles',
-    feature: FEATURE.ORDER,
-  },
-  {
     key: 'jiyun',
     group: 'sales',
     label: '집운 기록', // 집운 배송 요청 · 배송비 결제 · 출고 · 국내 송장

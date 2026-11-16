@@ -9,7 +9,6 @@ const toOrder = (o) => ({
   lineNo: o.line_no,
   orderNo: o.order_no,
   shipUnitNo: o.ship_unit_no,
-  bundleKey: o.bundle_key || '', // 집운 묶음 코드 PRE_LP… (2026-11-16)
   marketStatus: o.market_status,
   confirmed: o.confirmed,
   // 금액 (2026-10-27) — total 판매가(총액) · discount 할인 · discountMarket 마켓 부담 · discountSeller 판매자 부담(우리 몫이 깎임)

@@ -52,7 +52,7 @@
    - 조사 판매처에서 못 사면(한도·품절) 결제하지 말고 보고. 예외: 비타 레몬티(PR-261019-0003)는 欢乐开怀食品旗舰店(787539058020) '【原箱15瓶】原味柠檬茶' ¥59.90 근처면 사도 됨(11-03).
    - 안전장치: 실결제가 조사가보다 20% 넘게 비싸거나 ¥400 초과, 옵션 애매, 슬라이더 외 캡챠면 결제하지 말고 보고.
 5. 기록: `trade.tmall.com/detail/orderDetail.htm?bizOrderId={번호}` PDF → `POST /api/taobao-purchases {order_id, taobao_order_no, shop_name, item_url, items, paid_cny, purchased_at, pay_method:"alipay", pay_currency:"CNY", pay_amount, charged_krw, charged_status, charged_source, memo}` → `POST /api/orders/{id}/documents` (kind=purchase, purchase_id). FIN 지출은 서버가 자동 전송, 증빙 링크가 빠졌으면 `PATCH http://127.0.0.1:8300/svc/expenses/by-key/AGC-purchase-{id} {evidence:"해외 영수증", evidence_url:"https://agc-fe.vercel.app/api/orders/{id}/documents/{doc}/file"}` (키: HQ `/svc/api-credentials/by-code/fin_expense/values` 의 credential.secrets.agc).
-6. 집운 묶음은 서버가 주문 들어올 때 자동으로 정한다 — 묶음 번호 **PRE_LP + 10자리**(2026-11-16). 같은 받는 사람(이름+우편번호)의 '모으는 중(open)' 묶음이 있으면 날짜 상관없이 합류, 예상 무게가 25kg(JIYUN_BUNDLE_MAX_KG)를 넘게 되면 새 묶음. 주문의 undle_key = 묶음 번호. 확인만. 화면: AGC 판매 › 집운 묶음(/jiyun/bundles), API GET /api/jiyun-bundles?status=active.
+6. 집운 묶음은 서버가 주문 들어올 때 자동으로 정한다(같은 받는 사람의 진행 중 주문 = 같은 bundle_key). 확인만.
 
 ## 5. 중국 내 배송 · 창고 입고
 
@@ -62,8 +62,7 @@
 
 - **집운 결제 안내는 묶음 상자가 전부 입고됐을 때만 1회**: `/api/orders` 의 `progress.bundle.ready` 가 true(묶음 2건 이상) 또는 묶음 없는 주문의 소포 입고. 묶음 일부만 입고되면 결제 안내 금지 — "묶음 n/m 입고, 기다리는 중"으로만(같은 숫자 반복 보고 금지).
 - 안내 문구: "집운 결제 필요: {주문코드들} {상품} — 이 고객 소포만 한 묶음, 받는 곳 = 고객 주소(시·구까지), 알리페이 잔액, 30kg 이하로(넘으면 大件操作费 ¥60 → 약 3박스=25kg 단위로 나눠 묶기)". 입고된 그 회차에 바로 보낸다(발송 점수 대부분이 입고~결제 대기). **안내 끝에 꼭 붙인다: "결제 화면 주소는 맨 위(가장 최근 저장) 주소가 자동 선택돼요 — 받는 사람 이름 확인 후 결제"** (11-12 사고: 새 주문 고객 주소가 맨 위에 저장돼 있어 OR-261110-0001 집운이 다른 고객 주소로 결제됨 → 退款 후 재결제). **안내 보내기 전에 결제용 주소록(https://i.taobao.com/my_itaobao/receiver-address-pc)에서 그 고객 주소 행의 \"置顶\"을 눌러 한국 주소 중 맨 위로 올려 둔다**(주소가 27개 넘게 쌓여 묻힘, 11-14 사용자 \"저장 안 돼 있네\"). 사용자가 집운을 결제하면 그 회차에 상세(conso_order_detail?tradeId=…)의 收货地址 이름·시·구가 그 주문 고객과 같은지 반드시 보고, 다르면 AGC 기록 전에 바로 보고(拣货 전 退款/投诉 가능). 같은 주문 재보고 방지: 구매기록 memo 끝 "[집운결제 안내 YYYY-MM-DD HH:MM]".
-- 보고는 묶음 번호로: "집운 결제 필요: PRE_LP… ({주문코드들}) …". 집운 결제 기록을 저장하면 그 묶음에 LP 번호가 붙고 상태가 '집운 결제'로 바뀐다(서버가 자동).
-- 한 상자가 크게 늦어 따로 보내야 할 것 같으면 보고만(바꾸기는 사용자 결정 후 `POST /api/jiyun-bundles/move {order_id, target:null}` — target 은 다른 묶음 번호 PRE_LP… 또는 주문 코드). 묶음을 더 안 받으려면 `POST /api/jiyun-bundles/{code}/confirm`.
+- 한 상자가 크게 늦어 따로 보내야 할 것 같으면 보고만(바꾸기는 사용자 결정 후 `PATCH /api/orders/{id}/bundle {key:null}`).
 - 반품·취소로 환불 신청한 주문의 소포는 "반품 건 창고 도착 — 처리 결정 필요" 보고.
 - 사용자가 결제한 집운 기록(conso_order_list 에 있는데 AGC `/api/jiyun-shipments?include_test=true` 에 LP 번호가 없는 것): `conso_order_detail?tradeId={집운주문번호}&channel=1` 에서 LP 번호·묶인 타오바오 주문·운송장·무게·운임·받는 곳 확인 → 운임 주문상세 PDF(`trade.taobao.com/trade/detail/trade_order_detail.htm?biz_order_id=`; 支付宝 vs 微信支付 확인) 저장 →
   - 주문 1건이면 `POST /api/jiyun-shipments`.

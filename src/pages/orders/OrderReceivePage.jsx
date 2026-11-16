@@ -1369,15 +1369,6 @@ export default function OrderReceivePage() {
                   <small>
                     {it.optionName && `${it.optionName} · `}×{it.quantity} · {it.receiver.name} ·{' '}
                     {kstTime(it.paidAt || it.orderedAt)}
-                    {/* 집운 묶음 (2026-11-16) — 2건 이상 묶였거나 진행 중이면 */}
-                    {it.bundleKey?.startsWith('PRE_LP') && (it.progress?.bundle || it.stage === 'received') && (
-                      <span className={styles.bundleTag}>
-                        {' · '}
-                        <i />
-                        {it.bundleKey}
-                        {it.progress?.bundle && ` (${it.progress.bundle.size}건)`}
-                      </span>
-                    )}
                   </small>
                   {/* 모바일 — 셋째 줄 '다음 할 일' (utils/nextAction) */}
                   {mobile &&

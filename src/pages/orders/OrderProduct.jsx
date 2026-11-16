@@ -16,10 +16,6 @@ export default function OrderProduct({
     ? [
         s.marketUrl && { href: s.marketUrl, label: `${market} 상품 페이지` },
         { href: `/research/products/${s.productId}`, label: `AGC 제품 ${s.productCode}` },
-        order.bundleKey?.startsWith('PRE_LP') && {
-          href: `/jiyun/bundles?status=${order.stage === 'done' ? 'done' : 'active'}&code=${order.bundleKey}`,
-          label: `집운 묶음 ${order.bundleKey}`,
-        },
         (s.purchaseUrl || s.taobaoUrl) && {
           href: s.purchaseUrl || s.taobaoUrl,
           label: s.purchaseUrl ? '산 타오바오 상품' : '타오바오 (조사 링크)',

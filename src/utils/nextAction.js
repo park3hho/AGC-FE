@@ -211,9 +211,9 @@ export function nextAction(order, extra) {
   // 묶음이면 묶음 상자가 전부 입고돼야 집운 결제 (2026-11-11)
   const b = order.progress?.bundle
   if (!st.jiyun && b && !b.sent && !b.ready)
-    return { ...pick('bundle_wait'), info: `묶음 ${b.code || ''} · 입고 ${b.arrived}/${b.total} · ${b.codes.join(', ')}` }
+    return { ...pick('bundle_wait'), info: `입고 ${b.arrived}/${b.total} · ${b.codes.join(', ')}` }
   if (!st.jiyun || st.jiyunPending)
-    return b && !st.jiyun ? { ...pick('jiyun'), info: `묶음 ${b.code || ''} · ${b.size}건 · ${b.codes.join(', ')}` } : pick('jiyun')
+    return b && !st.jiyun ? { ...pick('jiyun'), info: `묶음 ${b.size}건 · ${b.codes.join(', ')}` } : pick('jiyun')
   if (order.progress?.decl_missing) return pick('decl')
   if (!st.dispatched && !st.tracking) return pick('dispatch')
   if (!st.tracking) return pick('tracking')
