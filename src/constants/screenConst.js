@@ -45,6 +45,7 @@ export const SCREENS = [
   { path: '/jiyun', name: '집운 기록', group: '판매' },
   { path: '/import-declarations', name: '수입신고', group: '판매' },
   { path: '/jiyun/bundle', name: '집운 묶어서 보내기', group: '판매', parent: '/jiyun' },
+  { path: '/jiyun/bundles', name: '집운 묶음', group: '판매' },
   { path: '/domestic', name: '국내 배송 기록', group: '판매' },
   { path: '/domestic/:id', name: '국내 배송 기록 상세', group: '판매', parent: '/domestic' },
   { path: '/orders/:orderId/jiyun/new', name: '집운 기록 추가', group: '판매', parent: '/orders' },

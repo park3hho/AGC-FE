@@ -285,20 +285,21 @@ export default function HomePage() {
     for (const g of NEXT_GROUPS) {
       const list = byGroup[g.key]
       if (!list?.length) continue
+      // 집운 결제는 묶음(PRE_LP…) 단위로 센다 (2026-11-16)
+      const bundles = g.key === 'ship' ? [...new Set(list.map((o) => o.bundleKey || o.code))] : null
       orderTodos.push({
         key: `order-${g.key}`,
         icon: 'bag',
         tone: g.key === 'issue' || g.key === 'decl' ? 'warning' : 'primary',
-        title: `${g.label} ${list.length}건`,
-        sub: `${g.sub} · ${list
+        title: bundles ? `${g.label} 묶음 ${bundles.length}개 (${list.length}건)` : `${g.label} ${list.length}건`,
+        sub: `${g.sub} · ${(bundles || list.map((o) => o.code))
           .slice(0, 2)
-          .map((o) => o.code)
-          .join(', ')}${list.length > 2 ? ' …' : ''}`,
+          .join(', ')}${(bundles || list).length > 2 ? ' …' : ''}`,
         button: '처리하기',
         // 집운 결제는 묶음 화면으로 — 같은 고객 주문은 한 번에 (2026-11-11)
         path:
           g.key === 'ship'
-            ? '/jiyun/bundle'
+            ? '/jiyun/bundles?status=active'
             : g.key === 'decl'
               ? '/import-declarations'
               : `/orders?stage=${STAGE_OF[g.key]}`,

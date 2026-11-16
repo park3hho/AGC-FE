@@ -1479,3 +1479,20 @@ small.ad_info {
 small.ad_warning {
   color: var(--color-warning);
 }
+
+/* 집운 묶음 코드 — 점 + 글자 (2026-11-16) */
+.bundleTag {
+  color: var(--color-text-sub);
+  font-family: var(--font-num);
+  white-space: nowrap;
+}
+
+.bundleTag i {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 3px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  vertical-align: 1px;
+}
