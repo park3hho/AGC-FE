@@ -1,7 +1,7 @@
 // 리서치 규칙 — 사람용 요약. 원문은 리서처 스킬 (AGC/.claude/skills/researcher/SKILL.md).
 // 스킬의 규칙을 바꾸면 여기도 같이 고친다. 제품조사·가격조사 화면 제목 옆 ⓘ 로 보인다 (components/InfoPanel).
 // 형식: [{ title, items: [string] }] — 줄 앞의 '!' 는 꼭 지킬 것(강조)
-export const RESEARCH_RULES_UPDATED = '2026-10-29'
+export const RESEARCH_RULES_UPDATED = '2026-11-17'
 
 export const RESEARCH_RULES = [
   {
@@ -30,6 +30,7 @@ export const RESEARCH_RULES = [
     items: [
       '쿠폰가가 아니라 페이지에 보이는 현재 판매가(위안)',
       '맛 × 용량·입수 조합마다 한 줄, 같은 조합 두 번 금지',
+      '!판매가 상한: 옵션·묶음 판매가는 15만원을 절대 넘지 않게, 보통 7~8만원 안. 넘으면 묶음 수를 줄임',
     ],
   },
   {
