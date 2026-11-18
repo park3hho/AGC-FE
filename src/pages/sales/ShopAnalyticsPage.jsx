@@ -90,6 +90,7 @@ function HBar({ name, value, max, sub }) {
 export default function ShopAnalyticsPage() {
   const [params, setParams] = useSearchParams()
   const preset = params.get('p') || '7'
+  const showAll = params.get('all') === '1' // 기본 = 국내 손님만 (해외 봇 · 우리 계정 제외)
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -102,15 +103,22 @@ export default function ShopAnalyticsPage() {
   useEffect(() => {
     setLoading(true)
     setError('')
-    getShopAnalytics({ from: range[0], to: range[1] })
+    getShopAnalytics({ from: range[0], to: range[1], all: showAll })
       .then(setData)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
-  }, [range])
+  }, [range, showAll])
 
-  const setPreset = (k) => setParams(k === '7' ? {} : { p: k }, { replace: true })
+  const keepAll = showAll ? { all: '1' } : {}
+  const setPreset = (k) => setParams(k === '7' ? keepAll : { p: k, ...keepAll }, { replace: true })
   const setCustom = (from, to) =>
-    setParams({ p: 'custom', ...(from && { from }), ...(to && { to }) }, { replace: true })
+    setParams({ p: 'custom', ...(from && { from }), ...(to && { to }), ...keepAll }, { replace: true })
+  const setShowAll = (on) => {
+    const next = Object.fromEntries(params)
+    if (on) next.all = '1'
+    else delete next.all
+    setParams(next, { replace: true })
+  }
 
   const t = data?.total
   const f0 = data?.funnel?.[0]?.sessions || 0
@@ -124,7 +132,7 @@ export default function ShopAnalyticsPage() {
     <main className="page-flat">
       <PageHeader
         title="자사몰 분석"
-        sub="eidofood.com 방문 기록 · 봇 제외 · 주문·매출은 결제 완료 기준(시험 결제 제외)"
+        sub="eidofood.com 방문 기록 · 기본은 국내 손님만 · 주문·매출은 결제 완료 기준(시험 결제 제외)"
         action={
           data && (
             <span className={a.live} title="최근 30분 안에 움직인 방문자">
@@ -147,6 +155,14 @@ export default function ShopAnalyticsPage() {
                 {label}
               </button>
             ))}
+          </div>
+          <div className={s.chips} role="group" aria-label="누구까지">
+            <button type="button" className={`${s.chip} ${!showAll ? s.chipOn : ''}`} onClick={() => setShowAll(false)}>
+              국내 손님만
+            </button>
+            <button type="button" className={`${s.chip} ${showAll ? s.chipOn : ''}`} onClick={() => setShowAll(true)}>
+              전체
+            </button>
           </div>
           <div className={s.dates}>
             <input
@@ -200,6 +216,11 @@ export default function ShopAnalyticsPage() {
             sub="주문 ÷ 세션"
           />
         </div>
+        {data && !data.filter.all && data.filter.foreign + data.filter.internal > 0 && (
+          <p className={s.note}>
+            뺀 방문자: 해외 접속 {data.filter.foreign}명 (봇 · 크롤러로 보임) · 우리 계정 {data.filter.internal}명 (테스트 · 심사 · 대표). ‘전체’를 누르면 같이 보여요.
+          </p>
+        )}
         {empty && (
           <p className={s.note}>
             이 기간에 들어온 방문 기록이 없어요.
