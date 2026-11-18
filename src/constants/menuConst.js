@@ -107,6 +107,7 @@ export const MENU = [
     key: 'importDecl',
     group: 'sales',
     label: '수입신고', // 수입식품 구매대행 수입신고서 — 주문(받는 사람 · B/L)마다 통관 전에 (2026-11-11)
+    dev: true, // 개발자 모드에서만 (2026-11-18 사용자)
     icon: 'book',
     tone: 'primary',
     path: '/import-declarations',
