@@ -35,5 +35,7 @@ export const getShopAnalytics = async ({ from, to, all } = {}) => {
     devices: d.devices, // [{ name, visitors }]
     browsers: d.browsers,
     trackingSince: d.tracking_since,
+    // 서버로 들어온 요청 수 (2026-11-18~) — 정상 · 검색 봇 · 무효. 화면을 안 그리는 봇 · 스캐너까지 = 서버 부담
+    traffic: d.traffic || { total: 0, kinds: {}, days: [], reasons: [], agents: [], crawlers: [], paths: [], countries: [] },
   }
 }

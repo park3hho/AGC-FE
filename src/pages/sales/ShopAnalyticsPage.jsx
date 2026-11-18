@@ -127,6 +127,7 @@ export default function ShopAnalyticsPage() {
   const prodMax = Math.max(0, ...(data?.products || []).map((x) => x.views))
   const devMax = Math.max(0, ...(data?.devices || []).map((x) => x.visitors))
   const empty = data && t.sessions === 0
+  const tr = data?.traffic
 
   return (
     <main className="page-flat">
@@ -293,6 +294,89 @@ export default function ShopAnalyticsPage() {
           )}
         </Section>
       </div>
+
+      <Section
+        name="자사몰 분석 › 무효 트래픽"
+        id="traffic"
+        sub={
+          tr && tr.total
+            ? `서버 요청 ${num(tr.total)} · 무효 ${num(tr.kinds.invalid)} (${tr.invalid_pct}%)`
+            : '서버가 받은 요청 — 봇 · 스캐너까지 (2026-11-18부터)'
+        }
+      >
+        {tr && tr.total === 0 ? (
+          <p className={s.empty}>아직 쌓인 요청이 없어요. 서버가 받은 요청을 1분마다 모아 저장해요.</p>
+        ) : (
+          tr && (
+            <>
+              <div className={a.trafficKinds}>
+                <Kpi label="정상 (손님 브라우저)" value={num(tr.kinds.valid)} />
+                <Kpi label="검색 · 미리보기 봇" value={num(tr.kinds.crawler)} sub="구글 · 네이버 등 — 쓸모 있는 봇" />
+                <Kpi label="무효" value={num(tr.kinds.invalid)} sub={`전체의 ${tr.invalid_pct ?? 0}%`} tone="danger" />
+              </div>
+              <div className={a.trafficDays}>
+                {tr.days.map((d) => {
+                  const t = d.valid + d.crawler + d.invalid
+                  return (
+                    <div key={d.date} className={a.trafficDay} title={`${d.date} · 정상 ${d.valid} · 검색 봇 ${d.crawler} · 무효 ${d.invalid}`}>
+                      <div className={a.trafficStack}>
+                        {t > 0 && (
+                          <>
+                            <i data-k="invalid" style={{ flex: d.invalid }} />
+                            <i data-k="crawler" style={{ flex: d.crawler }} />
+                            <i data-k="valid" style={{ flex: d.valid }} />
+                          </>
+                        )}
+                      </div>
+                      <span>{d.date.slice(5)}</span>
+                      <b>{t ? num(t) : ''}</b>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className={a.grid3}>
+                <div>
+                  <p className={a.listHead}>무효 이유</p>
+                  {tr.reasons.length === 0 && <p className={s.empty}>없어요</p>}
+                  {tr.reasons.map((x) => (
+                    <HBar key={x.key} name={x.name} value={x.hits} max={tr.reasons[0].hits} />
+                  ))}
+                  <p className={a.listHead}>무효 에이전트</p>
+                  {tr.agents.map((x) => (
+                    <HBar key={x.name} name={x.name} value={x.hits} max={tr.agents[0].hits} />
+                  ))}
+                </div>
+                <div>
+                  <p className={a.listHead}>찔러 본 주소</p>
+                  {tr.paths.length === 0 && <p className={s.empty}>없어요</p>}
+                  {tr.paths.map((x) => (
+                    <HBar key={x.path} name={x.path} value={x.hits} max={tr.paths[0].hits} />
+                  ))}
+                </div>
+                <div>
+                  <p className={a.listHead}>무효 국가</p>
+                  {tr.countries.length === 0 && <p className={s.empty}>없어요</p>}
+                  {tr.countries.map((x) => (
+                    <HBar key={x.code} name={x.code === '?' ? '알 수 없음' : x.code} value={x.hits} max={tr.countries[0].hits} />
+                  ))}
+                  {tr.crawlers.length > 0 && (
+                    <>
+                      <p className={a.listHead}>검색 · 미리보기 봇</p>
+                      {tr.crawlers.map((x) => (
+                        <HBar key={x.name} name={x.name} value={x.hits} max={tr.crawlers[0].hits} />
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+              <p className={a.foot}>
+                무효 = 검색엔진이 아닌 봇 · 스캐너(.env · wp-admin 같은 없는 파일 찔러보기) · 과다 요청 · 없는 주소 · 브라우저 정보 없음.
+                방문 기록(위 숫자)에는 원래 안 들어가고, 서버 부담만 줘요. 많아지면 이 목록으로 막을 대상을 정해요.
+              </p>
+            </>
+          )
+        )}
+      </Section>
     </main>
   )
 }
