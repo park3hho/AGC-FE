@@ -69,6 +69,7 @@
 - 사용자가 결제한 집운 기록(conso_order_list 에 있는데 AGC `/api/jiyun-shipments?include_test=true` 에 LP 번호가 없는 것): `conso_order_detail?tradeId={집운주문번호}&channel=1` 에서 LP 번호·묶인 타오바오 주문·운송장·무게·운임·받는 곳 확인 → 운임 주문상세 PDF(`trade.taobao.com/trade/detail/trade_order_detail.htm?biz_order_id=`; 支付宝 vs 微信支付 확인) 저장 →
   - 주문 1건이면 `POST /api/jiyun-shipments`.
   - **여러 주문(같은 고객)이면 `POST /api/jiyun-shipments/bundle`** `{jiyun_no, orders:[{order_id, packages, weight_kg}], fee_cny(합계), pay_method, pay_currency, pay_amount(합계), charged_krw(합계), charged_status, charged_source, transport:"sea", requested_at}` — 금액은 무게 비율로 자동 분배, 번호 -2·-3 자동.
+  - **실측 기록 (2026-11-18, 비공개)**: 같은 집운 상세(conso_order_detail)에 나오는 상자 **무게(重量, kg)와 가로·세로·높이(长·宽·高, cm)** 를 주문마다 `POST /api/option-measures` `{order_id, jiyun_no, weight_kg, length_cm, width_cm, height_cm, source:"jiyun"}` 로 넣는다(또는 `docker exec agc_app python -m scripts.measure_record --jiyun {LP…} --weight {kg} --l {cm} --w {cm} --h {cm}`). 소포별 크기가 따로 나오면 주문(소포)별로, 합포장 상자 하나만 나오면 첫 주문에 넣는다(서버가 합포장을 자동 표시해 평균에서 뺌). 크기가 화면에 없으면 무게만. 옵션·묶음 수는 주문 판매자 상품코드로 서버가 찾는다. 이 값은 보고·외부 출력에 쓰지 않는다.
   - 문서 업로드 kind=jiyun(jiyun_id), FIN AGC-jiyun-{id} 증빙 링크 '없음'이면 PATCH. 받는 곳이 고객이 아니면 바로 보고. 차·티백·차음료는 식품 요금(첫 1kg ¥33 + 0.5kg당 ¥2).
 
 ## 7. 출고 · 국내 송장 → 마켓 발송처리
