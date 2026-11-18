@@ -83,6 +83,16 @@ export const MENU = [
     feature: FEATURE.ORDER,
     tab: 1,
   },
+  // 집운 재고 — 고객 취소 뒤 환불 못 받은 소포를 창고에 두고 같은 상품 다음 주문에 씀 (2026-11-18)
+  {
+    key: 'jiyunStock',
+    group: 'sales',
+    label: '집운 재고',
+    icon: 'package',
+    tone: 'primary',
+    path: '/jiyun/stock',
+    feature: FEATURE.ORDER,
+  },
   {
     key: 'purchases',
     group: 'sales',

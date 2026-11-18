@@ -1,0 +1,127 @@
+/* 판매 › 집운 재고 (DESIGN.md §4.6 섹션: 재고 목록) */
+
+.tabs {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.tab,
+.tabOn {
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-text-sub);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tabOn {
+  border-bottom-color: var(--color-text);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.num {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.name {
+  font-weight: 500;
+}
+
+.sub {
+  margin-top: 2px;
+  color: var(--color-text-sub);
+  font-size: 12px;
+}
+
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--color-text-sub);
+  vertical-align: middle;
+}
+
+.ok {
+  background: var(--color-success);
+}
+
+.warn {
+  background: var(--color-warning);
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.code {
+  width: 130px;
+  padding: 3px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+
+.btn {
+  margin-left: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius);
+  background: var(--color-text);
+  color: var(--color-on-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.link {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.empty,
+.error {
+  padding: var(--space-4);
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
+.error {
+  color: var(--color-danger);
+}
