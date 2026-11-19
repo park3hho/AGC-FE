@@ -282,3 +282,115 @@
     font-size: 11px;
   }
 }
+
+/* 확인 대기열 (2026-11-19) — 순서 · 사유 · 제품·옵션 · 검색어 · 지난 결과 · 마지막 확인 */
+.tabNum {
+  margin-left: 4px;
+  color: var(--color-text-weak);
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.qrow {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.3fr) minmax(
+      0,
+      1.1fr
+    ) 128px;
+  gap: var(--space-3);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.qrow:not(.head):hover {
+  background: var(--color-bg-app);
+}
+
+.skipped {
+  opacity: 0.55;
+}
+
+.clip {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag {
+  color: var(--color-primary);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.st[data-tone='ring'] i {
+  border: 1.5px solid var(--color-text-sub);
+  background: transparent;
+}
+
+.st[data-tone='muted'] i {
+  background: var(--color-text-sub);
+}
+
+@media (max-width: 900px) {
+  .qrow {
+    grid-template-columns: 28px minmax(0, 1.2fr) minmax(0, 1.6fr) 112px;
+  }
+
+  .qrow > :nth-child(4),
+  .qrow > :nth-child(5) {
+    display: none;
+  }
+}
+
+/* 모바일: 1줄 번호·제품·사유 점, 2줄 사유 글자, 3줄 검색어 · 마지막 확인 */
+@media (max-width: 600px) {
+  .qrow {
+    grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'no prod prod'
+      'no why why'
+      'no query last';
+    gap: 4px var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .qrow > :nth-child(1) {
+    grid-area: no;
+    align-self: start;
+  }
+
+  .qrow > :nth-child(2) {
+    grid-area: why;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .qrow > :nth-child(3) {
+    grid-area: prod;
+  }
+
+  .qrow > :nth-child(4) {
+    display: flex;
+    grid-area: query;
+  }
+
+  .qrow > :nth-child(5) {
+    display: none;
+  }
+
+  .qrow > :nth-child(6) {
+    grid-area: last;
+  }
+
+  .qrow > :nth-child(2) small {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}

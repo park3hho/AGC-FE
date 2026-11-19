@@ -32,7 +32,9 @@ const toCheck = (c) => ({
 })
 
 export const getCompetitors = async () => {
-  const data = await request('/competitor-prices', { errorMsg: '최저가 경쟁 정보를 불러오지 못했어요' })
+  const data = await request('/competitor-prices', {
+    errorMsg: '최저가 경쟁 정보를 불러오지 못했어요',
+  })
   return {
     items: data.items.map((it) => ({
       product: {
@@ -50,5 +52,45 @@ export const getCompetitors = async () => {
     })),
     counts: data.counts,
     marginFloorPct: data.margin_floor_pct,
+  }
+}
+
+// 확인 대기열 (2026-11-19) — 무엇을 먼저 볼지 서버가 정한다: 주문 → 바뀜 → 확인 전 → 검색 안 됨 → lose·match → 오래된 순
+// 점검 결과를 저장(POST /competitor-prices/bulk)하면 그 줄의 사유가 저절로 풀린다
+export const getCompetitorQueue = async (platform, limit = 500) => {
+  const data = await request(
+    `/competitor-prices/queue?platform=${platform}&limit=${limit}&include_skipped=true`,
+    {
+      errorMsg: '확인 대기열을 불러오지 못했어요',
+    },
+  )
+  return {
+    total: data.total,
+    counts: data.counts || {},
+    generatedAt: data.generated_at,
+    items: data.items.map((it, i) => ({
+      no: i + 1,
+      group: it.group,
+      groupLabel: it.group_label,
+      reasons: it.reasons || [],
+      productId: it.product_id,
+      code: it.code,
+      title: it.title,
+      optionId: it.option_id,
+      option: it.option || '',
+      query: it.query || '',
+      querySource: it.query_source,
+      searchNote: it.search_note || '',
+      userNote: it.user_note || '',
+      needsUserCheck: !!it.needs_user_check,
+      skipUntil: it.skip_until,
+      skipped: !!it.skipped,
+      lastStatus: it.last_status,
+      lastVerdict: it.last_verdict,
+      lastCheckedAt: it.last_checked_at,
+      ourPrice: it.our_price ?? null,
+      vendorName: it.vendor_name || '',
+      vendorPrice: it.vendor_price ?? null,
+    })),
   }
 }
