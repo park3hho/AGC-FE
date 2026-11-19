@@ -14,14 +14,14 @@ REPL `fetch('http://127.0.0.1:8000/...', {headers:{'X-API-Key': key}})` 로 부�
 | 제품별 검색어 · 메모 · 보류 · 사용자 확인 필요 | `PUT /competitor-prices/watch {product_id, platform, option_id?, query_override, search_note, user_note, needs_user_check, skip_days, flag_reason}` (보낸 칸만 바뀜) |
 | 메모 목록 | `GET /competitor-prices/watch?platform=` |
 
-- queue 항목: `rank, group(order·changed·new·retry·watch·stale), reasons[{code,label,detail}], product_id, option_id, title, option, query(query_override → 지난 검색어 → 제품명), search_note, user_note, needs_user_check, last_verdict, last_checked_at, our_price, min_price, vendor_name, vendor_price, vendor_ref`.
+- queue 항목: `rank, group(order·changed(수정)·new·retry·watch·stale), reasons[{code,label,detail}], product_id, option_id, title, option, query(query_override → 지난 검색어 → 제품명), search_note, user_note, needs_user_check, last_verdict, last_checked_at, our_price, min_price, vendor_name, vendor_price, vendor_ref`.
 - 대기열 위에서부터 40건. 위 순서를 바꾸지 않는다. 같은 브랜드가 여러 줄이면 검색 1번으로 같이 판정해도 된다(대기열 안의 줄만).
 - bulk 항목: `product_id, platform, option_id(queue 의 option_id), status(found · only_us · not_found), vendor_name, vendor_price(배송비 포함 총액, 우리 수량으로 환산), vendor_shipping, vendor_type(agency · warehouse · unknown), vendor_note(200자, 환산 근거), vendor_url, query, vendor_ref`(쿠팡 `{productId, vendorItemId}`). verdict 는 서버가 계산.
 - 그대로면(경쟁자 같음) 같은 값으로 다시 저장 → checked_at 갱신.
 - **다음 회차에 알아야 할 것은 전부 PUT watch 로 남긴다**:
   - 검색어가 안 먹혀 다른 검색어로 찾았으면 `query_override` + `search_note`.
   - 사람이 판단해야 하면(배치·용량·무가당 여부가 다름 등) `needs_user_check:true` + `user_note`.
-  - 방금 새로 lose·match 가 된 것은 `skip_days:1`(다음 날 재확인 생략, 주문·바뀜·신규는 보류여도 다시 올라옴).
+  - 방금 새로 lose·match 가 된 것은 `skip_days:1`(다음 날 재확인 생략, 주문·수정·신규는 보류여도 다시 올라옴).
   - 해결되면 `needs_user_check:false`, `flag_reason:""`.
 
 ## 2. 네이버
