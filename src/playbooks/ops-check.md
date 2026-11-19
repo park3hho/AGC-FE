@@ -154,7 +154,7 @@ tasks 의 cn_track(구매 cn_status ordered·shipped, 묶음 일부 입고)을 �
 - tasks 의 deadline 항목(alerted=false 인 것)만 본다. 알리면 알림 `deadline_{stage}:{코드}` + `POST /ops/orders/{id}/mark {deadline_stage}`. 아래 문구 기준은 그대로.
 - D-3 에 송장 없음 → 1회 보고("발송기한 임박: {코드} {마켓} 기한 {M/D}, 현재 위치 … — 쿠팡은 Wing '배송지연안내' 필요 / 네이버는 발송지연 1회 이미 사용"). D-1 에 한 번 더. 지나면 "출고지연 발생" 보고. 같은 단계 반복 금지는 deadline_stage 와 알림 key 가 막는다(루틴 메모에 적지 않음).
 
-## 10-1. 주문 놓침 점검 — 하루 한 번 04:46 정식 점검 회차에만 (2026-11-19)
+## 10-1. 주문 놓침 점검 — 하루 한 번 04:30 정식 점검 회차에만 (2026-11-19)
 
 **KST 04:30~04:59 에 시작한 회차**(check-mode kst 시각으로 판단 — 다른 이유로 full 이 나와 reasons 에 '하루 한 번'이 안 보여도)에서, 4~10절을 끝낸 뒤 마지막으로 한다. 서버 할 일(/ops/tasks)이 못 잡는 빈틈을 찾는 게 목적.
 - **수집 누락**: 쿠팡 ordersheets(ACCEPT·INSTRUCT, 최근 2일)와 네이버 last-changed-statuses(PAYED, 최근 24시간)를 마켓 API 로 직접 조회 → AGC market_order 에 없는 주문이 있는지. 마지막 주문 수집(OrderSyncRun)이 30분 넘게 멈췄는지.
