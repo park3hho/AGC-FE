@@ -33,7 +33,7 @@ export const QUEUE_GROUP = {
     hint: '마지막 확인 뒤 24시간 넘게 지났고 그 사이 주문이 들어왔어요',
   },
   changed: {
-    label: '바뀜',
+    label: '수정',
     tone: 'warning',
     hint: '확인한 뒤 판매가·원가·옵션·상품명이 바뀌었거나 새 옵션·새 등록·확인 필요 표시가 생겼어요',
   },
