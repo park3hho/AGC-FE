@@ -609,6 +609,19 @@ function MobileOrderDetail({
             {o.claimAt && ` · ${kstTime(o.claimAt)}`}
           </p>
         )}
+        {/* 배송완료 → 자동 구매확정 예정일 (D-day) — 데스크탑 목록과 같은 문구 (모바일에서 안 보이던 것, 2026-11-19) */}
+        {(() => {
+          const ad = !o.claimType && o.stage === 'done' && o.settle?.stage === 'delivered' ? autoDecideText(o.autoDecide) : null
+          return (
+            ad && (
+              <p className={`${styles.mAutoDecide} ${styles['ad_' + ad.tone]}`} title={ad.title}>
+                <i className={styles.adDot} />
+                배송완료 · {ad.text}
+                {ad.title && <small>{ad.title}</small>}
+              </p>
+            )
+          )
+        })()}
       </div>
 
       {next && !cancelled && (
@@ -1373,6 +1386,17 @@ export default function OrderReceivePage() {
                   {/* 모바일 — 셋째 줄 '다음 할 일' (utils/nextAction) */}
                   {mobile &&
                     (() => {
+                      // 배송완료 · 자동 확정 예정일이 있으면 그 D-day 를 셋째 줄에 (데스크탑과 같은 문구, 2026-11-19)
+                      const ad =
+                        !it.claimType && it.stage === 'done' && it.settle?.stage === 'delivered'
+                          ? autoDecideText(it.autoDecide)
+                          : null
+                      if (ad)
+                        return (
+                          <small className={`${styles.mNextLine} ${styles['ad_' + ad.tone]}`} title={ad.title}>
+                            배송완료 · {ad.text}
+                          </small>
+                        )
                       const n = nextAction(it)
                       return (
                         n && (

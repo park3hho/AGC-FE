@@ -1479,3 +1479,25 @@ small.ad_info {
 small.ad_warning {
   color: var(--color-warning);
 }
+
+/* 모바일 주문 상세 — 자동 구매확정 예정일 (2026-11-19) */
+.mAutoDecide {
+  margin: 8px 0 0;
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+.mAutoDecide small {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+  color: var(--color-text-weak);
+}
+.mNextLine.ad_info {
+  color: var(--color-primary);
+}
+.mNextLine.ad_warning {
+  color: var(--color-warning);
+}
+.mNextLine.ad_success {
+  color: var(--color-success);
+}
