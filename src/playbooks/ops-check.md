@@ -48,6 +48,36 @@
 - 같은 상태 반복 보고 금지는 key 가 막아 준다(숫자가 바뀌면 key 도 바뀌어 새로 알림).
 - 사람용 확인 화면: 판매 › 오늘 할 일 https://eido-agc.vercel.app/ops (왼쪽 할 일 = /ops/tasks, 오른쪽 AI 알림 = /ops/alerts). 사용자가 '끝남'으로 바꾼 알림은 resolved.
 
+## 0-2. 집운 동기화 (집운 결제 후 구간, 2026-11-19)
+
+> 집운 결제 **후**(拣货·출고·새 물류번호)는 타오바오 집운 JSON 으로 서버가 판단한다. 집운 결제 **전**(판매처 발송·창고 입고)은 JSON 이 없어서 5절대로 물류 화면을 본다.
+> 서버는 타오바오에 로그인할 수 없으니, 결제용(ediopur01 · QVKDNMN3) 로그인 탭이 받아서 넘긴다. AI 는 JSON 을 해석하지 않고 전달만 한다.
+
+REPL 에서 그대로 (탭은 결제용 로그인일 때만 — 아니면 건너뜀):
+```js
+const AK = (await fs.readFile('C:/Users/iwill/.agc/api_key','utf8')).trim();
+const SYNC = async (b) => (await fetch('http://127.0.0.1:8000/ops/jiyun-sync',{method:'POST',headers:{'X-API-Key':AK,'Content-Type':'application/json'},body:JSON.stringify(b)})).json();
+const jtab = await openTab('https://pcs.i56.taobao.com/user/consolidation/conso_order_list'); await sleep(2500);
+const who = await jtab.evaluate(() => (document.body.innerText.match(/用户识别码：\s*([A-Z0-9]+)/)||[])[1]);   // QVKDNMN3 이어야 함
+const orders = await jtab.evaluate(async () => (await (await fetch('/user/consolidation/consolidationOrderList.json?pageNo=1&pageSize=50',{credentials:'include'})).json()).data.secondConsoOrders);
+let r = await SYNC({orders});
+if (r.need_detail?.length) {
+  const details = await jtab.evaluate(async (ids) => { const o = {}; for (const id of ids) { const j = await (await fetch(`/user/consolidation/orderDetail.json?tradeId=${id}&channel=1`,{credentials:'include'})).json(); if (j.data) o[id] = j.data; } return o; }, r.need_detail);
+  r = await SYNC({orders, details});
+}
+if (r.need_trace?.length) {   // 출고 시각 — 트레이스는 다른 도메인이라 fetch 가 막혀서 탭으로 연다
+  const traces = {};
+  for (const id of r.need_trace) { await jtab.goto(`https://detail.i56.taobao.com/trace/trace_detail.htm?tId=${id}&userId=3472039790`); await sleep(2500);
+    let t = await jtab.evaluate(() => document.body.innerText); if (/网络貌似出问题/.test(t)) { await jtab.reload(); await sleep(3000); t = await jtab.evaluate(() => document.body.innerText); }
+    const i = t.indexOf('包裹信息'); traces[id] = t.slice(Math.max(0,i), i+1500); }
+  r = await SYNC({orders, details: {}, traces});
+}
+console.log(JSON.stringify({dispatched: r.dispatched, new_paid: r.new_paid, mismatch: r.mismatch, errors: r.errors}));
+await closeTab(jtab);
+```
+- 응답(받는 사람 원본 없음): `dispatched`(서버가 집운 기록을 출고·H B/L·출고 시각으로 바꿈 → 할 일 invoice · import_decl 이 생김, 알림 dispatched), `new_paid`(사용자가 결제한 집운인데 우리 기록 없음 → 할 일 jiyun_record, 알림 jiyun_paid), `mismatch`(받는 곳이 그 주문 고객과 다름 → 알림 level blocked, **拣货 전이면 退款/投诉 가능하니 바로 보고**), `need_detail`/`need_trace`(위 코드가 처리), `errors`.
+- jiyun_record 처리: 6절 '사용자가 결제한 집운 기록'대로 PDF·`POST /api/jiyun-shipments(/bundle)`·실측. 기록하면 할 일에서 빠진다.
+- 상태는 서버 테이블 jiyun_trade 에 남는다(메모에 집운 상태 목록을 적지 않는다).
 ## 1. 테스트 주문
 
 - 목록 API(/api/orders, /api/taobao-purchases, /api/jiyun-shipments, /api/domestic-shipments)는 테스트 주문(is_test — 박찬호 본인 시험 주문 OR-261025-0001·0002, OR-261027-0002)을 기본으로 뺀다. 점검은 기본값(테스트 제외)으로 부른다.
