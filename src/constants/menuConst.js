@@ -100,6 +100,7 @@ export const MENU = [
     key: 'jiyunStock',
     group: 'sales',
     label: '집운 재고',
+    dev: true, // 개발자 모드에서만 (2026-11-19 사용자)
     icon: 'package',
     tone: 'primary',
     path: '/jiyun/stock',
