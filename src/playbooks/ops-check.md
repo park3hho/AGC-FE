@@ -42,6 +42,7 @@
 - **서버가 올린 알림도 전한다**: 매 회차 `GET /ops/alerts?unreported=true` → 보고에 한 줄씩 넣고 `PATCH /ops/alerts/{id} {reported:true}`. (카드값 확정 card_confirmed · 쿠팡 취소 claim 등 서버 자동 처리 결과)
 - 상황이 끝났으면(예: 결제 안내한 묶음이 결제됨) `PATCH /ops/alerts/{id} {resolved:true}` — 같은 key 가 나중에 다시 생기면 새 알림으로 열린다.
 - 같은 상태 반복 보고 금지는 key 가 막아 준다(숫자가 바뀌면 key 도 바뀌어 새로 알림).
+- 사람용 확인 화면: 판매 › 오늘 할 일 https://eido-agc.vercel.app/ops (왼쪽 할 일 = /ops/tasks, 오른쪽 AI 알림 = /ops/alerts). 사용자가 '끝남'으로 바꾼 알림은 resolved.
 
 ## 1. 테스트 주문
 
