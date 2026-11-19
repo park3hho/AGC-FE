@@ -48,6 +48,7 @@ export const MENU = [
     key: 'competition',
     group: 'sales',
     label: '최저가 경쟁',
+    dev: true, // 개발자 모드에서만 (2026-11-19 사용자)
     icon: 'tag',
     tone: 'primary',
     path: '/pricing/competition',
@@ -78,6 +79,7 @@ export const MENU = [
     key: 'ops',
     group: 'sales',
     label: '오늘 할 일',
+    dev: true, // 개발자 모드에서만 (2026-11-19 사용자)
     icon: 'sections',
     tone: 'warning',
     path: '/ops',

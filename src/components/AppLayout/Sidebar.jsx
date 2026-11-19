@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 
 import AccountModal from '@/components/AccountModal'
 import Icon from '@/components/Icon'
@@ -10,15 +10,31 @@ import { devVisible, useDevMode } from '@/hooks/useDevMode'
 import styles from './AppLayout.module.css'
 
 const navClass =
-  (dev) =>
+  (dev, on) =>
   ({ isActive }) =>
-    `${styles.navItem} ${isActive ? styles.navOn : ''} ${dev ? styles.navDev : ''}`
+    `${styles.navItem} ${(on ?? isActive) ? styles.navOn : ''} ${dev ? styles.navDev : ''}`
+
+// 지금 주소에 가장 길게 맞는 메뉴 하나만 켜기 — /pricing/competition 에서 '가격 책정(/pricing)'까지 같이 켜지지 않게 (2026-11-19)
+export function activeMenuPath(pathname) {
+  let best = null
+  for (const m of MENU) {
+    if (!m.path || m.soon) continue
+    if (
+      (pathname === m.path || pathname.startsWith(`${m.path}/`)) &&
+      (!best || m.path.length > best.length)
+    )
+      best = m.path
+  }
+  return best
+}
 
 // 공통 › 왼쪽 메뉴 — 데스크탑에서만 보임. 아래 내 계정을 누르면 모달 (개발자 모드 · 로그아웃)
 export default function Sidebar() {
   const { user } = useAuth()
   const devMode = useDevMode()
   const [accountOpen, setAccountOpen] = useState(false)
+  const { pathname } = useLocation()
+  const activePath = activeMenuPath(pathname)
   const visible = MENU.filter(
     (m) => (m.soon || hasFeature(user, m.feature)) && devVisible(m, devMode),
   )
@@ -52,7 +68,11 @@ export default function Sidebar() {
                     <small>준비 중</small>
                   </span>
                 ) : (
-                  <NavLink key={m.key} to={m.path} className={navClass(m.dev)}>
+                  <NavLink
+                    key={m.key}
+                    to={m.path}
+                    className={navClass(m.dev, m.path === activePath)}
+                  >
                     <Icon name={m.icon} size={18} />
                     {m.label}
                   </NavLink>
