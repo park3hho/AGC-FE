@@ -85,6 +85,10 @@ export const getCompetitorQueue = async (platform, limit = 500) => {
       needsUserCheck: !!it.needs_user_check,
       skipUntil: it.skip_until,
       skipped: !!it.skipped,
+      // 가중치 점수 (2026-11-19) — 점수 = 사유 + 경과 + 매출 + 경쟁, 높은 순. excluded = skip · user_check · fresh (뒤쪽에 흐리게)
+      score: it.score ?? null,
+      scoreBreakdown: it.score_breakdown || null,
+      excluded: it.excluded || null,
       lastStatus: it.last_status,
       lastVerdict: it.last_verdict,
       lastCheckedAt: it.last_checked_at,

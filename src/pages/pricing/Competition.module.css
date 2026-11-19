@@ -294,10 +294,9 @@
 
 .qrow {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.3fr) minmax(
-      0,
-      1.1fr
-    ) 128px;
+  grid-template-columns:
+    40px minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.3fr) minmax(0, 1.1fr)
+    128px;
   gap: var(--space-3);
   align-items: center;
   width: 100%;
@@ -351,7 +350,7 @@
 /* 모바일: 1줄 번호·제품·사유 점, 2줄 사유 글자, 3줄 검색어 · 마지막 확인 */
 @media (max-width: 600px) {
   .qrow {
-    grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
       'no prod prod'
       'no why why'

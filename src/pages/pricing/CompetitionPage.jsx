@@ -291,7 +291,7 @@ export default function CompetitionPage() {
           id="queue"
           sub={
             queue &&
-            `${qrows.length}줄 · 위에서부터 점검 · 저장하면 사유가 풀려요 · ${queue.generatedAt?.slice(5) || ''} 기준`
+            `${qrows.length}줄 · 점수 높은 순으로 점검 (점수에 마우스를 올리면 내역) · 저장하면 사유가 풀려요 · ${queue.generatedAt?.slice(5) || ''} 기준`
           }
           flush
           fill
@@ -440,12 +440,18 @@ export default function CompetitionPage() {
 }
 
 // 확인 대기열 표 — 순서 · 사유 · 제품·옵션 · 검색어(메모) · 지난 결과 · 마지막 확인(보류·사람 확인·메모)
+const EXCLUDED = { skip: '보류 중', user_check: '사람 확인 기다림', fresh: '24시간 안 확인' }
+
 function QueueTable({ rows, onOpen }) {
   return (
     <div className={styles.table} role="table" aria-label="확인 대기열">
       <div className={`${styles.qrow} ${styles.head}`} role="row">
-        <span role="columnheader" className={styles.num}>
-          #
+        <span
+          role="columnheader"
+          className={styles.num}
+          title="점수 = 사유 + 경과 + 매출 + 경쟁 — 높은 순으로 점검"
+        >
+          점수
         </span>
         <span role="columnheader">사유</span>
         <span role="columnheader">제품 · 옵션</span>
@@ -456,21 +462,26 @@ function QueueTable({ rows, onOpen }) {
       {rows.map((it) => {
         const why = reasonText(it)
         const flags = [
+          it.excluded ? `빠짐: ${EXCLUDED[it.excluded] || it.excluded}` : '',
           it.skipUntil ? `${it.skipUntil.slice(5)}까지 보류` : '',
           it.needsUserCheck ? '사람 확인 필요' : '',
           it.userNote,
         ].filter(Boolean)
+        const b = it.scoreBreakdown
+        const scoreTip = b
+          ? `점수 ${b.total} = 사유 ${b.reason} + 경과 ${b.aging} + 매출 ${b.sales} + 경쟁 ${b.competition}\n${b.note || ''}`
+          : ''
         return (
           <div
             key={`${it.productId}-${it.optionId ?? 'base'}`}
             role="row"
             tabIndex={0}
-            className={`${styles.qrow} ${it.skipped ? styles.skipped : ''}`}
+            className={`${styles.qrow} ${it.excluded ? styles.skipped : ''}`}
             onClick={() => onOpen(it.productId)}
             onKeyDown={(e) => e.key === 'Enter' && onOpen(it.productId)}
           >
-            <span role="cell" className={`${styles.num} ${styles.mono} ${styles.weak}`}>
-              {it.no}
+            <span role="cell" className={`${styles.num} ${styles.main}`} title={scoreTip}>
+              <b className={styles.mono}>{it.score != null ? Math.round(it.score) : '-'}</b>
             </span>
             <span role="cell" className={styles.main}>
               <QueueDot g={it.group} />
