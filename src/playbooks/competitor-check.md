@@ -44,6 +44,11 @@ REPL `fetch('http://127.0.0.1:8000/...', {headers:{'X-API-Key': key}})` 로 부�
 - 캉스푸 계열 · 통일 녹차 · 북빙양 · 홍바오라이 · 전전 등은 국내 창고 판매자(삼양국제무역 · 길상무역 · 티케이 · 산해무역 등)가 있어 lose 가 많다.
 
 ## 5. REPL 요령
+- 저장 후 판정 확인: `GET /competitor-prices?platform=` → `items[].platforms[pf].main.verdict`, 다른 옵션은 `checks[].verdict`(option_id 로 찾기). 방금 본 줄은 queue 에서 빠지므로 queue 로는 못 본다. queue `limit` 은 500 이하(1000 은 items 없음).
+- REPL 첫 `fetch` 전에 `openTab('about:blank')` 하나를 먼저 연다(탭이 없으면 fetch 가 'Tab ... no longer available' 로 실패).
+- 네이버 카드 innerText 는 가격이 '27,600' / '원' 두 줄로 나뉜다. 스토어 줄 앞 '(100ml당 …)' · '찜 1' · '구매 1찜 1' · '5.0' · '(1)' 은 건너뛴다. '11번가' 처럼 숫자로 시작하는 스토어도 있다.
+- 쿠팡 쿼리가 같은 줄(예: 313·315)은 검색 1번으로 같이 판정. 다른 줄 검색 결과에 같은 경쟁 상품이 보이면 그걸로 저장해 요청을 아낀다(note 에 적기). 쿠팡 탭 안 `fetch('/vp/products/…')` 도 요청 1개로 센다.
+- 330ml 묶음 상품은 같은 제품 500ml 묶음이 훨씬 싸게 있는 경우가 많다(캉스푸 빙홍차·빙탕쉐리·녹차). 같은 용량끼리 비교하고, 500ml 값은 note 에 [용량 다름] 으로 남긴다(사람 판단은 watch needs_user_check).
 - 한 호출 안에서 쿠팡 1건 → 네이버 몇 건 → 쿠팡 1건으로 번갈아(호출당 쿠팡 최대 2건). 호출 하나의 sleep 합계 110초 이하. 호출이 끝나면 백그라운드 비동기는 끊긴다.
 - 탭은 openTab/closeTab, 끝나면 닫는다.
 
