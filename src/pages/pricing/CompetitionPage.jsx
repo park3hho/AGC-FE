@@ -61,7 +61,15 @@ function QueueDot({ g }) {
 const reasonText = (it) =>
   it.reasons
     .filter((r) => r.code !== 'stale')
-    .map((r) => (r.detail ? `${r.label} ${r.detail}` : r.label))
+    // 점 옆 글자(묶음 이름)와 같은 사유는 내용만 — '주문 들어옴 주문 들어옴 2건' 반복 방지
+    .map((r) =>
+      r.label === QUEUE_GROUP[it.group]?.label
+        ? r.detail || ''
+        : r.detail
+          ? `${r.label} ${r.detail}`
+          : r.label,
+    )
+    .filter(Boolean)
     .join(' · ')
 
 const TYPE = { agency: '구매대행', warehouse: '국내 재고', unknown: '모름' }
@@ -243,7 +251,7 @@ export default function CompetitionPage() {
             className={styles.chips}
             role="group"
             aria-label="판정으로 거르기"
-            hidden={view === 'queue'}
+            style={view === 'queue' ? { display: 'none' } : undefined}
           >
             <button
               type="button"
