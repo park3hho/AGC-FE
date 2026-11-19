@@ -15,7 +15,8 @@ REPL `fetch('http://127.0.0.1:8000/...', {headers:{'X-API-Key': key}})` 로 부�
 | 메모 목록 | `GET /competitor-prices/watch?platform=` |
 
 - queue 항목: `rank, group(order·changed(수정)·new·retry·watch·stale), reasons[{code,label,detail}], product_id, option_id, title, option, query(query_override → 지난 검색어 → 제품명), search_note, user_note, needs_user_check, last_verdict, last_checked_at, our_price, min_price, vendor_name, vendor_price, vendor_ref`.
-- 대기열 위에서부터 40건. 위 순서를 바꾸지 않는다. 같은 브랜드가 여러 줄이면 검색 1번으로 같이 판정해도 된다(대기열 안의 줄만).
+- 정렬 = **가중치 점수 높은 순** (사유 + 경과 + 매출 + 경쟁, 가중치 BE `core/competitor_config.py`, 항목마다 score · score_breakdown). 대기열 위에서부터 40건, 순서를 바꾸지 않는다.
+- 제외(excluded 칸, 뒤로 빠짐): 보류(skip) 중 새 사유 없음 · needs_user_check(풀 때까지) · 24시간 안 확인 + 새 사유 없음. 제외된 줄은 보지 않는다. 같은 브랜드가 여러 줄이면 검색 1번으로 같이 판정해도 된다(대기열 안의 줄만).
 - bulk 항목: `product_id, platform, option_id(queue 의 option_id), status(found · only_us · not_found), vendor_name, vendor_price(배송비 포함 총액, 우리 수량으로 환산), vendor_shipping, vendor_type(agency · warehouse · unknown), vendor_note(200자, 환산 근거), vendor_url, query, vendor_ref`(쿠팡 `{productId, vendorItemId}`). verdict 는 서버가 계산.
 - 그대로면(경쟁자 같음) 같은 값으로 다시 저장 → checked_at 갱신.
 - **다음 회차에 알아야 할 것은 전부 PUT watch 로 남긴다**:

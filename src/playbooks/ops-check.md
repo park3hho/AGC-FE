@@ -4,8 +4,10 @@
 
 - 루틴 지시문은 "이 플레이북과 아래 연결 문서를 읽고 그대로 실행"만 한다. 할 일·규칙·순서는 전부 여기.
 - 연결 문서(해당 단계에서 반드시 읽고 따른다): `import-declaration.md`(수입신고), `jiyun-rules.md`(집운 배송 요청·취소·재발송).
-- 이 문서와 루틴 메모(MEMORY.md)가 다르면 **이 문서가 우선**. 루틴 메모에는 진행 상태(최신 회차 기록·보고 표시)만 남긴다.
-- 새 일이 없으면 보고 없이 끝낸다. 처리한 일 · 사용자가 할 일 · 막힌 일이 있을 때만 한국어로 짧게 보고.
+- 이 문서와 루틴 메모(MEMORY.md)가 다르면 **이 문서가 우선**.
+- **상태는 DB 에, 메모에는 안 적는다 (사용자 원칙 2026-11-19).** 무엇을 할지는 `GET /ops/tasks` 가, 무엇을 이미 알렸는지는 `/ops/alerts` 가 안다(0-1절). 루틴 메모에 '다음:' · 'jy/tp/decl/문서 max' · '보고함·재보고 금지' · 물류 문구 목록을 적지 않는다. 물류 문구는 구매 `cn_last_text` · 소포 `last_text` 에, 안내 시각은 묶음 `notified_at` 에, 환불은 구매 `refund_*` 에, 기한 단계는 주문 `deadline_stage` 에.
+- 루틴 메모에는 '최신 회차' 한 단락(무엇을 처리했는지 · 막힌 것 · 새로 배운 요령)만 덮어쓴다. 사용자가 내린 건별 결정(📌)은 메모 대신 그 구매·묶음의 memo 칸이나 알림 body 에 남긴다.
+- 새 일이 없으면 보고 없이 끝낸다. 처리한 일 · 사용자가 할 일 · 막힌 일이 있을 때만 한국어로 짧게 보고. **보고할 것은 전부 먼저 `POST /ops/alerts` 로 올리고 new=true 인 것만 보고한다.**
 - 개인정보: 고객 이름·전화·주소·통관부호·카드값은 절대 출력·보고하지 않는다. 이름은 "박*"처럼 가린다. 고객 정보 임시파일은 쓰고 바로 지운다(컨테이너 /tmp 포함).
 
 ## 0. 환경
@@ -15,6 +17,31 @@
 - HQ 키: `C:\Users\iwill\.hq\agent_key` (헤더 X-Service-Key) → http://127.0.0.1:8400/svc. 비밀번호·카드값은 HQ 에서 읽고 출력하지 않는다.
 - 영수증 폴더: `C:\Users\iwill\AGC\receipts\` (세션 폴더 아님 — 옛 세션 폴더는 11-12 세션 삭제로 사라짐. git 에는 안 올라감) — 파일명 `{YYYYMMDD}_{주문코드}_{구매|집운}_주문상세_{타오바오번호}.pdf`.
 - AGC `/api/orders` 의 receiver 는 가린 값 → 고객 원본은 마켓 API(네이버 product-orders/query 의 shippingAddress·individualCustomUniqueCode, 쿠팡 ordersheets 의 receiver·overseaShippingInfoDto)로.
+
+## 0-1. 할 일 · 알림 API (2026-11-19, 매 회차 맨 앞)
+
+- 로컬 서버 `http://127.0.0.1:8000`, 헤더 `X-API-Key` = `C:\Users\iwill\.agc\api_key` (값 출력 금지). `/ops/*` 는 API 키로 된다. 그 밖의 주문 API(`/orders` 등)는 지금처럼 agc-fe 탭 로그인 쿠키로 `fetch('/api/...')`. (키 파일을 못 읽으면 `/ops/*` 도 agc-fe 탭에서 `/api/ops/...`.)
+- **시작: `GET /ops/tasks`** → items 를 priority 순서로 처리한다. type 별로 이 문서의 해당 절을 따른다:
+  | type | 절 | 끝낸 뒤 서버에 남길 것 |
+  |---|---|---|
+  | claim | 9 | 처리 결과 알림(kind claim) |
+  | confirm · naver_delay · purchase | 4 | 발주확인 API · `POST /ops/orders/{id}/mark {delay_requested_at}` · 구매 기록(stock_ids 있으면 재고 사용) |
+  | import_decl · import_status | 8 | 신고 기록 POST/PATCH |
+  | cancel_followup · refund_wait | 9 | 구매 `refund_status/refund_no` PATCH 또는 집운 재고 |
+  | cn_track | 5 | 구매 PATCH(cn_status · cn_last_text) · 소포 API |
+  | jiyun_pay_notice · jiyun_pay_wait | 6 | 안내 후 `POST /ops/bundles/{code}/notified` |
+  | dispatch_check · invoice | 7 | 집운 PATCH · 마켓 발송처리 |
+  | deadline | 10 | 알림 후 `POST /ops/orders/{id}/mark {deadline_stage}` |
+  | stock_aging | 9 | 알림(kind stock_aging) |
+- tasks 에 안 나오는 확인은 그대로 한다(타오바오 계정 확인 3절, 사용자가 결제한 집운 찾기 6절, 쿠팡 RU·CC · 환불 목록 9절, 유니패스 처리현황 8절, 알리페이 잔액 2절).
+- **알림(재보고 막기)**: 보고할 일마다 `POST /ops/alerts {key, kind, title, body?, level?, order_codes, target, source:"routine:qDZcwsTKTD0rQZrq", reported:true}` → **new=true 일 때만 보고**, new=false 면 이미 알린 것(보고 안 함). key = `{kind}:{대상}[:{단계·숫자}]`:
+  - 새 주문 `order_new:OR-…` · 구매 막힘 `purchase_blocked:OR-…:{사유코드}` · 로그인 `login_needed:{taobao|unipass|agc}:{YYYYMMDD}` · 잔액 `alipay_low:{날짜}`
+  - 집운 결제 안내 `jiyun_pay_needed:PRE_LP…` · 묶음 일부 입고 `bundle_partial:PRE_LP…:{n}/{m}` · 소포 일부 `package_partial:purchase:{id}:{n}/{m}`
+  - 집운 결제 기록 `jiyun_paid:LP…` · 출고 `dispatched:{jiyun_no}` · 송장 `invoice_sent:OR-…` · 신고 `import_sent:{신청번호}` · 오류 `import_error:{신청번호}`
+  - 클레임 `claim:OR-…:{상태}` · 환불 `refund:purchase:{id}:{requested|success|rejected}` · 기한 `deadline_{d3|d1|over}:OR-…` · 재고 `stock_aging:{stock_id}`
+- **서버가 올린 알림도 전한다**: 매 회차 `GET /ops/alerts?unreported=true` → 보고에 한 줄씩 넣고 `PATCH /ops/alerts/{id} {reported:true}`. (카드값 확정 card_confirmed · 쿠팡 취소 claim 등 서버 자동 처리 결과)
+- 상황이 끝났으면(예: 결제 안내한 묶음이 결제됨) `PATCH /ops/alerts/{id} {resolved:true}` — 같은 key 가 나중에 다시 생기면 새 알림으로 열린다.
+- 같은 상태 반복 보고 금지는 key 가 막아 준다(숫자가 바뀌면 key 도 바뀌어 새로 알림).
 
 ## 1. 테스트 주문
 
@@ -28,7 +55,7 @@
 - 결제는 한 회차에 필요한 만큼 한 번에(1건씩 나누지 않음). 알리페이 '앱 QR 스캔 인증'이 뜨면 그 회차 멈추고 QR 캡처 1회 보고, 사용자가 '결제해'라고 할 때까지 그 주문 결제 재시도 금지.
 - 집운 운임은 사용자가 직접 낸다(에이전트는 집운 운임을 결제하지 않는다). 사용자가 결제수단을 말하지 않았으면 잔액으로 기록.
 - 원화: 알리페이 잔액 결제(상품·집운) = 위안×202 반올림, charged_status "settled", charged_source "알리페이 잔액 결제(1위안 202원 충전분)", pay_method "alipay". FIN 지출 method 가 '알리페이(현대카드)'로 들어오면 `PATCH /svc/expenses/by-key/{ext_key} {method:"알리페이 잔액"}`. 微信支付(위챗페이) 집운만 위안×201.02, pay_method "other", settled.
-- 카드 결제(VISA 8904): 직후 추정(위안×204.4, "none", "추정: 알리페이 연동 현대카드, 카드 승인내역 대조 전") → 매 회차 FIN 카드 내역(`select used_date, used_time, merchant, amount from card_transaction where merchant ilike '%taobao%' and not canceled order by used_date desc, used_time desc limit 20;` on fin_db)에서 결제 시각 ±15분·금액 ±5% 승인을 찾아 PATCH {charged_krw, charged_status:"approved", charged_source:"현대카드 승인 {금액}원 ({merchant} {날짜 시각}, FIN 카드 대조)"} 후 "카드값 확정" 보고. 이미 approved/settled 면 건드리지 않음. 아직 없으면 다음 회차(보고 안 함).
+- 카드 결제(VISA 8904): 직후 추정(위안×204.4, "none", "추정: 알리페이 연동 현대카드, 카드 승인내역 대조 전")로 기록만 한다. **카드 승인 대조는 서버가 10분마다 자동으로 한다(2026-11-19, FIN 카드 승인 ±15분·±5% → approved, 알림 card_confirmed)** → 루틴은 0-1절대로 unreported 알림의 "카드값 확정"만 보고한다. FIN 카드 내역을 직접 대조하지 않는다. (아래는 서버가 하는 일 — 참고용) FIN 카드 내역(`select used_date, used_time, merchant, amount from card_transaction where merchant ilike '%taobao%' and not canceled order by used_date desc, used_time desc limit 20;` on fin_db)에서 결제 시각 ±15분·금액 ±5% 승인을 찾아 PATCH {charged_krw, charged_status:"approved", charged_source:"현대카드 승인 {금액}원 ({merchant} {날짜 시각}, FIN 카드 대조)"} 후 "카드값 확정" 보고. 이미 approved/settled 면 건드리지 않음. 아직 없으면 다음 회차(보고 안 함).
 
 ## 3. 타오바오 계정
 
@@ -42,7 +69,7 @@
 `GET /api/orders?stage=received&include_test=true`. 클레임(claim_type)이 있으면 처리하지 말고 보고. 실제 고객 주문마다:
 
 1. 발주확인: `POST /api/orders/{id}/confirm`.
-2. 네이버면 발송지연 1회: `POST {NAVER_BASE}/v1/pay-order/seller/product-orders/{line_no}/delay` body `{dispatchDueDate: 주문일+14일 "YYYY-MM-DDT23:59:59.000+09:00", delayedDispatchReason:"OVERSEA_DELIVERY", dispatchDelayedDetailedReason:"해외 구매대행 상품으로 중국 현지 구매 후 국제 배송(해운) 진행 중입니다. M월 D일까지 발송 예정입니다."}` → 조회로 반영 확인.
+2. 네이버면 발송지연 1회(tasks 의 naver_delay — 성공하면 `POST /ops/orders/{id}/mark {delay_requested_at}`, 마켓 원본에 이미 보이면 서버가 알아서 채움): `POST {NAVER_BASE}/v1/pay-order/seller/product-orders/{line_no}/delay` body `{dispatchDueDate: 주문일+14일 "YYYY-MM-DDT23:59:59.000+09:00", delayedDispatchReason:"OVERSEA_DELIVERY", dispatchDelayedDetailedReason:"해외 구매대행 상품으로 중국 현지 구매 후 국제 배송(해운) 진행 중입니다. M월 D일까지 발송 예정입니다."}` → 조회로 반영 확인.
 3. 쿠팡 받는 사람·통관부호가 빈값이면(11-10~ 쿠팡 API 현상): Wing 배송관리 → 상품준비중 → '엑셀 다운'(사유 5자 이상) 배송리스트에서 수취인이름(AA)·우편번호(AC)·주소(AD)·개인통관번호(AJ)·통관용수취인전화번호(AK, 010 — AB 안심번호 말고). AGC 가 비어 있으면 채우고(`_enc`·`run_pccc_check`, `norm_phone`·`receiver_fingerprint`) 통관 검증 '일치' 확인. 엑셀은 바로 지운다.
 4. **매입처 예외 (조사 URL 대신 이걸 산다):** ⚠️ 11-14 기준 천묘→집운 창고 직접 주소 방식은 **미검증(구매 43 시험 중)**. 검증될 때까지 과일C 18·36포(`859xN` 등)는 **루이싱 공식점 ¥9.9 3袋 https://detail.tmall.com/item.htm?id=1074590269896 (수량 제한 없음, 韩国 集运 가능) × N개를 고객 한국 주소 + 集运-海运으로** 사고, 판매처 旺旺에 "최신 생산분으로" 요청(생산 5~6월·180일이라 유통기한 짧음). 천묘 시험이 성공하면 아래 천묘 방식으로 바꾼다. (이하 천묘 방식) 루이싱 과일C 아메리카노 `PR-261030-0028-{859 오렌지C·860 포멜로C·862 포도C}xN` 에서 N≥2(18포·36포) → 공식점 3포(¥19.9)는 1인 1개 한정이라 못 삼 → **천묘마트(天猫超市) https://detail.tmall.com/item.htm?id=987926818768 의 같은 맛 9袋 × (N÷3)개**(18포=2개, 36포=4개). 천묘는 한국 주소+集运이 안 돼서 받는 곳을 결제용 집운 창고 주소(`电美世路180号（韩国海运集运）@QVKDNMN3`, 수취인=그 고객 이름·전화)로 저장해 결제, 입고 뒤 집운 결제 때 고객 한국 주소 선택(11-14 OR-261113-0002 첫 사례). N=1(3포 1개)은 공식점 그대로. 진한 아메리카노(861)는 천묘에 없음 → 막히면 보고.
 5. **사기 전에 집운 재고 먼저 (2026-11-18):** `GET /api/jiyun-stock/match?order_id={id}` — 같은 SKU(상품코드·옵션·묶음 수)의 보관 중(available) 재고가 있으면 **타오바오에서 사지 말고** 가장 오래된 것부터 `POST /api/jiyun-stock/{stock_id}/use {order_id}` → 그 소포의 타오바오 구매가 이 주문로 옮겨 감(원가도). 소포가 이미 창고 입고면 곧바로 6장 집운 결제 안내(새 고객 주소 置顶), 이동 중이면 입고 대기. "재고에서 씀"으로 1회 보고. 재고 목록: `GET /api/jiyun-stock?status=available` (화면: 판매 › 집운 재고).
@@ -58,10 +85,12 @@
 
 ## 5. 중국 내 배송 · 창고 입고
 
-진행 중 구매기록(`GET /api/taobao-purchases`, cn_status ordered·shipped)을 결제용 계정의 구매목록·물류 화면(`market.m.taobao.com/app/dinamic/pc-trade-logistics/home.html?orderId=`)에서 확인. 판매처 발송(운송장)·창고 입고가 새로 보이면 `PATCH /api/taobao-purchases/{id}` (cn_status shipped/arrived, cn_tracking_no, shipped_at/arrived_at — 화면의 실제 시각). PC 待集运 화면은 소포 목록이 안 보인다(앱 전용).
+tasks 의 cn_track(구매 cn_status ordered·shipped, 묶음 일부 입고)을 결제용 계정의 구매목록·물류 화면(`market.m.taobao.com/app/dinamic/pc-trade-logistics/home.html?orderId=`)에서 확인. 판매처 발송(운송장)·창고 입고가 새로 보이면 `PATCH /api/taobao-purchases/{id}` (cn_status shipped/arrived, cn_tracking_no, shipped_at/arrived_at — 화면의 실제 시각). **변화가 없어도 마지막 물류 문구는 `cn_last_text`(예: "已安检待入库 11-19 08:53")로 남긴다 — 메모에 물류 문구 목록을 적지 않는다.** PC 待集运 화면은 소포 목록이 안 보인다(앱 전용).
+- **소포가 여러 개("N个包裹", 包裹1·包裹2)면**: `PATCH /api/taobao-purchases/{id} {package_count:N}` + 소포마다 `POST /api/taobao-purchases/{id}/packages {tracking_no, courier, status:"shipped"|"arrived", shipped_at, arrived_at, last_text}` (처음 추가하면 구매에 있던 운송장이 소포 1 로 자동 등록). 입고되면 `PATCH /api/taobao-purchases/packages/{pid} {status:"arrived", arrived_at}`. 서버가 전부 입고됐을 때만 구매를 arrived 로 바꾼다(일부만이면 cn_status arrived PATCH 는 409). 메모 태그 "[추가 소포 …]"는 더 쓰지 않는다.
 
 ## 6. 집운 (묶음 기준)
 
+- **집운 결제 안내 = tasks 의 jiyun_pay_notice** (서버가 묶음 전부 입고 + 소포 전부 입고 + 아직 안내 안 함을 계산). 안내를 보내면 `POST /ops/bundles/{code}/notified {note:"받는 곳 {시·구}, 置顶 함"}` + 알림 `jiyun_pay_needed:{code}`. 그러면 다음 회차부터 jiyun_pay_wait(사용자 결제 대기)로 바뀜다. 구매 memo 태그 "[집운결제 안내 …]"는 더 쓰지 않는다. 아래는 그 규칙의 설명:
 - **집운 결제 안내는 묶음 상자가 전부 입고됐을 때만 1회**: `/api/orders` 의 `progress.bundle.ready` 가 true(묶음 2건 이상) 또는 묶음 없는 주문의 소포 입고. 묶음 일부만 입고되면 결제 안내 금지 — "묶음 n/m 입고, 기다리는 중"으로만(같은 숫자 반복 보고 금지).
 - **판매처가 한 구매를 소포 여러 개로 나눠 보낸 경우(사용자 규칙 2026-11-19): 소포가 전부 입고될 때까지 집운 결제 안내 금지.** AGC 구매기록은 운송장을 1개만 담아서, 첫 소포만 들어와도 묶음이 ready 로 보일 수 있다(11-19 OR-261117-0001 재스민차 12병×2박스: 첫 박스만 입고됐는데 안내 → 따로 결제돼 운임 2번). 그래서 입고 보고 전에 묶음의 구매마다 물류 화면(pc-trade-logistics)에서 **포장 개수("N个包裹", 탭 包裹1·包裹2)** 를 보고, 2개 이상이면 모든 운송장이 집운 창고 顺利入库 일 때만 안내한다. 추가 운송장은 구매 memo 에 "[추가 소포 {택배사} {운송장}]"로 적고, 일부만 입고되면 "소포 n/m 입고, 기다리는 중"으로만(보고는 처음 한 번). 주문 수량·묶음 수(예: ×2박스, 2개)가 2 이상이면 특히 꼭 확인.
 - 안내 문구: "집운 결제 필요: {주문코드들} {상품} — 이 고객 소포만 한 묶음, 받는 곳 = 고객 주소(시·구까지), 알리페이 잔액, 30kg 이하로(넘으면 大件操作费 ¥60 → 약 3박스=25kg 단위로 나눠 묶기)". 입고된 그 회차에 바로 보낸다(발송 점수 대부분이 입고~결제 대기). **안내 끝에 꼭 붙인다: "결제 화면 주소는 맨 위(가장 최근 저장) 주소가 자동 선택돼요 — 받는 사람 이름 확인 후 결제"** (11-12 사고: 새 주문 고객 주소가 맨 위에 저장돼 있어 OR-261110-0001 집운이 다른 고객 주소로 결제됨 → 退款 후 재결제). **안내 보내기 전에 결제용 주소록(https://i.taobao.com/my_itaobao/receiver-address-pc)에서 그 고객 주소 행의 \"置顶\"을 눌러 한국 주소 중 맨 위로 올려 둔다**(주소가 27개 넘게 쌓여 묻힘, 11-14 사용자 \"저장 안 돼 있네\"). 사용자가 집운을 결제하면 그 회차에 상세(conso_order_detail?tradeId=…)의 收货地址 이름·시·구가 그 주문 고객과 같은지 반드시 보고, 다르면 AGC 기록 전에 바로 보고(拣货 전 退款/投诉 가능). 같은 주문 재보고 방지: 구매기록 memo 끝 "[집운결제 안내 YYYY-MM-DD HH:MM]".
@@ -109,6 +138,7 @@
 - 쿠팡 출고중지요청은 매 회차 `GET .../returnRequests?createdAtFrom={30일 전}&createdAtTo={오늘}&status=RU`. API 로 안 되면 Wing(https://wing.coupang.com/tenants/sfl-portal/stop-shipment/list, HQ #2) '출고중지' 버튼.
 - **판매처가 이미 보낸 뒤(운송 중·창고 입고, 집운 결제 전) 취소는 退款·拦截 대신 집운 재고로 (사용자 결정 2026-11-18):** 마켓 출고중지는 (a)대로 승인하고, 타오바오 환불 신청 대신 `POST /api/jiyun-stock {purchase_id, memo:"{주문코드} 고객 취소({사유}), 판매처 발송 {택배사} {운송장}"}` → 다음 같은 상품 주문에 4-5대로 씀. 보관 중인 구매는 매출 현황에서 손실로 안 셈. **14일 넘게 안 쓰인 재고는 1회 보고**(반품 `PATCH /api/jiyun-stock/{id} {status:"returned"}` 또는 손실 `written_off` 은 사용자 결정). 판매처 미발송이면 아래 退款 그대로.
 - 타오바오 환불(결제용): 클레임 완료 + 소포 창고 입고 전이면 주문상세 → '退换/退款' → 未收到货 · 不想要了 · 전액 · 退款说明("客户取消了订单，包裹还在运输途中（{택배사} {운송장}），麻烦帮忙拦截退回，谢谢！" / 미발송 "客户取消了订单，请不要发货，谢谢！") → 提交 → 退款编号 확인 → 구매기록 memo "[退款 신청 YYYY-MM-DD HH:MM] 退款编号 …, ¥금액, 사유" → 보고. 이미 입고·집운·출고면 신청하지 말고 보고만. 요청 단계 클레임은 한 번만 보고.
+- **환불 상태는 구매 칸에 (2026-11-19)**: 신청하면 `PATCH /api/taobao-purchases/{id} {refund_status:"requested", refund_no, refund_cny}`, 退款成功이면 `{refund_status:"success"}`, 거절이면 `"rejected"`(시각은 서버가 채움). memo 줄은 사람이 읽기 용으로 계속 남겨도 되지만, 할 일 계산(cancel_followup · refund_wait)은 refund_status 를 본다.
 - 환불 추적: https://refund2.taobao.com/dispute/buyerDisputeList.htm — 거절·추가 요구는 바로 보고, 退款成功 새로 보이면 memo "[退款成功 YYYY-MM-DD HH:MM] ¥금액" + 보고.
 - FIN 환불 줄(11-07): 원 지출은 두고 음수 줄 `POST http://127.0.0.1:8300/svc/expenses` — ext_key 원+"-refund", spent_on 환불일, amount −원화, foreign_amount "−위안", 나머지는 원 지출과 같게, purpose "{주문코드} 상품 구매 환불 (사유)". 잔액 결제분은 退款成功 즉시, 카드분은 FIN 카드 취소가 보인 뒤.
 
@@ -116,11 +146,12 @@
 
 - `GET /api/orders?stage=processing&include_test=true`(received 도). 마켓에 국내 송장이 없는 주문마다 ship_due_at(KST 날짜).
 - 조회되는 번호가 있으면 기한 전이라도 바로 발송처리(테스트 상자도).
-- D-3 에 송장 없음 → 1회 보고("발송기한 임박: {코드} {마켓} 기한 {M/D}, 현재 위치 … — 쿠팡은 Wing '배송지연안내' 필요 / 네이버는 발송지연 1회 이미 사용"). D-1 에 한 번 더. 지나면 "출고지연 발생" 보고. 같은 단계 반복 금지 — 루틴 메모에 "[기한보고 {코드} D-3/D-1/지연]".
+- tasks 의 deadline 항목(alerted=false 인 것)만 본다. 알리면 알림 `deadline_{stage}:{코드}` + `POST /ops/orders/{id}/mark {deadline_stage}`. 아래 문구 기준은 그대로.
+- D-3 에 송장 없음 → 1회 보고("발송기한 임박: {코드} {마켓} 기한 {M/D}, 현재 위치 … — 쿠팡은 Wing '배송지연안내' 필요 / 네이버는 발송지연 1회 이미 사용"). D-1 에 한 번 더. 지나면 "출고지연 발생" 보고. 같은 단계 반복 금지는 deadline_stage 와 알림 key 가 막는다(루틴 메모에 적지 않음).
 
 ## 11. 끝내기
 
 - 탭은 openTab/closeTab 만, 끝나면 연 탭 닫기(로그인 화면 탭은 남김). 사용자 탭은 닫지 않는다.
 - 같은 동작 2~3번 실패하면 멈추고 보고.
 - 결제·발송처리·환불 신청·수입신고를 했으면 보고에 주문코드·금액·번호·결제 수단(잔액/카드)을 넣는다.
-- 루틴 메모 맨 위 '최신' 에 이번 회차 상태를 남긴다(규칙은 적지 않는다 — 규칙은 이 문서).
+- 루틴 메모는 '최신 회차' 한 단락만 덮어쓴다: 처리한 일(주문코드·번호), 막힌 것, 새로 배운 요령. '다음:' · max 번호 · '보고함' · 물류 문구 목록은 적지 않는다(그건 tasks · alerts · DB 칸이 안다). 규칙은 이 문서.
