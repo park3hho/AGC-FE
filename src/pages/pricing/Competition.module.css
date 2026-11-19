@@ -28,18 +28,20 @@
   color: var(--color-text);
 }
 
+/* 거르기 = 글자 탭 (DESIGN §4.2-9 — 테두리 칩 금지, 고른 것만 진한 글자 + 밑줄) */
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 2px var(--space-3);
 }
 
 .chip {
-  padding: 3px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-bg);
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
   color: var(--color-text-sub);
+  font: inherit;
   font-size: 12px;
   cursor: pointer;
 }
@@ -51,7 +53,7 @@
 }
 
 .chipOn {
-  border-color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   color: var(--color-text);
   font-weight: 600;
 }

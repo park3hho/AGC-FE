@@ -21,6 +21,7 @@ const PriceDetailPage = lazy(() => import('@/pages/research/price/PriceDetailPag
 const PricingListPage = lazy(() => import('@/pages/pricing/PricingListPage'))
 const PricingPage = lazy(() => import('@/pages/pricing/PricingPage'))
 const CompetitionPage = lazy(() => import('@/pages/pricing/CompetitionPage'))
+const OpsPage = lazy(() => import('@/pages/ops/OpsPage'))
 const SalesPage = lazy(() => import('@/pages/sales/SalesPage'))
 const ShopAnalyticsPage = lazy(() => import('@/pages/sales/ShopAnalyticsPage'))
 const DesignListPage = lazy(() => import('@/pages/design/DesignListPage'))
@@ -66,6 +67,7 @@ export default function App() {
               <Route path="/research/prices/:id" element={<PriceDetailPage />} />
               <Route path="/pricing" element={<PricingListPage />} />
               <Route path="/pricing/competition" element={<CompetitionPage />} />
+              <Route path="/ops" element={<OpsPage />} />
               <Route path="/sales" element={<SalesPage />} />
               <Route path="/shop-analytics" element={<ShopAnalyticsPage />} />
               <Route path="/pricing/:productId" element={<PricingPage />} />
@@ -83,7 +85,7 @@ export default function App() {
               <Route path="/orders/purchases/:id/edit" element={<PurchaseFormPage />} />
               <Route path="/jiyun" element={<JiyunListPage />} />
               <Route path="/jiyun/bundle" element={<JiyunBundlePage />} />
-          <Route path="/jiyun/stock" element={<JiyunStockPage />} />
+              <Route path="/jiyun/stock" element={<JiyunStockPage />} />
               <Route path="/import-declarations" element={<ImportDeclPage />} />
               <Route path="/domestic" element={<DomesticListPage />} />
               <Route path="/domestic/:id" element={<DomesticDetailPage />} />

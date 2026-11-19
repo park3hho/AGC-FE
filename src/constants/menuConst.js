@@ -73,6 +73,16 @@ export const MENU = [
     path: '/products',
     feature: FEATURE.RESEARCH,
   },
+  // 오늘 할 일 — 서버가 DB 로 계산한 할 일 + AI 점검·서버 자동 처리가 남긴 알림 (2026-11-19, 30분 점검 규칙화)
+  {
+    key: 'ops',
+    group: 'sales',
+    label: '오늘 할 일',
+    icon: 'sections',
+    tone: 'warning',
+    path: '/ops',
+    feature: FEATURE.ORDER,
+  },
   {
     key: 'orders',
     group: 'sales',
