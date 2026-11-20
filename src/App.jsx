@@ -94,7 +94,7 @@ export default function App() {
               <Route path="/orders/jiyun/:id/edit" element={<JiyunFormPage />} />
               <Route path="/shipping/addresses/edit" element={<ShippingAddressFormPage />} />
               <Route path="/exchange-rate" element={<ExchangeRatePage />} />
-              `n <Route path="/alipay-balance" element={<AlipayBalancePage />} />
+              <Route path="/alipay-balance" element={<AlipayBalancePage />} />
               <Route path="/markets" element={<MarketsPage />} />
               <Route path="/playbooks" element={<PlaybooksPage />} />
             </Route>
