@@ -27,7 +27,7 @@ const MOBILE_TABS = [
 ]
 
 // 알리페이 잔액 — 즈푸바오에 위안을 충전할 때의 환율을 적어 두고, 잔액 결제는 오래된 충전부터(선입선출) 그 환율로 원화를 계산한다.
-// 두 충전에 걸친 결제는 깎은 위안 비율대로 (예: ¥40 × 202 + ¥23 × 201). 계산한 원화는 구매·집운 기록과 FIN 지출에 자동으로 들어간다.
+// 두 충전에 걸친 결제는 차감한 위안 비율대로 (예: ¥40 × 202 + ¥23 × 201). 계산한 원화는 구매·집운 기록과 FIN 지출에 자동으로 들어간다.
 export default function AlipayBalancePage() {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
@@ -224,7 +224,7 @@ export default function AlipayBalancePage() {
               <span>내용</span>
               <span>위안</span>
               <span>원화</span>
-              <span>깎은 충전 (위안 × 환율)</span>
+              <span>차감액 (위안 × 환율)</span>
             </div>
             {items.map((s) => (
               <div key={s.id} className={styles.line2}>
