@@ -43,7 +43,12 @@
   width: 160px;
 }
 .row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
   gap: 0;
+}
+.row > :first-child {
+  border-right: 1px solid var(--color-border);
 }
 .list {
   display: flex;
@@ -102,6 +107,12 @@
   color: var(--color-text-sub);
 }
 @media (max-width: 900px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+  .row > :first-child {
+    border-right: 0;
+  }
   .form {
     margin-left: 0;
   }
