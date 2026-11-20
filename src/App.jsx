@@ -30,6 +30,7 @@ const ProductOverviewPage = lazy(() => import('@/pages/products/ProductOverviewP
 const DesignEditPage = lazy(() => import('@/pages/design/DesignEditPage'))
 const ShippingFeePage = lazy(() => import('@/pages/pricing/ShippingFeePage'))
 const ExchangeRatePage = lazy(() => import('@/pages/pricing/ExchangeRatePage'))
+const AlipayBalancePage = lazy(() => import('@/pages/pricing/AlipayBalancePage'))
 const MarketsPage = lazy(() => import('@/pages/markets/MarketsPage'))
 const PlaybooksPage = lazy(() => import('@/pages/playbooks/PlaybooksPage'))
 const ShippingAddressPage = lazy(() => import('@/pages/shipping/ShippingAddressPage'))
@@ -93,6 +94,7 @@ export default function App() {
               <Route path="/orders/jiyun/:id/edit" element={<JiyunFormPage />} />
               <Route path="/shipping/addresses/edit" element={<ShippingAddressFormPage />} />
               <Route path="/exchange-rate" element={<ExchangeRatePage />} />
+              `n <Route path="/alipay-balance" element={<AlipayBalancePage />} />
               <Route path="/markets" element={<MarketsPage />} />
               <Route path="/playbooks" element={<PlaybooksPage />} />
             </Route>

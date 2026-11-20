@@ -182,6 +182,16 @@ export const MENU = [
     path: '/exchange-rate',
     feature: FEATURE.RESEARCH,
   },
+  // 알리페이 잔액 — 충전 환율 선입선출로 잔액 결제 원화 계산 (2026-11-20)
+  {
+    key: 'alipayBalance',
+    group: 'settings',
+    label: '알리페이 잔액',
+    icon: 'exchange',
+    tone: 'primary',
+    path: '/alipay-balance',
+    feature: FEATURE.ORDER,
+  },
   {
     key: 'markets',
     group: 'settings',
