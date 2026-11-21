@@ -65,6 +65,7 @@ const toProductLite = (p) => ({
   titleKo: p.title_ko || '',
   photoUrl: fileUrl(p.photo_url),
   addedAt: toKstDate(p.created_at),
+  shippingMode: p.shipping_mode || '', // included 포함형(무료배송) · separate 별도형(배송비 따로) — 상세 S1 배송비 띠
 })
 
 // 공통 안내는 저장할 때 그대로 다시 보내므로 snake_case 칸을 유지한다

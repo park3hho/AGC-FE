@@ -347,7 +347,12 @@ export default function DesignEditPage() {
             )
           }
         >
-          <PreviewFrame ref={pageRef} content={content} common={common} />
+          <PreviewFrame
+            ref={pageRef}
+            content={content}
+            common={common}
+            shippingMode={data.product.shippingMode}
+          />
         </Section>
       </div>
 

@@ -11,6 +11,7 @@ const PreviewFrame = forwardRef(function PreviewFrame(
   {
     content, // object: DetailContent
     common, // object: 공통 안내
+    shippingMode = '', // string: 제품 배송비 방식 (S1 배송비 띠)
   },
   ref,
 ) {
@@ -46,7 +47,7 @@ const PreviewFrame = forwardRef(function PreviewFrame(
           className={styles.previewInner}
           style={{ transform: `scale(${scale})`, width: TEMPLATE_WIDTH }}
         >
-          <DetailTemplate ref={ref} content={content} common={common} />
+          <DetailTemplate ref={ref} content={content} common={common} shippingMode={shippingMode} />
         </div>
       </div>
     </div>

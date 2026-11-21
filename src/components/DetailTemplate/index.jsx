@@ -1,6 +1,7 @@
 import { forwardRef, useState } from 'react'
 
 import { fileUrl } from '@/api/client'
+import { SEPARATE_SHIPPING_FEE } from '@/constants/pricingConst'
 import RichText from './RichText'
 import { TEMPLATE_CSS } from './templateCss'
 
@@ -181,6 +182,7 @@ const DetailTemplate = forwardRef(function DetailTemplate(
   {
     content, // object: DetailContent
     common, // object: { reg_no, seller, notice_title, notice }
+    shippingMode = '', // string: 제품 배송비 방식 — 'separate' 면 S1 띠가 '배송비 9,900원'
   },
   ref,
 ) {
@@ -240,11 +242,19 @@ const DetailTemplate = forwardRef(function DetailTemplate(
             ))}
           </div>
         )}
-        {/* 전 상품 무료배송 — 판매가에 국제배송비·국내 택배비 포함 (공통, 상품별 입력 없음) */}
-        <div className="dp-free">
-          <b>무료배송</b>
-          <span>국제배송비 · 국내 택배비 모두 포함된 가격이에요</span>
-        </div>
+        {/* 배송비 띠 — 제품의 배송비 방식으로 정한다 (상품별 입력 없음, 2026-11-21)
+            포함형: 무료배송(판매가에 국제배송비·국내 택배비 포함) · 별도형: 배송비 9,900원, 함께 담으면 한 번 */}
+        {shippingMode === 'separate' ? (
+          <div className="dp-free">
+            <b>배송비 {SEPARATE_SHIPPING_FEE.toLocaleString('ko-KR')}원</b>
+            <span>여러 상품을 함께 담으면 배송비는 한 번만 내요</span>
+          </div>
+        ) : (
+          <div className="dp-free">
+            <b>무료배송</b>
+            <span>국제배송비 · 국내 택배비 모두 포함된 가격이에요</span>
+          </div>
+        )}
         {hero.photo_url ? (
           <div className="dp-hero-img">
             {/* 원래 비율 그대로 — 가로는 860 폭, 세로는 높이 1100 안으로 줄여 가운데 (자르지 않는다) */}
