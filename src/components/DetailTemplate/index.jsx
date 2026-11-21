@@ -196,7 +196,20 @@ const DetailTemplate = forwardRef(function DetailTemplate(
   const notes = (flavors.notes || []).filter(has)
   const gallery = flavors.gallery || {}
   const galleryItems = (gallery.items || []).filter((g) => has(g.photo_url))
-  const notice = (common?.notice || []).filter((n) => has(n.title) || has(n.body))
+  // 공통 안내의 '배송 · 배송비' 줄은 포함형(무료배송) 기준으로 적혀 있다 → 별도형이면 배송비 문장만 바꾼다 (2026-11-21)
+  const notice = (common?.notice || [])
+    .filter((n) => has(n.title) || has(n.body))
+    .map((n) =>
+      shippingMode === 'separate' && /배송비/.test(n.title || '') && /무료배송/.test(n.body || '')
+        ? {
+            ...n,
+            body: n.body.replace(
+              /무료배송이에요\.?/,
+              `배송비 ${SEPARATE_SHIPPING_FEE.toLocaleString('ko-KR')}원이에요. 여러 상품을 한 번에 주문하시면 배송비는 한 번만 내요.`,
+            ),
+          }
+        : n,
+    )
 
   return (
     <div className="dp" ref={ref}>
