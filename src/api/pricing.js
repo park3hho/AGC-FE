@@ -64,6 +64,11 @@ export const getPricing = async (productId) => {
       titleCn: p.title_cn || '',
       titleKo: p.title_ko || '',
       photoUrl: fileUrl(p.photo_url),
+      // 배송비 방식 (2026-11-20) — included 포함형 · separate 별도형 · '' 미분류, source auto|manual
+      shippingMode: p.shipping_mode || '',
+      shippingModeSource: p.shipping_mode_source || 'auto',
+      unitWeightG: p.unit_weight_g ?? null,
+      shippingModeNote: p.shipping_mode_note || '',
     },
     survey: data.survey
       ? { id: data.survey.id, code: data.survey.code, surveyDate: data.survey.survey_date }

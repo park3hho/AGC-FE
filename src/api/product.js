@@ -104,7 +104,13 @@ export const getProductCategories = () => {
 export const categoryLabel = (cats, p) => {
   const c = cats?.[p.category]
   if (!c) return [p.category, p.subcategory].filter(Boolean).join(' › ')
-  return [c.label, c.sub[p.subcategory] || (p.subcategory ? p.subcategory : '소분류 없음'), c.forms?.[p.teaForm]].filter(Boolean).join(' › ')
+  return [
+    c.label,
+    c.sub[p.subcategory] || (p.subcategory ? p.subcategory : '소분류 없음'),
+    c.forms?.[p.teaForm],
+  ]
+    .filter(Boolean)
+    .join(' › ')
 }
 
 // 다음 제품 코드 미리보기 — 실제 코드는 등록 응답의 code
@@ -142,7 +148,8 @@ export const updateProductInfo = async (id, info) => {
 export const updateProductLabels = async (id, { labelPaths, nutrition }) => {
   const body = {}
   if (labelPaths !== undefined) body.label_images = labelPaths
-  if (nutrition !== undefined) body.nutrition = nutrition && nutrition.trim() ? nutrition.trim() : null
+  if (nutrition !== undefined)
+    body.nutrition = nutrition && nutrition.trim() ? nutrition.trim() : null
   const data = await request(`/products/${id}`, {
     method: 'PATCH',
     body,
@@ -155,7 +162,9 @@ export const updateProductLabels = async (id, { labelPaths, nutrition }) => {
 // 화면 주소 → BE 경로 (fileUrl 되돌리기)
 const FILES_PREFIX = fileUrl('/files/').slice(0, -'/files/'.length)
 export const photoPathOf = (url) =>
-  url && FILES_PREFIX && url.startsWith(`${FILES_PREFIX}/files/`) ? url.slice(FILES_PREFIX.length) : url || ''
+  url && FILES_PREFIX && url.startsWith(`${FILES_PREFIX}/files/`)
+    ? url.slice(FILES_PREFIX.length)
+    : url || ''
 
 // 보고 있던 사진을 대표이미지 / 대표이미지(전환용)으로 지정.
 // 대표를 바꾸면 기존 대표는 추가 사진 맨 앞으로 옮긴다 (지우지 않음, 최대 10장).
@@ -180,7 +189,11 @@ export const updateProductMainPhotos = async (id, { photoPath, hoverPhotoPath })
   const body = {}
   if (photoPath !== undefined) body.photo_url = photoPath || null
   if (hoverPhotoPath !== undefined) body.photo_hover_url = hoverPhotoPath || null
-  const data = await request(`/products/${id}`, { method: 'PATCH', body, errorMsg: '대표이미지를 저장하지 못했어요' })
+  const data = await request(`/products/${id}`, {
+    method: 'PATCH',
+    body,
+    errorMsg: '대표이미지를 저장하지 못했어요',
+  })
   return toProduct(data.product)
 }
 
@@ -193,4 +206,20 @@ export const createProduct = async ({ titleCn, titleKo, photoFile }) => {
     errorMsg: '제품을 등록하지 못했어요',
   })
   return toProduct(data.product)
+}
+
+// 배송비 방식 (2026-11-20) — 'included'(포함형) · 'separate'(별도형) 는 사람이 고른 값(자동이 안 덮음) · 'auto' 는 자동 분류로 되돌림
+export const updateShippingMode = async (id, mode) => {
+  const data = await request(`/products/${id}`, {
+    method: 'PATCH',
+    body: { shipping_mode: mode },
+    errorMsg: '배송비 방식을 바꾸지 못했어요',
+  })
+  const p = data.product
+  return {
+    shippingMode: p.shipping_mode || '',
+    shippingModeSource: p.shipping_mode_source || 'auto',
+    unitWeightG: p.unit_weight_g ?? null,
+    shippingModeNote: p.shipping_mode_note || '',
+  }
 }
