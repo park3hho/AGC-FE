@@ -36,7 +36,7 @@ REPL `fetch('http://127.0.0.1:8000/...', {headers:{'X-API-Key': key}})` 로 부�
 - 회차당 요청(검색 + 상품페이지) **40개 이하**(약 44번째에 Access Denied). 요청 간격 45초 이상.
 - 검색: `https://www.coupang.com/np/search?q={검색어}&listSize=72` → `li[class*=ProductUnit]` innerText 줄(마지막 'N원' = 판매가, '배송비 N원', '도착' 줄), href 에 itemId · vendorItemId.
 - 판매자: 쿠팡 탭 안에서 `fetch('/vp/products/{id}?itemId=..&vendorItemId=..')` HTML 정규식 `sellerName\":\"(..)` (판매자는 vendorItem 마다 다름). 실패하면 상품명 앞 스토어명, 없으면 '미확인(쿠팡 상품번호)'.
-- 우리 판매자명 '이도'. 우리 상품은 보통 'MM/DD 도착 예정' · 상품번호 979x/980x.
+- 우리 판매자명 '이도'. 우리 상품은 보통 'MM/DD 도착 예정'(12/14 무렵) · 상품번호 979x~983x(11-21 등록 [낱개] 상품은 9834xxxxxx, 배송비 9,900 붙은 줄).
 - 판매자 확인은 lose · match · 새 cheapest 후보만(요청 아끼기).
 
 ## 4. 판정 · 환산
@@ -53,6 +53,9 @@ REPL `fetch('http://127.0.0.1:8000/...', {headers:{'X-API-Key': key}})` 로 부�
 - 한 호출 안에서 쿠팡 1건 → 네이버 몇 건 → 쿠팡 1건으로 번갈아(호출당 쿠팡 최대 2건). 호출 하나의 sleep 합계 110초 이하. 호출이 끝나면 백그라운드 비동기는 끊긴다.
 - 저장 후 목록 `GET /competitor-prices?platform=` 의 items 는 `{product:{id,...}, platforms}` 모양이다(product_id 칸 없음, `product.id` 로 찾기).
 - 네이버 스토어 줄 앞에 '리뷰 629' · '4.81'(소수 둘째 자리 평점) · '구매 80+' 줄이 끼면 스토어로 잘못 읽힌다. 건너뛴다. '네이버 가격비교' 묶음은 스토어 줄이 아예 없다(스토어 미상으로 두고 note 에 적기).
+- 신상품(group new) 의 query 는 긴 제품명 그대로라 검색이 안 된다. '브랜드 + 핵심 제품명'(예: '차옌웨써 티백', '차리 CHALI 티백')으로 찾고, 저장 뒤 PUT watch `query_override` 로 남긴다. [낱개] 상품은 기존 묶음 상품과 같은 검색 1번으로 같이 판정된다.
+- 네이버 카드에서 '배송비' 와 '무료'/'3,000원' 이 두 줄로 나뉠 때가 있다(다음 줄을 값으로 읽기).
+- 쿠팡 판매자 조회 HTML 정규식은 `sellerName\\?":\\?"([^"\\]+)` 처럼 역슬래시 이스케이프를 허용해야 잡힌다.
 - 쿠팡 요청이 1~2개 남으면 not_found 줄을 다른 검색어로 다시 찾는 데 쓴다(찾으면 watch query_override).
 - 탭은 openTab/closeTab, 끝나면 닫는다.
 
