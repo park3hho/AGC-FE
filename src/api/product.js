@@ -49,6 +49,7 @@ const toProduct = (p) => ({
     p.priced_platforms || [],
     !!p.latest_survey || p.survey_count > 0,
     p.shipping_unknown || 0,
+    p.shipping_mode || '',
   ),
 })
 
