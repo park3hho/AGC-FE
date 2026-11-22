@@ -210,7 +210,8 @@ m as (select o.*, (it->>'option_id')::int option_id, coalesce((it->>'bundle_qty'
    and ((o.market='coupang' and ml.items @> jsonb_build_array(jsonb_build_object('market_item_id', o.market_option_id)))
      or (o.market='naver' and ml.market_product_id=o.market_product_id))
   cross join lateral jsonb_array_elements(ml.items) it where o.market='naver' or it->>'market_item_id'=o.market_option_id),
-p as (select order_id, sum(paid_cny) paid from taobao_purchase where deleted_at is null and paid_cny>0 group by 1)
+p as (select order_id, sum(paid_cny - coalesce(refund_cny,0)) paid from taobao_purchase where deleted_at is null and paid_cny>0
+  and coalesce(refund_status,'none') <> 'success' and coalesce(cn_status,'') not in ('cancelled','problem') group by 1)   -- 환불 끝남·취소·시험(problem) 구매는 뺀다 (11-23 OR-261113-0002 오탐)
 select po.product_id, po.id option_id, po.option1, po.price_cny, max(round(p.paid/(m.bq*m.quantity),2)) last_unit_paid, count(*) n
 from m join p on p.order_id=m.id join product_option po on po.id=m.option_id
 where p.paid < po.price_cny*m.bq*m.quantity*0.9 or p.paid > po.price_cny*m.bq*m.quantity*1.1 group by 1,2,3,4 order by 1,2;
