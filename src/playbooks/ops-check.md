@@ -210,8 +210,9 @@ m as (select o.*, (it->>'option_id')::int option_id, coalesce((it->>'bundle_qty'
 p as (select order_id, sum(paid_cny) paid from taobao_purchase where deleted_at is null and paid_cny>0 group by 1)
 select po.product_id, po.id option_id, po.option1, po.price_cny, max(round(p.paid/(m.bq*m.quantity),2)) last_unit_paid, count(*) n
 from m join p on p.order_id=m.id join product_option po on po.id=m.option_id
-where p.paid < po.price_cny*m.bq*m.quantity*0.9 group by 1,2,3,4 order by 1,2;
+where p.paid < po.price_cny*m.bq*m.quantity*0.9 or p.paid > po.price_cny*m.bq*m.quantity*1.1 group by 1,2,3,4 order by 1,2;
 ```
+- **반대 방향도 본다 (2026-11-22 할인가 기준 결정)**: 실제가 10%↑ 비싸면 할인이 끝난 것 → 알림 `buy_dearer:{option_id}:{last_unit_paid}`(level warn) "할인 끝남: … 기준 ¥{price_cny} → 실제 ¥{last_unit_paid}, 이 값으로 다시 계산하면 판매가 ↑ 필요".
 - 옵션마다 알림 `buy_cheaper:{option_id}:{last_unit_paid}`(kind risk, level info) → new 인 것만 보고: "매입가 어긋남: {제품} {옵션} 기준 ¥{price_cny} → 실제 ¥{last_unit_paid} ({n}건). 이 값으로 다시 계산하면 판매가 ↓ 가능".
 - **가격·price_cny 는 바꾸지 않는다** (가격 변경은 사용자 결정). 홍바오(0원)·재고 사용 주문은 paid 가 0 이라 자동으로 빠진다.
 ## 11. 끝내기
