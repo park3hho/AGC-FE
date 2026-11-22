@@ -194,6 +194,26 @@ tasks 의 cn_track(구매 cn_status ordered·shipped, 묶음 일부 입고)을 �
 - **루틴 건강**: aside.sessions.list 로 이 루틴의 지난 24시간 회차 중 오류 종료·같은 이유(리서치 계정·로그아웃)로 2시간↑ 막힌 구간, 하루 비용 합계(assistant usage.cost.total).
 - 찾은 문제는 그 회차에서 이 문서 규칙대로 바로 처리하고, 알림 `risk:{종류}:{대상}`(kind risk)으로 올려 보고. 코드·플레이북 수정이 필요한 빈틈은 '수정 필요'로 보고(수정은 부모 세션). 문제가 없으면 보고에 "주문 놓침 점검: 이상 없음 (하루 비용 $x)" 한 줄만.
 
+## 10-2. 매입가 어긋남 점검 — 하루 한 번 04:30 정식 점검 회차에만 (2026-11-22 사용자 'ㄱㄱ')
+
+> 가격 계산은 product_option.price_cny(가격조사 때 본 값)로 한다. 실제로는 쿠폰·할인으로 더 싸게 사는 일이 많아(11-22 루이싱 캡슐 ¥99→¥69, 과일C ¥19.9→¥9.9) 판매가가 높게 잡히고 최저가 경쟁에서 진다. 실제 결제가가 10% 이상 싸면 알린다.
+
+최근 30일 주문의 타오바오 실결제(paid_cny 합)와 기준 매입가(price_cny × 묶음 수 × 수량)를 비교한다 (agc_db, 테스트 주문 제외):
+```sql
+with o as (select mo.id, mo.code, mo.quantity, mo.market, mo.market_product_id, mo.market_option_id from market_order mo
+  where coalesce(mo.is_test,false)=false and mo.ordered_at > now() - interval '30 days'),
+m as (select o.*, (it->>'option_id')::int option_id, coalesce((it->>'bundle_qty')::int,1) bq from o
+  join market_listing ml on ml.deleted_at is null and ml.platform=o.market
+   and ((o.market='coupang' and ml.items @> jsonb_build_array(jsonb_build_object('market_item_id', o.market_option_id)))
+     or (o.market='naver' and ml.market_product_id=o.market_product_id))
+  cross join lateral jsonb_array_elements(ml.items) it where o.market='naver' or it->>'market_item_id'=o.market_option_id),
+p as (select order_id, sum(paid_cny) paid from taobao_purchase where deleted_at is null and paid_cny>0 group by 1)
+select po.product_id, po.id option_id, po.option1, po.price_cny, max(round(p.paid/(m.bq*m.quantity),2)) last_unit_paid, count(*) n
+from m join p on p.order_id=m.id join product_option po on po.id=m.option_id
+where p.paid < po.price_cny*m.bq*m.quantity*0.9 group by 1,2,3,4 order by 1,2;
+```
+- 옵션마다 알림 `buy_cheaper:{option_id}:{last_unit_paid}`(kind risk, level info) → new 인 것만 보고: "매입가 어긋남: {제품} {옵션} 기준 ¥{price_cny} → 실제 ¥{last_unit_paid} ({n}건). 이 값으로 다시 계산하면 판매가 ↓ 가능".
+- **가격·price_cny 는 바꾸지 않는다** (가격 변경은 사용자 결정). 홍바오(0원)·재고 사용 주문은 paid 가 0 이라 자동으로 빠진다.
 ## 11. 끝내기
 
 - 탭은 openTab/closeTab 만, 끝나면 연 탭 닫기(로그인 화면 탭은 남김). 사용자 탭은 닫지 않는다.
