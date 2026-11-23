@@ -51,7 +51,27 @@ function Kpi({ label, value, sub, tone }) {
 }
 
 // 날짜별 막대 — 매출(연한 막대) 위에 이익(진한 막대). 칸이 많으면 가로 스크롤
-function DayChart({ days }) {
+// 주별로 묶기 — 월요일 시작 주 (KST 날짜), 매출·이익·건수 합 (2026-11-21 사용자)
+const toWeeks = (days) => {
+  const by = new Map()
+  for (const d of days) {
+    const k = mondayOf(d.date)
+    const w = by.get(k) || { date: k, end: addDays(k, 6), lines: 0, revenue: 0, profit: 0 }
+    w.lines += d.lines || 0
+    w.revenue += d.revenue || 0
+    w.profit += d.profit || 0
+    by.set(k, w)
+  }
+  return [...by.values()]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((w) => ({
+      ...w,
+      marginPct: w.revenue ? Math.round((w.profit / w.revenue) * 1000) / 10 : null,
+    }))
+}
+const md = (s) => s.slice(5).replace('-', '/')
+
+function DayChart({ days, weekly }) {
   const max = Math.max(1, ...days.map((d) => d.revenue))
   return (
     <div className={styles.chartWrap}>
@@ -60,7 +80,7 @@ function DayChart({ days }) {
           <div
             key={d.date}
             className={styles.bar}
-            title={`${d.date} · ${d.lines}건 · 매출 ${won(d.revenue)} · 이익 ${won(d.profit)}${d.marginPct != null ? ` (${d.marginPct}%)` : ''}`}
+            title={`${weekly ? `${d.date} ~ ${d.end} 주` : d.date} · ${d.lines}건 · 매출 ${won(d.revenue)} · 이익 ${won(d.profit)}${d.marginPct != null ? ` (${d.marginPct}%)` : ''}`}
           >
             <span className={styles.barCount}>{d.lines || ''}</span>
             <div className={styles.barTrack}>
@@ -70,7 +90,7 @@ function DayChart({ days }) {
                 style={{ height: `${(Math.abs(d.profit) / max) * 100}%` }}
               />
             </div>
-            <span className={styles.barDate}>{d.date.slice(5).replace('-', '/')}</span>
+            <span className={styles.barDate}>{weekly ? `${md(d.date)}~` : md(d.date)}</span>
           </div>
         ))}
       </div>
@@ -93,6 +113,7 @@ export default function SalesPage() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const preset = params.get('p') || 'month'
+  const weekly = params.get('g') === 'week' // 날짜별 › 일별 · 주별
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -112,13 +133,21 @@ export default function SalesPage() {
       .finally(() => setLoading(false))
   }, [range])
 
+  const setWeekly = (on) => {
+    const next = new URLSearchParams(params)
+    if (on) next.set('g', 'week')
+    else next.delete('g')
+    setParams(next, { replace: true })
+  }
   const setPreset = (k) => {
     const next = new URLSearchParams()
     if (k !== 'month') next.set('p', k)
+    if (weekly) next.set('g', 'week')
     setParams(next, { replace: true })
   }
   const setCustom = (from, to) => {
     const next = new URLSearchParams({ p: 'custom' })
+    if (weekly) next.set('g', 'week')
     if (from) next.set('from', from)
     if (to) next.set('to', to)
     setParams(next, { replace: true })
@@ -180,7 +209,12 @@ export default function SalesPage() {
       <Section name="요약" id="summary" title={false} plain>
         <div className={styles.kpis} aria-busy={loading}>
           <Kpi label="매출" value={t ? man(t.revenue) : '-'} sub={t ? won(t.revenue) : ''} />
-          <Kpi label="이익" value={t ? man(t.profit) : '-'} sub={t ? won(t.profit) : ''} tone={t && t.profit < 0 ? 'danger' : 'success'} />
+          <Kpi
+            label="이익"
+            value={t ? man(t.profit) : '-'}
+            sub={t ? won(t.profit) : ''}
+            tone={t && t.profit < 0 ? 'danger' : 'success'}
+          />
           <Kpi
             label="마진율"
             value={t ? pct(t.marginPct) : '-'}
@@ -192,7 +226,11 @@ export default function SalesPage() {
             value={t ? `${t.orders}건` : '-'}
             sub={t ? `상품 ${t.lines}줄${t.cancelled ? ` · 취소 ${t.cancelled}` : ''}` : ''}
           />
-          <Kpi label="건당 이익" value={t && t.lines ? won(t.profit / t.lines) : '-'} sub={t && t.lines ? `건당 매출 ${won(t.revenue / t.lines)}` : ''} />
+          <Kpi
+            label="건당 이익"
+            value={t && t.lines ? won(t.profit / t.lines) : '-'}
+            sub={t && t.lines ? `건당 매출 ${won(t.revenue / t.lines)}` : ''}
+          />
           {forecast != null && (
             <Kpi
               label="이번 달 예상 이익"
@@ -203,23 +241,59 @@ export default function SalesPage() {
           )}
         </div>
         {forecast != null && (
-          <div className={styles.goal} title={`이번 달 이익 ${won(t.profit)} / 목표 ${won(MONTH_TARGET)}`}>
+          <div
+            className={styles.goal}
+            title={`이번 달 이익 ${won(t.profit)} / 목표 ${won(MONTH_TARGET)}`}
+          >
             <i style={{ width: `${Math.min(100, (t.profit / MONTH_TARGET) * 100)}%` }} />
-            <i className={styles.goalFc} style={{ width: `${Math.min(100, (forecast / MONTH_TARGET) * 100)}%` }} />
+            <i
+              className={styles.goalFc}
+              style={{ width: `${Math.min(100, (forecast / MONTH_TARGET) * 100)}%` }}
+            />
             <span>
-              목표 {man(MONTH_TARGET)} 중 지금 {man(t.profit)} ({Math.round((t.profit / MONTH_TARGET) * 100)}%)
+              목표 {man(MONTH_TARGET)} 중 지금 {man(t.profit)} (
+              {Math.round((t.profit / MONTH_TARGET) * 100)}%)
             </span>
           </div>
         )}
         {t?.estimatedLines > 0 && (
           <p className={styles.note}>
-            구매·집운 기록 전이라 원가를 추정한 주문 {t.estimatedLines}건 포함 — 기록이 들어오면 실제 값으로 바뀌어요
+            구매·집운 기록 전이라 원가를 추정한 주문 {t.estimatedLines}건 포함 — 기록이 들어오면
+            실제 값으로 바뀌어요
           </p>
         )}
       </Section>
 
-      <Section name="날짜별" id="days" sub={data && `${data.days.length}일`}>
-        {data && data.days.length > 0 ? <DayChart days={data.days} /> : <p className={styles.empty}>주문이 없어요</p>}
+      <Section
+        name="날짜별"
+        id="days"
+        sub={
+          data &&
+          (weekly ? `${toWeeks(data.days).length}주 · 월요일 시작` : `${data.days.length}일`)
+        }
+        action={
+          <div className={styles.chips} role="group" aria-label="일별 · 주별">
+            {[
+              [false, '일별'],
+              [true, '주별'],
+            ].map(([on, label]) => (
+              <button
+                key={label}
+                type="button"
+                className={`${styles.chip} ${weekly === on ? styles.chipOn : ''}`}
+                onClick={() => setWeekly(on)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        }
+      >
+        {data && data.days.length > 0 ? (
+          <DayChart days={weekly ? toWeeks(data.days) : data.days} weekly={weekly} />
+        ) : (
+          <p className={styles.empty}>주문이 없어요</p>
+        )}
       </Section>
 
       <div className={styles.grid2}>
@@ -237,17 +311,27 @@ export default function SalesPage() {
                 <b>{m.label}</b>
                 <span className={styles.num}>
                   {m.lines}
-                  {m.cancelled ? <small className={styles.weak}> (취소 {m.cancelled})</small> : null}
+                  {m.cancelled ? (
+                    <small className={styles.weak}> (취소 {m.cancelled})</small>
+                  ) : null}
                 </span>
                 <span className={styles.num}>{won(m.revenue)}</span>
-                <span className={`${styles.num} ${m.profit < 0 ? styles.bad : ''}`}>{won(m.profit)}</span>
+                <span className={`${styles.num} ${m.profit < 0 ? styles.bad : ''}`}>
+                  {won(m.profit)}
+                </span>
                 <span className={styles.num}>{pct(m.marginPct)}</span>
               </div>
             ))}
           </div>
         </Section>
 
-        <Section name="제품별" id="products" sub={data && `${data.products.length}개 · 이익 순`} flush fill>
+        <Section
+          name="제품별"
+          id="products"
+          sub={data && `${data.products.length}개 · 이익 순`}
+          flush
+          fill
+        >
           <div className={styles.table}>
             <div className={`${styles.row} ${styles.prow} ${styles.head}`}>
               <span>제품</span>
@@ -264,8 +348,12 @@ export default function SalesPage() {
                 </span>
                 <span className={styles.num}>{p.lines}</span>
                 <span className={styles.num}>{won(p.revenue)}</span>
-                <span className={`${styles.num} ${p.profit < 0 ? styles.bad : ''}`}>{won(p.profit)}</span>
-                <span className={`${styles.num} ${p.marginPct != null && p.marginPct < 10 ? styles.warn : ''}`}>
+                <span className={`${styles.num} ${p.profit < 0 ? styles.bad : ''}`}>
+                  {won(p.profit)}
+                </span>
+                <span
+                  className={`${styles.num} ${p.marginPct != null && p.marginPct < 10 ? styles.warn : ''}`}
+                >
                   {pct(p.marginPct)}
                 </span>
               </div>
@@ -274,19 +362,37 @@ export default function SalesPage() {
         </Section>
       </div>
 
-      <Section name="주문별" id="orders" sub={data && `${data.orders.length}줄 · 최근 순`} flush fill>
+      <Section
+        name="주문별"
+        id="orders"
+        sub={data && `${data.orders.length}줄 · 최근 순`}
+        flush
+        fill
+      >
         {data && data.orders.length === 0 && <p className={styles.empty}>주문이 없어요</p>}
         {data && data.orders.length > 0 && (
           <div className={styles.table} role="table" aria-label="주문별 이익">
             <div className={`${styles.row} ${styles.orow} ${styles.head}`} role="row">
               <span role="columnheader">주문</span>
               <span role="columnheader">상품</span>
-              <span role="columnheader" className={styles.num}>매출</span>
-              <span role="columnheader" className={styles.num}>정산</span>
-              <span role="columnheader" className={styles.num}>구매</span>
-              <span role="columnheader" className={styles.num}>집운</span>
-              <span role="columnheader" className={styles.num}>이익</span>
-              <span role="columnheader" className={styles.num}>마진</span>
+              <span role="columnheader" className={styles.num}>
+                매출
+              </span>
+              <span role="columnheader" className={styles.num}>
+                정산
+              </span>
+              <span role="columnheader" className={styles.num}>
+                구매
+              </span>
+              <span role="columnheader" className={styles.num}>
+                집운
+              </span>
+              <span role="columnheader" className={styles.num}>
+                이익
+              </span>
+              <span role="columnheader" className={styles.num}>
+                마진
+              </span>
             </div>
             {data.orders.map((o) => (
               <div
@@ -311,23 +417,37 @@ export default function SalesPage() {
                     {o.quantity > 1 ? ` ×${o.quantity}` : ''}
                   </small>
                 </span>
-                <span role="cell" className={styles.num} data-label="매출">{won(o.revenue)}</span>
+                <span role="cell" className={styles.num} data-label="매출">
+                  {won(o.revenue)}
+                </span>
                 <span role="cell" className={styles.num} data-label="정산">
                   {won(o.settlement)}
-                  {o.estimated.includes('settlement') && <em title="쿠팡 정산 전 — 수수료율로 계산">추정</em>}
+                  {o.estimated.includes('settlement') && (
+                    <em title="쿠팡 정산 전 — 수수료율로 계산">추정</em>
+                  )}
                 </span>
                 <span role="cell" className={styles.num} data-label="구매">
                   {won(o.purchase)}
-                  {o.estimated.includes('purchase') && <em title="타오바오 구매 전 — 조사가로 계산">추정</em>}
+                  {o.estimated.includes('purchase') && (
+                    <em title="타오바오 구매 전 — 조사가로 계산">추정</em>
+                  )}
                 </span>
                 <span role="cell" className={styles.num} data-label="집운">
                   {won(o.jiyun)}
-                  {o.estimated.includes('jiyun') && <em title="집운 결제 전 — 배송비 추정">추정</em>}
+                  {o.estimated.includes('jiyun') && (
+                    <em title="집운 결제 전 — 배송비 추정">추정</em>
+                  )}
                 </span>
-                <span role="cell" className={`${styles.num} ${o.profit < 0 ? styles.bad : ''}`} data-label="이익">
+                <span
+                  role="cell"
+                  className={`${styles.num} ${o.profit < 0 ? styles.bad : ''}`}
+                  data-label="이익"
+                >
                   <b>{won(o.profit)}</b>
                 </span>
-                <span role="cell" className={styles.num} data-label="마진">{pct(o.marginPct)}</span>
+                <span role="cell" className={styles.num} data-label="마진">
+                  {pct(o.marginPct)}
+                </span>
               </div>
             ))}
           </div>
