@@ -25,6 +25,36 @@
   font-weight: 600;
 }
 
+/* 운임 예측 수식 — 단계 이름 | 식 (2026-11-26) */
+.formula {
+  display: flex;
+  flex-direction: column;
+  margin: var(--space-1) 0;
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.formulaRow {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.formulaKey {
+  white-space: pre;
+  color: var(--color-text-sub);
+}
+
+@media (max-width: 768px) {
+  .formulaRow {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
 .ruleMax {
   font-size: var(--font-sm);
 }
