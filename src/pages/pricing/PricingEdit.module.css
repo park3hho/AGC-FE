@@ -836,28 +836,4 @@
   font-size: 11px;
 }
 
-/* 배송비 방식 — 포함형 · 별도형 · 자동 (2026-11-20) */
-.shipMode {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-text-sub);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.shipModeSelect {
-  font: inherit;
-  font-weight: 500;
-  color: var(--color-text);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 2px 4px;
-}
-.shipModeHint {
-  color: var(--color-text-weak);
-  font-size: 12px;
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-}
+

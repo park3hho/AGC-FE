@@ -16,13 +16,6 @@ export const PLATFORMS = [
 ]
 export const MARKET_PLATFORMS = PLATFORMS.filter((p) => p.market)
 
-// 배송비 방식별 계산 (2026-11-21 사용자) — 가격 책정은 배송비 방식부터 정하고, 그에 따라 원가에 운임을 넣을지 정한다
-//   included 포함형(무료배송·박스): 원가 = 상품가 + 집운 운임 → 기본 '목표 차익' 2,000원 (마진 바닥 5%, 자사몰 8%)
-//   separate 별도형(마트형·낱개):   원가 = 상품가만 (운임은 고객이 내는 배송비로) → 기본 '목표 마진' 20%
-export const SEPARATE_MARGIN_PCT = 20
-// 별도형에서 고객이 따로 내는 배송비 (원) — 화면 안내용
-export const SEPARATE_SHIPPING_FEE = 9900
-
 // 마진율이 이 값(%) 이상이면 초록색으로 강조 — 임시 기준, 사용자 확정 전
 export const GOOD_MARGIN_PCT = 20
 

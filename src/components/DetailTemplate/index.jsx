@@ -1,7 +1,6 @@
 import { forwardRef, useState } from 'react'
 
 import { fileUrl } from '@/api/client'
-import { SEPARATE_SHIPPING_FEE } from '@/constants/pricingConst'
 import RichText from './RichText'
 import { TEMPLATE_CSS } from './templateCss'
 
@@ -182,7 +181,6 @@ const DetailTemplate = forwardRef(function DetailTemplate(
   {
     content, // object: DetailContent
     common, // object: { reg_no, seller, notice_title, notice }
-    shippingMode = '', // string: 제품 배송비 방식 — 'separate' 면 S1 띠가 '배송비 9,900원'
   },
   ref,
 ) {
@@ -196,20 +194,7 @@ const DetailTemplate = forwardRef(function DetailTemplate(
   const notes = (flavors.notes || []).filter(has)
   const gallery = flavors.gallery || {}
   const galleryItems = (gallery.items || []).filter((g) => has(g.photo_url))
-  // 공통 안내의 '배송 · 배송비' 줄은 포함형(무료배송) 기준으로 적혀 있다 → 별도형이면 배송비 문장만 바꾼다 (2026-11-21)
-  const notice = (common?.notice || [])
-    .filter((n) => has(n.title) || has(n.body))
-    .map((n) =>
-      shippingMode === 'separate' && /배송비/.test(n.title || '') && /무료배송/.test(n.body || '')
-        ? {
-            ...n,
-            body: n.body.replace(
-              /무료배송이에요\.?/,
-              `배송비 ${SEPARATE_SHIPPING_FEE.toLocaleString('ko-KR')}원이에요. 여러 상품을 한 번에 주문하시면 배송비는 한 번만 내요.`,
-            ),
-          }
-        : n,
-    )
+  const notice = (common?.notice || []).filter((n) => has(n.title) || has(n.body))
 
   return (
     <div className="dp" ref={ref}>
@@ -255,19 +240,11 @@ const DetailTemplate = forwardRef(function DetailTemplate(
             ))}
           </div>
         )}
-        {/* 배송비 띠 — 제품의 배송비 방식으로 정한다 (상품별 입력 없음, 2026-11-21)
-            포함형: 무료배송(판매가에 국제배송비·국내 택배비 포함) · 별도형: 배송비 9,900원, 함께 담으면 한 번 */}
-        {shippingMode === 'separate' ? (
-          <div className="dp-free">
-            <b>배송비 {SEPARATE_SHIPPING_FEE.toLocaleString('ko-KR')}원</b>
-            <span>여러 상품을 함께 담으면 배송비는 한 번만 내요</span>
-          </div>
-        ) : (
-          <div className="dp-free">
-            <b>무료배송</b>
-            <span>국제배송비 · 국내 택배비 모두 포함된 가격이에요</span>
-          </div>
-        )}
+        {/* 배송비 띠 — 전 제품 무료배송(판매가에 국제배송비·국내 택배비 포함) */}
+        <div className="dp-free">
+          <b>무료배송</b>
+          <span>국제배송비 · 국내 택배비 모두 포함된 가격이에요</span>
+        </div>
         {hero.photo_url ? (
           <div className="dp-hero-img">
             {/* 원래 비율 그대로 — 가로는 860 폭, 세로는 높이 1100 안으로 줄여 가운데 (자르지 않는다) */}

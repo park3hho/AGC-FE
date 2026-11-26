@@ -49,7 +49,6 @@ const toProduct = (p) => ({
     p.priced_platforms || [],
     !!p.latest_survey || p.survey_count > 0,
     p.shipping_unknown || 0,
-    p.shipping_mode || '',
   ),
 })
 
@@ -209,18 +208,3 @@ export const createProduct = async ({ titleCn, titleKo, photoFile }) => {
   return toProduct(data.product)
 }
 
-// 배송비 방식 (2026-11-20) — 'included'(포함형) · 'separate'(별도형) 는 사람이 고른 값(자동이 안 덮음) · 'auto' 는 자동 분류로 되돌림
-export const updateShippingMode = async (id, mode) => {
-  const data = await request(`/products/${id}`, {
-    method: 'PATCH',
-    body: { shipping_mode: mode },
-    errorMsg: '배송비 방식을 바꾸지 못했어요',
-  })
-  const p = data.product
-  return {
-    shippingMode: p.shipping_mode || '',
-    shippingModeSource: p.shipping_mode_source || 'auto',
-    unitWeightG: p.unit_weight_g ?? null,
-    shippingModeNote: p.shipping_mode_note || '',
-  }
-}

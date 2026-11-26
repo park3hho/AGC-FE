@@ -39,17 +39,9 @@ export const cnyToKrw = (cny, rate) => {
   return v >= 0 && r > 0 ? v * r : null
 }
 
-// 배송비 별도형인지 — settings.shippingMode (제품의 배송비 방식, 2026-11-21)
-export const isSeparateMode = (settings) => settings?.shippingMode === 'separate'
-
 // 원가 + 배송비 (원) — 환율이 없거나 배송비를 모르면 null
-//   별도형은 운임을 고객이 배송비로 따로 내므로 상품가만 원가로 본다 (배송비를 몰라도 계산)
 export const costWithShipping = (option, settings) => {
   const fx = effectiveFxRate(settings)
-  if (isSeparateMode(settings)) {
-    const goods = toNum(option.priceCny)
-    return fx > 0 && goods >= 0 ? goods * fx : null
-  }
   const shipping = toNum(option.shippingCny)
   if (!(fx > 0) || !(shipping >= 0)) return null
   return (toNum(option.priceCny) + shipping) * fx
@@ -247,10 +239,9 @@ export const formatFx = (v) => trimDecimal(v)
 export const formatKgFromG = (g) => (g == null ? '-' : `${Number((g / 1000).toFixed(2))}kg`)
 
 // 제품의 가격 책정 상태 (constants/pricingConst.PRICING_STATUS 키)
-export const pricingStatusOf = (pricedPlatforms, hasSurvey, shippingUnknown = 0, shippingMode = '') => {
+export const pricingStatusOf = (pricedPlatforms, hasSurvey, shippingUnknown = 0) => {
   // 배송비를 모르는 옵션(용량을 못 읽음)이 하나라도 있으면 판매가를 저장했어도 완료로 치지 않는다 (2026-10-30 사용자)
-  //   별도형은 운임을 판매가에 넣지 않으니 배송비를 몰라도 된다 (2026-11-21)
-  if (hasSurvey && shippingUnknown > 0 && shippingMode !== 'separate') return 'noship'
+  if (hasSurvey && shippingUnknown > 0) return 'noship'
   // 가격 책정 완료 = 마켓(쿠팡·네이버) 모두 저장. 자사몰가는 따로 (없어도 완료)
   const done = MARKET_PLATFORMS.filter((p) => pricedPlatforms.includes(p.key)).length
   if (done === MARKET_PLATFORMS.length) return 'done'

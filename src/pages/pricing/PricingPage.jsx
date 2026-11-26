@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { adoptBundle, dropBundle, getPricing, rowIdOf, savePricing } from '@/api/pricing'
-import { getProducts, updateShippingMode } from '@/api/product'
+import { getProducts } from '@/api/product'
 import Icon from '@/components/Icon'
 import Thumb from '@/components/Thumb'
 import HoverInfo from '@/components/common/HoverInfo'
@@ -17,8 +17,6 @@ import {
   LOW_MARGIN_PCT,
   PLATFORMS,
   PROFIT_MIN_MARGIN_PCT,
-  SEPARATE_MARGIN_PCT,
-  SEPARATE_SHIPPING_FEE,
 } from '@/constants/pricingConst'
 import {
   calcOption,
@@ -94,8 +92,8 @@ const MIX = {
 }
 
 // 판매처 1곳의 화면 상태 — 계산 · 검증 · 바뀐 칸
-const platformState = (platform, form, saved, options, survey, fx, shippingMode) => {
-  const settings = { ...form, fxRate: fx.cnyKrw, fxMarkupPct: saved.fxMarkupPct, shippingMode }
+const platformState = (platform, form, saved, options, survey, fx) => {
+  const settings = { ...form, fxRate: fx.cnyKrw, fxMarkupPct: saved.fxMarkupPct }
   const baseline = toForm(saved, options)
 
   const errors = {}
@@ -188,12 +186,10 @@ const floorText = (list) => list.map((p) => `${p.label} ${floorPct(p)}%`).join('
 const modeFor = (p, mode) => (mode === 'profit' && p.bulkMode ? p.bulkMode : mode)
 const initialFor = (p, m) => (m.key === 'profit' && p.bulkMode ? p.bulkInitial : m.initial)
 const unitFor = (p, mode) => BULK_MODES.find((m) => m.key === modeFor(p, mode)).unit
-// 배송비 방식에 맞는 '한 번에 맞추기' 기본값 — 별도형은 목표 마진 20%, 포함형은 목표 차익 2,000원 (2026-11-21)
-const bulkDefault = (shippingMode, list = PLATFORMS) => {
-  const m = BULK_MODES.find((x) => x.key === (shippingMode === 'separate' ? 'margin' : 'profit'))
-  const init = (p) =>
-    shippingMode === 'separate' ? String(SEPARATE_MARGIN_PCT) : initialFor(p, m)
-  return { mode: m.key, amounts: Object.fromEntries(list.map((p) => [p.key, init(p)])) }
+// '한 번에 맞추기' 기본값 — 목표 차익 2,000원 (배송비는 전 제품 포함형)
+const bulkDefault = (list = PLATFORMS) => {
+  const m = BULK_MODES.find((x) => x.key === 'profit')
+  return { mode: m.key, amounts: Object.fromEntries(list.map((p) => [p.key, initialFor(p, m)])) }
 }
 
 // 모바일에서는 한 번에 한 섹션 (DESIGN.md §4.4) — 저장은 늘 보인다
@@ -248,12 +244,12 @@ export default function PricingPage() {
       .catch((err) => setError(err.message))
   }, [productId])
 
-  // 배송비 방식이 정해지거나 바뀌면 '한 번에 맞추기' 기본값도 그 방식으로
-  const shipModeKey = data?.product?.shippingMode || ''
+  // 제품이 바뀌면 '한 번에 맞추기' 기본값으로
+  const productKey = data?.product?.id || ''
   useEffect(() => {
-    setBulk(bulkDefault(shipModeKey))
+    setBulk(bulkDefault())
     setBulkMsg(EMPTY_MSG)
-  }, [shipModeKey])
+  }, [productKey])
 
   useEffect(() => {
     setNext(null)
@@ -282,7 +278,6 @@ export default function PricingPage() {
 
   const { product, survey, fx, options, bundles } = data
   const platforms = PLATFORMS.filter((p) => saved[p.key])
-  const sep = product.shippingMode === 'separate' // 배송비 별도형 — 원가에 운임을 넣지 않는다
   // 묶음 줄 — 어느 판매처든 판매가가 있거나 켠 것만 판매 옵션. 나머지 제안은 표 아래에 따로
   const isOn = (b) =>
     bundleOn.has(b.id) || platforms.some((p) => (forms[p.key].prices[b.id] ?? '') !== '')
@@ -330,7 +325,7 @@ export default function PricingPage() {
     ? Object.fromEntries(
         platforms.map((p) => [
           p.key,
-          platformState(p, forms[p.key], saved[p.key], allRows, survey, fx, product.shippingMode),
+          platformState(p, forms[p.key], saved[p.key], allRows, survey, fx),
         ]),
       )
     : {}
@@ -390,7 +385,7 @@ export default function PricingPage() {
             return setBulkMsg({ text: '판매가는 1원 이상으로 입력하세요', error: true })
           }
         } else {
-          if (o.shippingCny == null && !sep) {
+          if (o.shippingCny == null) {
             skipped += 1
             continue
           }
@@ -510,16 +505,7 @@ export default function PricingPage() {
     const ship = cnyToKrw(o.shippingCny, fxRate)
     return [
       { label: `상품 ${formatCny(o.priceCny)}`, value: goods, color: MIX.goods },
-      // 별도형은 운임을 고객이 배송비로 내므로 구성에서 뺀다
-      ...(sep
-        ? []
-        : [
-            {
-              label: `배송 ${formatCny(o.shippingCny)} (${o.billableKg}kg)`,
-              value: ship,
-              color: MIX.ship,
-            },
-          ]),
+      { label: `배송 ${formatCny(o.shippingCny)} (${o.billableKg}kg)`, value: ship, color: MIX.ship },
       { label: '수수료', value: r.fee, color: MIX.fee },
       ...(r.profit > 0 ? [{ label: '차익', value: r.profit, color: MIX.profit }] : []),
     ]
@@ -541,7 +527,7 @@ export default function PricingPage() {
               amounts: Object.fromEntries(
                 platforms.map((p) => [
                   p.key,
-                  sep && m.key === 'margin' ? String(SEPARATE_MARGIN_PCT) : initialFor(p, m),
+                  initialFor(p, m),
                 ]),
               ),
             })
@@ -556,9 +542,7 @@ export default function PricingPage() {
         </select>
       </div>
       <p className={styles.weak}>
-        {sep
-          ? `별도형: 운임 빼고 상품가로 계산 · 기본 마진 ${SEPARATE_MARGIN_PCT}% · 배송비 ${SEPARATE_SHIPPING_FEE.toLocaleString('ko-KR')}원은 고객 부담`
-          : '포함형: 상품가 + 집운 운임으로 계산 · 기본 차익 2,000원 (무료배송)'}
+        상품가 + 집운 운임으로 계산 · 기본 차익 2,000원 (무료배송)
       </p>
       <div className={styles.grid} style={{ '--cols': platforms.length }}>
         <span />
@@ -669,7 +653,7 @@ export default function PricingPage() {
             const bundled = o.bundleQty > 1
             const warn = o.overLimit
               ? '30kg 초과 — 집운 소형 불가'
-              : o.shippingCny == null && !sep
+              : o.shippingCny == null
                 ? '용량을 못 읽어 배송비를 몰라요'
                 : o.overDutyFree
                   ? '상품가가 면세 한도($150)를 넘을 수 있어요'
@@ -882,45 +866,6 @@ export default function PricingPage() {
             </div>
           </div>
           <span className={styles.spacer} />
-          <label
-            className={styles.shipMode}
-            title={`${product.shippingModeNote || ''}${
-              product.shippingModeSource === 'manual'
-                ? ' · 사람이 고름 (자동 분류가 안 바꿈)'
-                : ' · 자동 분류'
-            }`}
-          >
-            배송비
-            <select
-              className={styles.shipModeSelect}
-              aria-label="배송비 방식"
-              value={product.shippingModeSource === 'manual' ? product.shippingMode : 'auto'}
-              onChange={async (e) => {
-                try {
-                  const r = await updateShippingMode(product.id, e.target.value)
-                  setData((d) => ({ ...d, product: { ...d.product, ...r } }))
-                } catch (err) {
-                  window.alert(err.message)
-                }
-              }}
-            >
-              <option value="auto">
-                자동 ·{' '}
-                {product.shippingMode === 'separate'
-                  ? '별도형'
-                  : product.shippingMode === 'included'
-                    ? '포함형'
-                    : '미분류'}
-              </option>
-              <option value="included">포함형 (무료배송 · 박스)</option>
-              <option value="separate">별도형 (낱개 · 배송비 따로)</option>
-            </select>
-            {product.unitWeightG != null && (
-              <span className={styles.shipModeHint}>
-                낱개 {product.unitWeightG.toLocaleString('ko-KR')}g
-              </span>
-            )}
-          </label>
           <Link to="/shipping" className={styles.textLink}>
             배송비
           </Link>
@@ -1002,7 +947,7 @@ export default function PricingPage() {
                             상품가가 면세 한도($150)를 넘을 수 있어요
                           </span>
                         )}
-                        {o.shippingCny == null && !sep && (
+                        {o.shippingCny == null && (
                           <span className={styles.optWarn}>용량을 못 읽어 배송비를 몰라요</span>
                         )}
                         {o.boxAssumed && o.weightG == null && o.shippingCny != null && (

@@ -351,7 +351,6 @@ export default function DesignEditPage() {
             ref={pageRef}
             content={content}
             common={common}
-            shippingMode={data.product.shippingMode}
           />
         </Section>
       </div>
