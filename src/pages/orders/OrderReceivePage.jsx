@@ -6,6 +6,7 @@ import {
   collectOrders,
   confirmOrder,
   markDelivered,
+  shopRefund,
   getOrder,
   getOrders,
   getOrderUpdates,
@@ -22,7 +23,14 @@ import { CopyButton } from '@/components/common/MobileBits'
 import PageHeader from '@/components/common/PageHeader'
 import { useDevMode } from '@/hooks/useDevMode'
 import { useMobile } from '@/hooks/useMobile'
-import { autoDecideText, nextAction, SETTLE_STAGES, settleRemain, STEPS6, stepsDone } from '@/utils/nextAction'
+import {
+  autoDecideText,
+  nextAction,
+  SETTLE_STAGES,
+  settleRemain,
+  STEPS6,
+  stepsDone,
+} from '@/utils/nextAction'
 import { collectMode, diffLines, eventTitle } from '@/utils/orderEvent'
 import Section from '@/components/common/Section'
 import DeclLine from '@/pages/importDecl/DeclLine'
@@ -180,10 +188,13 @@ function StepTip({ x, y, step, state, at, lastEvent, clickable }) {
       )}
       {lastEvent && (
         <p className={styles.stepTipLast}>
-          최근 기록 · {kst(occurredOf(lastEvent)).slice(5, 16)} · {lastEvent.summary || eventTitle(lastEvent)}
+          최근 기록 · {kst(occurredOf(lastEvent)).slice(5, 16)} ·{' '}
+          {lastEvent.summary || eventTitle(lastEvent)}
         </p>
       )}
-      {state === 'skip' && <p className={styles.stepTipLast}>뒤 단계가 기록돼서 지나간 것으로 봐요.</p>}
+      {state === 'skip' && (
+        <p className={styles.stepTipLast}>뒤 단계가 기록돼서 지나간 것으로 봐요.</p>
+      )}
       {clickable && <p className={styles.stepTipClick}>눌러서 기록 열기</p>}
     </div>
   )
@@ -611,7 +622,10 @@ function MobileOrderDetail({
         )}
         {/* 배송완료 → 자동 구매확정 예정일 (D-day) — 데스크탑 목록과 같은 문구 (모바일에서 안 보이던 것, 2026-11-19) */}
         {(() => {
-          const ad = !o.claimType && o.stage === 'done' && o.settle?.stage === 'delivered' ? autoDecideText(o.autoDecide) : null
+          const ad =
+            !o.claimType && o.stage === 'done' && o.settle?.stage === 'delivered'
+              ? autoDecideText(o.autoDecide)
+              : null
           return (
             ad && (
               <p className={`${styles.mAutoDecide} ${styles['ad_' + ad.tone]}`} title={ad.title}>
@@ -1092,6 +1106,27 @@ export default function OrderReceivePage() {
   }
 
   // 자사몰 주문 배송 완료 표시 (마켓 주문은 마켓 상태로 바뀐다)
+  // 자사몰 품절 환불 — 개수 → 금액 확인 → 카드 부분 취소 (상품 금액 + 배송비 차액, 2026-11-27)
+  const refund = async () => {
+    const max = o?.quantity || 1
+    const n = Number(window.prompt(`품절로 취소할 개수 (최대 ${max}개)`, String(max)))
+    if (!n || n < 1 || n > max) return
+    setBusy('refund')
+    try {
+      const q = await shopRefund(selected, n, true)
+      const msg = q.full
+        ? `주문 전체 취소 · ${q.refund.toLocaleString()}원 환불`
+        : `상품 ${q.items_amount.toLocaleString()}원 + 배송비 차액 ${q.shipping_refund.toLocaleString()}원 = ${q.refund.toLocaleString()}원 환불`
+      if (window.confirm(`${msg}\n카드 결제를 이만큼 취소해요. 진행할까요?`)) {
+        await shopRefund(selected, n, false)
+        await load()
+      }
+    } catch (err) {
+      setError(err.message)
+    }
+    setBusy('')
+  }
+
   const delivered = async () => {
     if (
       !window.confirm('이 자사몰 주문을 배송 완료로 표시할까요? 고객 화면이 배송 완료로 바뀌어요.')
@@ -1232,7 +1267,14 @@ export default function OrderReceivePage() {
                   role="tab"
                   aria-selected={stage === s.key}
                   className={`${styles.tTab} ${stage === s.key ? styles.tOn : ''}`}
-                  onClick={() => set({ stage: s.key === 'received' ? null : s.key, id: null, ps: null, ss: null })}
+                  onClick={() =>
+                    set({
+                      stage: s.key === 'received' ? null : s.key,
+                      id: null,
+                      ps: null,
+                      ss: null,
+                    })
+                  }
                 >
                   {s.label}
                 </button>
@@ -1300,7 +1342,9 @@ export default function OrderReceivePage() {
                     title={s.sub}
                   >
                     {s.label} <b>{list.length}</b>
-                    {s.key !== 'all' && s.key !== 'paid' && sum > 0 && <small>{formatWon(sum)}</small>}
+                    {s.key !== 'all' && s.key !== 'paid' && sum > 0 && (
+                      <small>{formatWon(sum)}</small>
+                    )}
                   </button>
                 )
               })}
@@ -1308,45 +1352,46 @@ export default function OrderReceivePage() {
           )}
 
           {/* 처리 탭 — 진행 막대 지금 칸(타오바오 구매 · 판매처 발송 · 집운 입고 · 국제 발송)별 건수 + 판매가 합계. 완료 탭 칩과 같은 모양 (2026-11-14) */}
-          {stage === 'processing' && data && (() => {
-            const total = (o) => (o.amount?.total ?? o.totalPrice ?? 0)
-            const labels =
-              data.items.find((o) => o.progress)?.progress?.labels || [
+          {stage === 'processing' &&
+            data &&
+            (() => {
+              const total = (o) => o.amount?.total ?? o.totalPrice ?? 0
+              const labels = data.items.find((o) => o.progress)?.progress?.labels || [
                 '타오바오 구매',
                 '판매처 발송',
                 '집운 입고',
                 '국제 발송',
               ]
-            const chips = [
-              { key: 'all', label: '전체', list: data.items },
-              ...labels.map((label, i) => ({
-                key: String(i),
-                label,
-                list: data.items.filter((o) => (o.progress?.step ?? -1) === i),
-              })),
-            ]
-            const none = data.items.filter((o) => !o.progress)
-            if (none.length) chips.push({ key: 'none', label: '기록 없음', list: none })
-            return (
-              <div className={styles.settleChips} role="group" aria-label="진행 단계로 걸러보기">
-                {chips.map((c) => {
-                  const sum = c.list.reduce((a, o) => a + total(o), 0)
-                  return (
-                    <button
-                      key={c.key}
-                      type="button"
-                      className={`${styles.settleChip} ${progF === c.key ? styles.settleOn : ''}`}
-                      onClick={() => set({ ps: c.key === 'all' ? null : c.key, id: null })}
-                      title="판매가(고객 결제 전 총액) 합계"
-                    >
-                      {c.label} <b>{c.list.length}</b>
-                      {sum > 0 && <small>{formatWon(sum)}</small>}
-                    </button>
-                  )
-                })}
-              </div>
-            )
-          })()}
+              const chips = [
+                { key: 'all', label: '전체', list: data.items },
+                ...labels.map((label, i) => ({
+                  key: String(i),
+                  label,
+                  list: data.items.filter((o) => (o.progress?.step ?? -1) === i),
+                })),
+              ]
+              const none = data.items.filter((o) => !o.progress)
+              if (none.length) chips.push({ key: 'none', label: '기록 없음', list: none })
+              return (
+                <div className={styles.settleChips} role="group" aria-label="진행 단계로 걸러보기">
+                  {chips.map((c) => {
+                    const sum = c.list.reduce((a, o) => a + total(o), 0)
+                    return (
+                      <button
+                        key={c.key}
+                        type="button"
+                        className={`${styles.settleChip} ${progF === c.key ? styles.settleOn : ''}`}
+                        onClick={() => set({ ps: c.key === 'all' ? null : c.key, id: null })}
+                        title="판매가(고객 결제 전 총액) 합계"
+                      >
+                        {c.label} <b>{c.list.length}</b>
+                        {sum > 0 && <small>{formatWon(sum)}</small>}
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            })()}
 
           {data && data.items.length === 0 && (
             <p className={styles.empty}>
@@ -1367,138 +1412,151 @@ export default function OrderReceivePage() {
                   (progF === 'none' ? !it.progress : String(it.progress?.step ?? '') === progF),
               )
               .map((it) => (
-              <button
-                key={it.id}
-                type="button"
-                role="listitem"
-                className={`${styles.row} ${it.id === selected ? styles.rowOn : ''}`}
-                onClick={() => openOrder(it.id)}
-              >
-                <MarketMark market={it.market} />
-                <span className={styles.prod}>
-                  <b>
-                    <span className={styles.code}>{it.code || '코드 없음'}</span> {it.productName}
-                  </b>
-                  <small>
-                    {it.optionName && `${it.optionName} · `}×{it.quantity} · {it.receiver.name} ·{' '}
-                    {kstTime(it.paidAt || it.orderedAt)}
-                  </small>
-                  {/* 모바일 — 셋째 줄 '다음 할 일' (utils/nextAction) */}
-                  {mobile &&
-                    (() => {
-                      // 배송완료 · 자동 확정 예정일이 있으면 그 D-day 를 셋째 줄에 (데스크탑과 같은 문구, 2026-11-19)
-                      const ad =
-                        !it.claimType && it.stage === 'done' && it.settle?.stage === 'delivered'
-                          ? autoDecideText(it.autoDecide)
-                          : null
-                      if (ad)
-                        return (
-                          <small className={`${styles.mNextLine} ${styles['ad_' + ad.tone]}`} title={ad.title}>
-                            배송완료 · {ad.text}
-                          </small>
-                        )
-                      const n = nextAction(it)
-                      return (
-                        n && (
-                          <small
-                            className={`${styles.mNextLine} ${n.tone === 'danger' ? styles.bad : n.tone === 'neutral' ? styles.weak : ''}`}
-                          >
-                            {KIND_PREFIX[n.kind] ? `${KIND_PREFIX[n.kind]}: ` : ''}
-                            {n.label}
-                            {n.info && ` · ${n.info}`}
-                          </small>
-                        )
-                      )
-                    })()}
-                </span>
-                {/* 취소·반품 완료면 첫 줄 = 클레임(빨강), 둘째 줄 = 사유 (통관부호·마켓 상태는 의미가 없어 뺀다) */}
-                {it.claimType && it.stage === 'cancelled' ? (
-                  <span className={styles.rowState}>
-                    <StatusDot tone="danger">{claimLabel(it)}</StatusDot>
-                    <small
-                      className={styles.weak}
-                      title={[it.claimReason, it.claimStatus].filter(Boolean).join(' · ')}
-                    >
-                      {it.claimReason || '사유 없음'}
+                <button
+                  key={it.id}
+                  type="button"
+                  role="listitem"
+                  className={`${styles.row} ${it.id === selected ? styles.rowOn : ''}`}
+                  onClick={() => openOrder(it.id)}
+                >
+                  <MarketMark market={it.market} />
+                  <span className={styles.prod}>
+                    <b>
+                      <span className={styles.code}>{it.code || '코드 없음'}</span> {it.productName}
+                    </b>
+                    <small>
+                      {it.optionName && `${it.optionName} · `}×{it.quantity} · {it.receiver.name} ·{' '}
+                      {kstTime(it.paidAt || it.orderedAt)}
                     </small>
-                  </span>
-                ) : (
-                  <span className={styles.rowState}>
-                    <StatusDot tone={PCCC_STATUS[it.pcccStatus].tone}>
-                      {PCCC_STATUS[it.pcccStatus].short}
-                    </StatusDot>
-                    <small className={styles.weak}>
-                      {/* 처리 단계면 진행 위치 — 4칸 막대 + 지금 칸 이름 */}
-                      {it.stage === 'processing' && it.progress && (
-                        <span
-                          className={styles.prog}
-                          title={`처리 ${it.progress.step + 1}/${it.progress.total} — ${it.progress.label}`}
-                        >
-                          {Array.from({ length: it.progress.total }, (_, i) => (
-                            <i key={i} className={i <= it.progress.step ? styles.progOn : ''} />
-                          ))}
-                          <b>{it.progress.label}</b>{' '}
-                        </span>
-                      )}
-                      {it.claimType && (
-                        <span
-                          className={styles.claimText}
-                          title={[it.claimReason, it.claimStatus].filter(Boolean).join(' · ')}
-                        >
-                          ● {claimLabel(it)}{' '}
-                        </span>
-                      )}
-                      {/* 완료 단계 — '배송완료 · 구매확정 대기 중' / '구매확정 완료' (utils/nextAction, 2026-11-06) */}
-                      {it.stage === 'done' &&
-                        !it.claimType &&
-                        (() => {
-                          const n = nextAction(it)
-                          const ad = it.settle?.stage === 'delivered' ? autoDecideText(it.autoDecide) : null
+                    {/* 모바일 — 셋째 줄 '다음 할 일' (utils/nextAction) */}
+                    {mobile &&
+                      (() => {
+                        // 배송완료 · 자동 확정 예정일이 있으면 그 D-day 를 셋째 줄에 (데스크탑과 같은 문구, 2026-11-19)
+                        const ad =
+                          !it.claimType && it.stage === 'done' && it.settle?.stage === 'delivered'
+                            ? autoDecideText(it.autoDecide)
+                            : null
+                        if (ad)
                           return (
-                            <>
-                              {/* 예정일이 있으면 '배송완료 · 자동 확정 11/22 (D-6)' 로 짧게 — 줄이 금액 칸을 넘지 않게 */}
-                              {ad ? '배송완료' : n ? `${n.label}${n.info ? ` · ${n.info}` : ''}` : ''}
-                              {ad && (
-                                <span className={`${styles.adLine} ${styles['ad_' + ad.tone]}`} title={ad.title}>
-                                  {' · '}
-                                  <i className={styles.adDot} />
-                                  {ad.text}
-                                </span>
-                              )}
-                            </>
+                            <small
+                              className={`${styles.mNextLine} ${styles['ad_' + ad.tone]}`}
+                              title={ad.title}
+                            >
+                              배송완료 · {ad.text}
+                            </small>
                           )
-                        })()}
-                      {it.stage !== 'done' && !(it.stage === 'processing' && it.progress) && (
-                        <>
-                          {MARKET_STATUS[it.marketStatus] || it.marketStatus}
-                          {it.confirmed && ' · 발주확인됨'}
-                        </>
-                      )}
+                        const n = nextAction(it)
+                        return (
+                          n && (
+                            <small
+                              className={`${styles.mNextLine} ${n.tone === 'danger' ? styles.bad : n.tone === 'neutral' ? styles.weak : ''}`}
+                            >
+                              {KIND_PREFIX[n.kind] ? `${KIND_PREFIX[n.kind]}: ` : ''}
+                              {n.label}
+                              {n.info && ` · ${n.info}`}
+                            </small>
+                          )
+                        )
+                      })()}
+                  </span>
+                  {/* 취소·반품 완료면 첫 줄 = 클레임(빨강), 둘째 줄 = 사유 (통관부호·마켓 상태는 의미가 없어 뺀다) */}
+                  {it.claimType && it.stage === 'cancelled' ? (
+                    <span className={styles.rowState}>
+                      <StatusDot tone="danger">{claimLabel(it)}</StatusDot>
+                      <small
+                        className={styles.weak}
+                        title={[it.claimReason, it.claimStatus].filter(Boolean).join(' · ')}
+                      >
+                        {it.claimReason || '사유 없음'}
+                      </small>
+                    </span>
+                  ) : (
+                    <span className={styles.rowState}>
+                      <StatusDot tone={PCCC_STATUS[it.pcccStatus].tone}>
+                        {PCCC_STATUS[it.pcccStatus].short}
+                      </StatusDot>
+                      <small className={styles.weak}>
+                        {/* 처리 단계면 진행 위치 — 4칸 막대 + 지금 칸 이름 */}
+                        {it.stage === 'processing' && it.progress && (
+                          <span
+                            className={styles.prog}
+                            title={`처리 ${it.progress.step + 1}/${it.progress.total} — ${it.progress.label}`}
+                          >
+                            {Array.from({ length: it.progress.total }, (_, i) => (
+                              <i key={i} className={i <= it.progress.step ? styles.progOn : ''} />
+                            ))}
+                            <b>{it.progress.label}</b>{' '}
+                          </span>
+                        )}
+                        {it.claimType && (
+                          <span
+                            className={styles.claimText}
+                            title={[it.claimReason, it.claimStatus].filter(Boolean).join(' · ')}
+                          >
+                            ● {claimLabel(it)}{' '}
+                          </span>
+                        )}
+                        {/* 완료 단계 — '배송완료 · 구매확정 대기 중' / '구매확정 완료' (utils/nextAction, 2026-11-06) */}
+                        {it.stage === 'done' &&
+                          !it.claimType &&
+                          (() => {
+                            const n = nextAction(it)
+                            const ad =
+                              it.settle?.stage === 'delivered'
+                                ? autoDecideText(it.autoDecide)
+                                : null
+                            return (
+                              <>
+                                {/* 예정일이 있으면 '배송완료 · 자동 확정 11/22 (D-6)' 로 짧게 — 줄이 금액 칸을 넘지 않게 */}
+                                {ad
+                                  ? '배송완료'
+                                  : n
+                                    ? `${n.label}${n.info ? ` · ${n.info}` : ''}`
+                                    : ''}
+                                {ad && (
+                                  <span
+                                    className={`${styles.adLine} ${styles['ad_' + ad.tone]}`}
+                                    title={ad.title}
+                                  >
+                                    {' · '}
+                                    <i className={styles.adDot} />
+                                    {ad.text}
+                                  </span>
+                                )}
+                              </>
+                            )
+                          })()}
+                        {it.stage !== 'done' && !(it.stage === 'processing' && it.progress) && (
+                          <>
+                            {MARKET_STATUS[it.marketStatus] || it.marketStatus}
+                            {it.confirmed && ' · 발주확인됨'}
+                          </>
+                        )}
+                      </small>
+                    </span>
+                  )}
+                  {/* 줄 높이를 모든 행에서 같게 — 둘째 줄은 할인이 없어도 자리를 둔다, 길면 말줄임(올리면 전체) */}
+                  <span className={styles.price}>
+                    {it.amount
+                      ? formatWon(it.amount.total)
+                      : it.totalPrice == null
+                        ? '-'
+                        : formatWon(it.totalPrice)}
+                    <small
+                      className={it.amount?.discountSeller ? styles.sellerCut : styles.weak}
+                      title={
+                        it.amount?.discount > 0
+                          ? `할인 ${minus(it.amount.discount)} · ${burdenText(it.amount, it.market)}`
+                          : undefined
+                      }
+                    >
+                      {it.amount?.discount > 0
+                        ? `${minus(it.amount.discount)} ${burdenText(it.amount, it.market)}`
+                        : '\u00a0'}
                     </small>
                   </span>
-                )}
-                {/* 줄 높이를 모든 행에서 같게 — 둘째 줄은 할인이 없어도 자리를 둔다, 길면 말줄임(올리면 전체) */}
-                <span className={styles.price}>
-                  {it.amount
-                    ? formatWon(it.amount.total)
-                    : it.totalPrice == null
-                      ? '-'
-                      : formatWon(it.totalPrice)}
-                  <small
-                    className={it.amount?.discountSeller ? styles.sellerCut : styles.weak}
-                    title={
-                      it.amount?.discount > 0
-                        ? `할인 ${minus(it.amount.discount)} · ${burdenText(it.amount, it.market)}`
-                        : undefined
-                    }
-                  >
-                    {it.amount?.discount > 0
-                      ? `${minus(it.amount.discount)} ${burdenText(it.amount, it.market)}`
-                      : '\u00a0'}
-                  </small>
-                </span>
-              </button>
-            ))}
+                </button>
+              ))}
           </div>
         </Section>
 

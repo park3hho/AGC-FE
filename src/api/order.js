@@ -248,3 +248,11 @@ export const setOrderBundle = (id, key = null) =>
     body: { key },
     errorMsg: '집운 묶음을 바꾸지 못했어요',
   })
+
+// 자사몰 일부 취소 · 환불 (2026-11-27) — 상품 금액 + 배송비 차액. dry=true 면 금액만
+export const shopRefund = (id, qty, dry = true) =>
+  request(`/orders/${id}/shop-refund`, {
+    method: 'POST',
+    body: { qty, dry },
+    errorMsg: dry ? '환불 금액을 계산하지 못했어요' : '환불하지 못했어요',
+  })
