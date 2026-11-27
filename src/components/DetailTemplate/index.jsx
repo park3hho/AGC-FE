@@ -1,7 +1,7 @@
 import { forwardRef, useState } from 'react'
 
 import { fileUrl } from '@/api/client'
-import { REQUEST_PHONE } from '@/constants/designConst'
+import { SHOW_REQUEST } from '@/constants/designConst'
 import RichText from './RichText'
 import { TEMPLATE_CSS } from './templateCss'
 
@@ -435,15 +435,15 @@ const DetailTemplate = forwardRef(function DetailTemplate(
           </ul>
         )}
       </div>
-      {/* 찾는 제품 요청 (2026-11-27 사용자 요청 — 맨 아래 고시) */}
-      {has(REQUEST_PHONE) && (
+      {/* 찾는 제품 요청 (2026-11-27 사용자 요청 — 맨 아래 고시) · 연락은 마켓 안 '문의하기'로만 (외부 연락처 유도 금지 정책) */}
+      {SHOW_REQUEST && (
         <div className="dp-rq">
           <div className="dp-label">REQUEST</div>
           <h2>찾는 중국 음료·간식이 있나요?</h2>
           <p className="dp-rq-p">
             현지에서 마셔 본 그 제품, 아직 이도식품에 없다면 알려 주세요.
             <br />
-            제품 이름이나 사진을 문자로 보내 주시면, 들여오는 대로 보내 주신 번호로 먼저 알려 드려요.
+            상품 문의에 제품 이름이나 사진을 남겨 주시면, 들여오는 대로 답변으로 먼저 알려 드려요.
           </p>
           <div className="dp-rq-steps">
             <div>
@@ -452,18 +452,17 @@ const DetailTemplate = forwardRef(function DetailTemplate(
             </div>
             <div>
               <b>02</b>
-              <span>아래 번호로 문자 보내기</span>
+              <span>상품 문의에 남기기</span>
             </div>
             <div>
               <b>03</b>
-              <span>입고되면 문자로 안내</span>
+              <span>입고되면 답변으로 안내</span>
             </div>
           </div>
           <div className="dp-rq-tel">
-            <span>문자 접수</span>
-            <b>{REQUEST_PHONE}</b>
+            <span>접수</span>
+            <b>상품 문의하기</b>
           </div>
-          <div className="dp-rq-s">보내 주신 휴대폰 번호는 입고 안내에만 쓰고, 안내 후 지워요.</div>
         </div>
       )}
       <div className="dp-foot">
