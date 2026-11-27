@@ -1,6 +1,7 @@
 import { forwardRef, useState } from 'react'
 
 import { fileUrl } from '@/api/client'
+import { REQUEST_PHONE } from '@/constants/designConst'
 import RichText from './RichText'
 import { TEMPLATE_CSS } from './templateCss'
 
@@ -152,7 +153,7 @@ function HowIcon({
       height="34"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="#1d6fe0"
+      stroke="#000"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -204,8 +205,16 @@ const DetailTemplate = forwardRef(function DetailTemplate(
         <RegNo common={common || {}} />
       </div>
 
-      {/* S1 대표 사진 */}
+      {/* S1 대표 — 에디토리얼 안: 사진 먼저(자르지 않음), 아래에 글 */}
       <div className="dp-hero">
+        {hero.photo_url ? (
+          <div className="dp-hero-img">
+            <img src={fileUrl(hero.photo_url)} alt="" />
+          </div>
+        ) : (
+          <div className="dp-hero-pad" />
+        )}
+        <div className="dp-hero-tx">
         {has(hero.eyebrow) && (
           <span className="dp-eyebrow">
             <RichText text={hero.eyebrow} />
@@ -245,14 +254,7 @@ const DetailTemplate = forwardRef(function DetailTemplate(
           <b>무료배송</b>
           <span>국제배송비 · 국내 택배비 모두 포함된 가격이에요</span>
         </div>
-        {hero.photo_url ? (
-          <div className="dp-hero-img">
-            {/* 원래 비율 그대로 — 가로는 860 폭, 세로는 높이 1100 안으로 줄여 가운데 (자르지 않는다) */}
-            <img src={fileUrl(hero.photo_url)} alt="" />
-          </div>
-        ) : (
-          <div className="dp-hero-pad" />
-        )}
+        </div>
       </div>
 
       {/* S2 포인트 */}
@@ -433,6 +435,37 @@ const DetailTemplate = forwardRef(function DetailTemplate(
           </ul>
         )}
       </div>
+      {/* 찾는 제품 요청 (2026-11-27 사용자 요청 — 맨 아래 고시) */}
+      {has(REQUEST_PHONE) && (
+        <div className="dp-rq">
+          <div className="dp-label">REQUEST</div>
+          <h2>찾는 중국 음료·간식이 있나요?</h2>
+          <p className="dp-rq-p">
+            현지에서 마셔 본 그 제품, 아직 이도식품에 없다면 알려 주세요.
+            <br />
+            제품 이름이나 사진을 문자로 보내 주시면, 들여오는 대로 보내 주신 번호로 먼저 알려 드려요.
+          </p>
+          <div className="dp-rq-steps">
+            <div>
+              <b>01</b>
+              <span>제품 이름·사진 준비</span>
+            </div>
+            <div>
+              <b>02</b>
+              <span>아래 번호로 문자 보내기</span>
+            </div>
+            <div>
+              <b>03</b>
+              <span>입고되면 문자로 안내</span>
+            </div>
+          </div>
+          <div className="dp-rq-tel">
+            <span>문자 접수</span>
+            <b>{REQUEST_PHONE}</b>
+          </div>
+          <div className="dp-rq-s">보내 주신 휴대폰 번호는 입고 안내에만 쓰고, 안내 후 지워요.</div>
+        </div>
+      )}
       <div className="dp-foot">
         <RegNo common={common || {}} />
         {has(common?.seller) && ` · ${common.seller}`}
