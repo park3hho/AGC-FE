@@ -131,3 +131,47 @@
     display: none;
   }
 }
+
+/* 제품별 묶음 (2026-11-27) */
+.group {
+  border-bottom: 1px solid var(--color-border);
+}
+.group .row {
+  border-bottom: 0;
+}
+.prow {
+  background: var(--color-bg-sub);
+  min-height: 48px;
+}
+.prow .main {
+  grid-column: 1 / -1;
+}
+.orow {
+  min-height: 40px;
+}
+.orow + .orow {
+  border-top: 1px solid var(--color-border);
+}
+.opt {
+  padding-left: 62px;
+  font-size: 13px;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fold {
+  border: 0;
+  background: none;
+  width: 18px;
+  padding: 0;
+  color: var(--color-text-sub);
+  font-size: 12px;
+  cursor: pointer;
+  flex: none;
+}
+@media (max-width: 900px) {
+  .opt {
+    padding-left: 26px;
+  }
+}

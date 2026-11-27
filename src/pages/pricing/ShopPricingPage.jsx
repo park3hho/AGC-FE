@@ -22,8 +22,9 @@ export default function ShopPricingPage() {
   const [q, setQ] = useState('')
   const [onlySale, setOnlySale] = useState(true)
   const [page, setPage] = useState(1)
+  const [closed, setClosed] = useState(() => new Set()) // 접은 제품 id
   const bodyRef = useRef(null)
-  const size = useFitRows(bodyRef, { fallback: 20 })
+  const size = useFitRows(bodyRef, { fallback: 20, rowSelector: '[data-fit-row]' })
 
   useEffect(() => {
     getShopPricing()
@@ -41,10 +42,40 @@ export default function ShopPricingPage() {
         (!k || `${x.title} ${x.code} ${x.option}`.toLowerCase().includes(k)),
     )
   }, [data, q, onlySale])
-  const pageCount = Math.max(1, Math.ceil(rows.length / size))
+  // 제품별 묶음 (2026-11-27) — 제품 줄 아래 옵션 줄. 접기/펼치기(기본 펼침), 페이지는 제품 단위로 끊는다
+  const groups = useMemo(() => {
+    const m = new Map()
+    for (const x of rows) {
+      if (!m.has(x.product_id)) m.set(x.product_id, { ...x, options: [] })
+      m.get(x.product_id).options.push(x)
+    }
+    return [...m.values()]
+  }, [rows])
+  const pages = useMemo(() => {
+    const out = [[]]
+    let used = 0
+    for (const gp of groups) {
+      const h = 1 + (closed.has(gp.product_id) ? 0 : gp.options.length)
+      if (used > 0 && used + h > size) {
+        out.push([])
+        used = 0
+      }
+      out[out.length - 1].push(gp)
+      used += h
+    }
+    return out
+  }, [groups, closed, size])
+  const pageCount = Math.max(1, pages.length)
   const cur = Math.min(page, pageCount)
-  const shown = rows.slice((cur - 1) * size, cur * size)
+  const shown = pages[cur - 1] || []
   const measured = rows.filter((x) => x.size.source === 'measured').length
+  const toggle = (id) =>
+    setClosed((s) => {
+      const n = new Set(s)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
 
   return (
     <main className="page-flat">
@@ -90,8 +121,8 @@ export default function ShopPricingPage() {
             <Pager
               page={cur}
               pageCount={pageCount}
-              total={rows.length}
-              unit={`옵션 · 실측 ${measured}`}
+              total={groups.length}
+              unit={`제품 · 옵션 ${rows.length} · 실측 ${measured}`}
               onChange={setPage}
             />
           )
@@ -111,42 +142,70 @@ export default function ShopPricingPage() {
               <span>근거</span>
             </div>
             <div data-fit-list>
-              {shown.map((x) => (
-                <div key={x.option_id} className={styles.row} role="row">
-                  <span className={styles.main}>
-                    <Thumb src={x.photoUrl} size={36} />
-                    <span className={styles.text}>
-                      <Link to={`/pricing/${x.product_id}`} className={styles.title}>
-                        {x.title}
-                      </Link>
-                      <small>
-                        {x.option || '-'} · {x.code}
-                        {!x.on_sale && ' · 판매 안 함'}
-                      </small>
-                    </span>
-                  </span>
-                  <span className={styles.num}>
-                    {won(x.cost_krw)}
-                    <small>¥{x.cost_cny}</small>
-                  </span>
-                  <span className={`${styles.num} ${styles.price}`}>{won(x.price)}</span>
-                  <span className={styles.num}>
-                    {won(x.profit)}
-                    <small>수수료 {won(x.pay_fee)}</small>
-                  </span>
-                  <span className={styles.num}>{g(x.size.weight_g)}</span>
-                  <span className={styles.num}>
-                    {x.size.dims_cm
-                      ? x.size.dims_cm.map((v) => Math.round(v)).join('×') + 'cm'
-                      : '-'}
-                    <small>부피 {g(x.size.dim_g)}</small>
-                  </span>
-                  <span className={styles.src} title={x.size.note || ''}>
-                    <i className={x.size.source === 'measured' ? styles.dotOk : styles.dotEst} />
-                    {x.size.source === 'measured' ? `실측 ${x.size.count}건` : '예측'}
-                  </span>
-                </div>
-              ))}
+              {shown.map((gp) => {
+                const open = !closed.has(gp.product_id)
+                return (
+                  <div key={gp.product_id} className={styles.group}>
+                    <div className={`${styles.row} ${styles.prow}`} role="row" data-fit-row>
+                      <span className={styles.main}>
+                        <button
+                          type="button"
+                          className={styles.fold}
+                          aria-expanded={open}
+                          aria-label={open ? '접기' : '펼치기'}
+                          onClick={() => toggle(gp.product_id)}
+                        >
+                          {open ? '▾' : '▸'}
+                        </button>
+                        <Thumb src={gp.photoUrl} size={36} />
+                        <span className={styles.text}>
+                          <Link to={`/pricing/${gp.product_id}`} className={styles.title}>
+                            {gp.title}
+                          </Link>
+                          <small>
+                            {gp.code} · 옵션 {gp.options.length}
+                            {!gp.on_sale && ' · 판매 안 함'}
+                          </small>
+                        </span>
+                      </span>
+                    </div>
+                    {open &&
+                      gp.options.map((x) => (
+                        <div
+                          key={x.option_id}
+                          className={`${styles.row} ${styles.orow}`}
+                          role="row"
+                        >
+                          <span className={styles.opt}>{x.option || '-'}</span>
+                          <span className={styles.num}>
+                            {won(x.cost_krw)}
+                            <small>¥{x.cost_cny}</small>
+                          </span>
+                          <span className={`${styles.num} ${styles.price}`}>{won(x.price)}</span>
+                          <span className={styles.num}>
+                            {won(x.profit)}
+                            <small>수수료 {won(x.pay_fee)}</small>
+                          </span>
+                          <span className={styles.num}>{g(x.size.weight_g)}</span>
+                          <span className={styles.num}>
+                            {x.size.dims_cm
+                              ? x.size.dims_cm.map((v) => Math.round(v)).join('×') + 'cm'
+                              : '-'}
+                            <small>부피 {g(x.size.dim_g)}</small>
+                          </span>
+                          <span className={styles.src} title={x.size.note || ''}>
+                            <i
+                              className={
+                                x.size.source === 'measured' ? styles.dotOk : styles.dotEst
+                              }
+                            />
+                            {x.size.source === 'measured' ? `실측 ${x.size.count}건` : '예측'}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )
+              })}
               {shown.length === 0 && <p className={styles.empty}>맞는 옵션 없음</p>}
             </div>
           </div>
