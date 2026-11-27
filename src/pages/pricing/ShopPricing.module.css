@@ -1,0 +1,133 @@
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.search {
+  width: 200px;
+  height: 30px;
+}
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.segItem {
+  border: 0;
+  background: transparent;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--color-text-sub);
+  cursor: pointer;
+}
+.segOn {
+  color: var(--color-text);
+  font-weight: 600;
+  background: var(--color-bg-sub);
+}
+.table {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+.row {
+  display: grid;
+  grid-template-columns: minmax(240px, 2.6fr) 0.9fr 0.8fr 0.9fr 0.7fr 1fr 0.8fr;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--color-border);
+  min-height: 48px;
+  box-sizing: border-box;
+}
+.head {
+  min-height: 32px;
+  font-size: 12px;
+  color: var(--color-text-sub);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  background: var(--color-bg);
+  z-index: 1;
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.num small,
+.text small {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-weak);
+  font-weight: 400;
+}
+.price {
+  font-weight: 700;
+  color: var(--color-text);
+}
+.main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.text {
+  min-width: 0;
+}
+.text small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.title {
+  display: block;
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.title:hover {
+  color: var(--color-primary);
+}
+.src {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+.dotOk,
+.dotEst {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+.dotOk {
+  background: var(--color-success);
+}
+.dotEst {
+  background: var(--color-text-weak);
+}
+.empty {
+  padding: 16px 12px;
+  font-size: 13px;
+  color: var(--color-text-sub);
+}
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: 1fr auto;
+  }
+  .row > :nth-child(n + 4) {
+    display: none;
+  }
+  .head {
+    display: none;
+  }
+}
