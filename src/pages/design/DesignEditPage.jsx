@@ -23,6 +23,7 @@ import {
   MARKER_RE,
   TEMPLATE_WIDTH,
 } from '@/constants/designConst'
+import { DETAIL_TEMPLATE_VERSION } from '@/constants/designConst'
 import { FEATURE, hasFeature } from '@/constants/permissions'
 import { useAuth } from '@/hooks/useAuth'
 import { useScreen } from '@/hooks/useScreen'
@@ -142,7 +143,8 @@ export default function DesignEditPage() {
     if (canReview) {
       const next = { ...(p.exports || {}) }
       for (const pf of EXPORT_PLATFORMS) {
-        if (next[pf.key]?.current) continue
+        // 내용이 같아도 템플릿 버전이 바뀌었으면 다시 올린다 (2026-11-27 에디토리얼 템플릿 일괄 재내보내기)
+        if (next[pf.key]?.current && next[pf.key]?.template === DETAIL_TEMPLATE_VERSION) continue
         const files = sets[pf.key]
         if (files.reduce((s, f) => s + f.blob.size, 0) > EXPORT_MAX_UPLOAD_BYTES) {
           throw new Error(
