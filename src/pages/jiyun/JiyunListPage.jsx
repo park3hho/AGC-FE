@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { getJiyunList } from '@/api/jiyun'
+import { getJiyunBoxes, getJiyunList } from '@/api/jiyun'
 import Badge from '@/components/Badge'
 import PageHeader from '@/components/common/PageHeader'
 import FilterBar from '@/components/common/FilterBar'
@@ -40,6 +40,12 @@ export default function JiyunListPage() {
   const status = params.get('status') || 'all'
   const q = params.get('q') || ''
 
+  const [boxes, setBoxes] = useState(null)
+  useEffect(() => {
+    getJiyunBoxes()
+      .then(setBoxes)
+      .catch(() => setBoxes([]))
+  }, [])
   useEffect(() => {
     getJiyunList({ limit: 500 })
       .then(setItems)
@@ -165,6 +171,40 @@ export default function JiyunListPage() {
           </div>
         )}
         {error && <p className="form-error">{error}</p>}
+      </Section>
+
+      <Section name="결제 대기 상자" id="boxes" sub={boxes && `${boxes.length}상자`}>
+        {boxes && boxes.length === 0 && <p className={styles.empty}>결제 대기 상자 없음</p>}
+        {boxes && boxes.length > 0 && (
+          <div className={styles.boxList} role="table" aria-label="결제 대기 상자">
+            {boxes.map((b) => (
+              <div key={b.code} className={styles.boxRow} role="row">
+                <span role="cell" className={styles.main}>
+                  <b className={styles.mono}>{b.code}</b>
+                  <small>
+                    {b.weightG ? `${(b.weightG / 1000).toFixed(1)}kg` : '무게 미확인'}
+                    {b.feeCny != null && ` · 예상 ¥${b.feeCny}`} · 입고 {b.arrived}/{b.total}
+                  </small>
+                </span>
+                <span role="cell" className={styles.boxItems}>
+                  {b.contents.length ? (
+                    b.contents.map((c, i) => (
+                      <small key={i}>
+                        <span className={styles.mono}>{c.orderCode}</span> {c.label} ×{c.units}
+                      </small>
+                    ))
+                  ) : (
+                    <small>구성 미확인</small>
+                  )}
+                </span>
+                <span role="cell" className={styles.st} data-tone={b.ready ? 'success' : 'warning'}>
+                  <i />
+                  {b.ready ? '입고 완료 · 결제 가능' : b.statusLabel}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </Section>
 
       <Section name="집운 목록" id="list" sub={items && `${rows.length}건`} flush fill>

@@ -251,3 +251,35 @@
 .main span.warn {
   color: var(--color-warning);
 }
+
+/* 집운 기록 › 결제 대기 상자 (2026-11-27) */
+.boxList {
+  max-height: 210px;
+  overflow-y: auto;
+}
+.boxRow {
+  display: grid;
+  grid-template-columns: 200px 1fr 170px;
+  gap: 12px;
+  align-items: start;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.boxItems {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.boxItems small {
+  color: var(--color-text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 768px) {
+  .boxRow {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

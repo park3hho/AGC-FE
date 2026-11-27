@@ -161,3 +161,26 @@ export const updateJiyunBundle = async (id, patch) => {
   })
   return data.items.map(toJiyun)
 }
+
+// 자사 집운번호(PRE_LP) 상자 — 30kg 이하 상자 하나에 번호 하나, 가장 싼 구성으로 서버가 나눈다 (2026-11-27)
+// contents = 이 상자에 넣을 주문·개수. 집운 결제할 때 이 목록대로 담는다
+export const getJiyunBoxes = async () => {
+  const data = await request('/jiyun-bundles?status=active')
+  return (data.items || [])
+    .filter((b) => b.status === 'open' || b.status === 'confirmed')
+    .map((b) => ({
+      code: b.code,
+      status: b.status,
+      statusLabel: b.status_label,
+      weightG: b.est_weight_g,
+      feeCny: b.est_fee_cny,
+      ready: b.ready,
+      arrived: b.arrived,
+      total: b.total,
+      contents: (b.contents || []).map((c) => ({
+        orderCode: c.order_code,
+        units: c.units,
+        label: c.label,
+      })),
+    }))
+}
