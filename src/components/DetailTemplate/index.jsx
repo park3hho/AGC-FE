@@ -459,10 +459,6 @@ const DetailTemplate = forwardRef(function DetailTemplate(
               <span>입고되면 답변으로 안내</span>
             </div>
           </div>
-          <div className="dp-rq-tel">
-            <span>접수</span>
-            <b>상품 문의하기</b>
-          </div>
         </div>
       )}
       <div className="dp-foot">
