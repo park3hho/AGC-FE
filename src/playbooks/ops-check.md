@@ -123,6 +123,8 @@ await closeTab(jtab);
 7. 기록: `trade.tmall.com/detail/orderDetail.htm?bizOrderId={번호}` PDF → `POST /api/taobao-purchases {order_id, taobao_order_no, shop_name, item_url, items, paid_cny, purchased_at, pay_method:"alipay", pay_currency:"CNY", pay_amount, charged_krw, charged_status, charged_source, memo}` → `POST /api/orders/{id}/documents` (kind=purchase, purchase_id). FIN 지출은 서버가 자동 전송, 증빙 링크가 빠졌으면 `PATCH http://127.0.0.1:8300/svc/expenses/by-key/AGC-purchase-{id} {evidence:"해외 영수증", evidence_url:"https://agc-fe.vercel.app/api/orders/{id}/documents/{doc}/file"}` (키: HQ `/svc/api-credentials/by-code/fin_expense/values` 의 credential.secrets.agc).
 8. 집운 묶음은 서버가 주문 들어올 때 자동으로 정한다 — 묶음 번호 **PRE_LP + 10자리**(2026-11-16). 같은 받는 사람(이름+우편번호)의 '모으는 중(open)' 묶음이 있으면 날짜 상관없이 합류, 예상 무게가 25kg(JIYUN_BUNDLE_MAX_KG)를 넘게 되면 새 묶음. 주문의 `bundle_key` = 묶음 번호. 확인만. 묶음 번호는 **에이전트 작업용**이라 사용자 화면에는 안 보인다(사용자 결정 2026-11-16) — 조회·보고는 API `GET /api/jiyun-bundles?status=active` 등(jiyun-rules '묶음 번호' 절).
 
+9. **이슈 리포트 (2026-11-27):** 구매를 기록하면 서버가 실구매 1단위가와 매입가(price_cny)를 비교해 ±5% 이상이면 이슈(kind=cost_diff '매입가 차이')를 자동으로 남긴다 — 매입가는 바꾸지 않는다(고칠지는 사람이). 매 회차 `GET /api/issues?unreported=true` 로 새 이슈를 보고 **1회 보고**(대상 · 내용 한 줄) 뒤 `PATCH /api/issues/{id} {reported:true}`. 화면: 대시보드 › 이슈 리포트.
+
 ## 5. 중국 내 배송 · 창고 입고
 
 tasks 의 cn_track(구매 cn_status ordered·shipped, 묶음 일부 입고)을 결제용 계정의 구매목록·물류 화면(`market.m.taobao.com/app/dinamic/pc-trade-logistics/home.html?orderId=`)에서 확인. 판매처 발송(운송장)·창고 입고가 새로 보이면 `PATCH /api/taobao-purchases/{id}` (cn_status shipped/arrived, cn_tracking_no, shipped_at/arrived_at — 화면의 실제 시각). **변화가 없어도 마지막 물류 문구는 `cn_last_text`(예: "已安检待入库 11-19 08:53")로 남긴다 — 메모에 물류 문구 목록을 적지 않는다.** PC 待集运 화면은 소포 목록이 안 보인다(앱 전용).

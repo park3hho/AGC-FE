@@ -34,6 +34,7 @@ export const SCREENS = [
   },
   { path: '/sales', name: '매출 현황', group: '대시보드' },
   { path: '/shop-analytics', name: '자사몰 분석', group: '대시보드' },
+  { path: '/issues', name: '이슈 리포트', group: '대시보드' },
   { path: '/pricing', name: '가격 책정', group: '판매' },
   { path: '/pricing/competition', name: '최저가 경쟁', group: '판매' },
   { path: '/pricing/:productId', name: '가격 책정 (제품)', group: '판매', parent: '/pricing' },

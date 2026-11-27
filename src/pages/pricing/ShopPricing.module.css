@@ -180,3 +180,24 @@
 .lastBuy {
   color: var(--color-primary);
 }
+
+.lastBuyLow {
+  color: var(--color-warning);
+}
+
+/* 매입가 차이 이슈 (이슈 리포트, 2026-11-27) — 색 점 + 글자 */
+.costIssue {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-danger);
+  text-decoration: none;
+}
+.costIssue i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  flex: none;
+}

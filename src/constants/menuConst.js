@@ -165,6 +165,15 @@ export const MENU = [
     feature: FEATURE.ORDER,
   },
   {
+    key: 'issues',
+    group: 'dashboard',
+    label: '이슈 리포트', // 가격 · 물류 · 통관 문제 기록 (2026-11-27 사용자)
+    icon: 'info',
+    tone: 'danger',
+    path: '/issues',
+    feature: FEATURE.ORDER,
+  },
+  {
     key: 'shipping',
     group: 'settings',
     label: '배송', // 탭: 배송비 · 출고지·반품지

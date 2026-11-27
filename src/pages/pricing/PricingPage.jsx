@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { adoptBundle, dropBundle, getPricing, rowIdOf, savePricing } from '@/api/pricing'
 import { getProducts } from '@/api/product'
+import { getCostIssuesByOption } from '@/api/issues'
 import Icon from '@/components/Icon'
 import Thumb from '@/components/Thumb'
 import HoverInfo from '@/components/common/HoverInfo'
@@ -223,6 +224,12 @@ export default function PricingPage() {
   const [bundleBusy, setBundleBusy] = useState(false)
   const [mTab, setMTab] = useState(null) // 모바일 판매처 탭 (null = 첫 판매처) · 'summary' = 요약
   const [bulkOpen, setBulkOpen] = useState(false) // 모바일 '한 번에 맞추기' 시트
+  const [costIssues, setCostIssues] = useState({}) // 매입가 차이 이슈 (이슈 리포트, 2026-11-27)
+  useEffect(() => {
+    getCostIssuesByOption()
+      .then(setCostIssues)
+      .catch(() => {})
+  }, [productId])
 
   useEffect(() => {
     setData(null)
@@ -505,7 +512,11 @@ export default function PricingPage() {
     const ship = cnyToKrw(o.shippingCny, fxRate)
     return [
       { label: `상품 ${formatCny(o.priceCny)}`, value: goods, color: MIX.goods },
-      { label: `배송 ${formatCny(o.shippingCny)} (${o.billableKg}kg)`, value: ship, color: MIX.ship },
+      {
+        label: `배송 ${formatCny(o.shippingCny)} (${o.billableKg}kg)`,
+        value: ship,
+        color: MIX.ship,
+      },
       { label: '수수료', value: r.fee, color: MIX.fee },
       ...(r.profit > 0 ? [{ label: '차익', value: r.profit, color: MIX.profit }] : []),
     ]
@@ -524,12 +535,7 @@ export default function PricingPage() {
             const m = BULK_MODES.find((x) => x.key === e.target.value)
             setBulk({
               mode: m.key,
-              amounts: Object.fromEntries(
-                platforms.map((p) => [
-                  p.key,
-                  initialFor(p, m),
-                ]),
-              ),
+              amounts: Object.fromEntries(platforms.map((p) => [p.key, initialFor(p, m)])),
             })
             setBulkMsg(EMPTY_MSG)
           }}
@@ -541,9 +547,7 @@ export default function PricingPage() {
           ))}
         </select>
       </div>
-      <p className={styles.weak}>
-        상품가 + 집운 운임으로 계산 · 기본 차익 2,000원 (무료배송)
-      </p>
+      <p className={styles.weak}>상품가 + 집운 운임으로 계산 · 기본 차익 2,000원 (무료배송)</p>
       <div className={styles.grid} style={{ '--cols': platforms.length }}>
         <span />
         {platforms.map((p) => (
@@ -941,6 +945,15 @@ export default function PricingPage() {
                               빼기
                             </button>
                           </span>
+                        )}
+                        {costIssues[o.optionId] && (
+                          <Link
+                            to="/issues?kind=cost_diff"
+                            className={styles.optWarn}
+                            title="이슈 리포트 › 매입가 차이"
+                          >
+                            ● 가격 문제 · {costIssues[o.optionId].detail}
+                          </Link>
                         )}
                         {o.overDutyFree && (
                           <span className={styles.optWarn}>

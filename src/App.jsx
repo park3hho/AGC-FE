@@ -25,6 +25,7 @@ const ShopPricingPage = lazy(() => import('@/pages/pricing/ShopPricingPage'))
 const OpsPage = lazy(() => import('@/pages/ops/OpsPage'))
 const SalesPage = lazy(() => import('@/pages/sales/SalesPage'))
 const ShopAnalyticsPage = lazy(() => import('@/pages/sales/ShopAnalyticsPage'))
+const IssueReportPage = lazy(() => import('@/pages/issues/IssueReportPage')) // 이슈 리포트 (2026-11-27)
 const DesignListPage = lazy(() => import('@/pages/design/DesignListPage'))
 const ProductsPage = lazy(() => import('@/pages/products/ProductsPage'))
 const ProductOverviewPage = lazy(() => import('@/pages/products/ProductOverviewPage'))
@@ -73,6 +74,7 @@ export default function App() {
               <Route path="/ops" element={<OpsPage />} />
               <Route path="/sales" element={<SalesPage />} />
               <Route path="/shop-analytics" element={<ShopAnalyticsPage />} />
+            <Route path="/issues" element={<IssueReportPage />} />
               <Route path="/pricing/:productId" element={<PricingPage />} />
               <Route path="/design" element={<DesignListPage />} />
               <Route path="/products" element={<ProductsPage />} />

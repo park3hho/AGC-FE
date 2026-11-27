@@ -176,19 +176,39 @@ export default function ShopPricingPage() {
                           className={`${styles.row} ${styles.orow}`}
                           role="row"
                         >
-                          <span className={styles.opt}>{x.option || '-'}</span>
+                          <span className={styles.opt}>
+                            {x.option || '-'}
+                            {x.cost_issue && (
+                              <Link
+                                to="/issues?kind=cost_diff"
+                                className={styles.costIssue}
+                                title="이슈 리포트 › 매입가 차이"
+                              >
+                                <i />
+                                가격 문제 · {x.cost_issue.detail}
+                              </Link>
+                            )}
+                          </span>
                           <span className={styles.num}>
                             {won(x.cost_krw)}
                             <small>¥{x.cost_cny}</small>
-                            {x.last_buy && (
-                              <small
-                                className={styles.lastBuy}
-                                title={`최근 실구매로 매입가 갱신 ${x.last_buy.at.slice(5, 10)} · 이전 ¥${x.last_buy.old_cny ?? '-'}`}
-                              >
-                                최근 구매 {x.last_buy.at.slice(5, 10)} · ¥
-                                {x.last_buy.old_cny ?? '-'}→
-                              </small>
-                            )}
+                            {x.last_buy &&
+                              (x.last_buy.cheaper ? (
+                                <small
+                                  className={styles.lastBuyLow}
+                                  title="실구매가가 지금 매입가보다 쌈 · 자동으로 안 내림 · 내릴지 확인 필요"
+                                >
+                                  최근 구매 ¥{x.last_buy.new_cny} (더 쌈)
+                                </small>
+                              ) : (
+                                <small
+                                  className={styles.lastBuy}
+                                  title={`최근 실구매로 매입가 갱신 ${x.last_buy.at.slice(5, 10)} · 이전 ¥${x.last_buy.old_cny ?? '-'}`}
+                                >
+                                  최근 구매 {x.last_buy.at.slice(5, 10)} · ¥
+                                  {x.last_buy.old_cny ?? '-'}→
+                                </small>
+                              ))}
                           </span>
                           <span className={`${styles.num} ${styles.price}`}>{won(x.price)}</span>
                           <span className={styles.num}>

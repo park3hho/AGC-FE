@@ -1,0 +1,94 @@
+/* 이슈 리포트 — 1px 줄, 상태는 색 점 + 글자 (DESIGN §4.2) */
+.filters {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.filters select {
+  width: 180px;
+}
+.table {
+  display: flex;
+  flex-direction: column;
+}
+.row {
+  display: grid;
+  grid-template-columns: 96px 88px minmax(200px, 1.4fr) minmax(200px, 1.2fr) 110px minmax(160px, 1fr);
+  gap: var(--space-3);
+  align-items: center;
+  padding: 0 var(--space-4);
+  height: 40px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+}
+.head {
+  color: var(--color-text-sub);
+  font-size: 12px;
+  height: 32px;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.target,
+.memo {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.target a {
+  color: var(--color-text);
+}
+.st {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.st i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-text-weak);
+  flex: none;
+}
+.st[data-tone='danger'] i {
+  background: var(--color-danger);
+}
+.st[data-tone='warning'] i {
+  background: var(--color-warning);
+}
+.st[data-tone='success'] i {
+  background: var(--color-success);
+}
+.st select {
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  padding: 0;
+  cursor: pointer;
+}
+.memoBtn {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  text-align: left;
+  cursor: text;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.memoBtn em {
+  color: var(--color-text-weak);
+  font-style: normal;
+}
+.memo input {
+  height: 28px;
+}
+.empty {
+  padding: var(--space-4);
+  color: var(--color-text-sub);
+}
