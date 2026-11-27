@@ -170,6 +170,7 @@ export const getJiyunBoxes = async () => {
     .filter((b) => b.status === 'open' || b.status === 'confirmed')
     .map((b) => ({
       code: b.code,
+      receiver: b.receiver_label || '받는 사람 미확인',
       status: b.status,
       statusLabel: b.status_label,
       weightG: b.est_weight_g,

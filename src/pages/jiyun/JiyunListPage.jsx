@@ -28,7 +28,20 @@ const M_TABS = [
 const kst = (iso) =>
   iso ? new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' }).slice(5, 16) : '-'
 
-// 판매 › 집운 기록 — 섹션: 검색·필터 · 집운 목록
+// 결제 대기 상자 → 받는 사람별 (목업 B, 2026-11-27) — 결제 가능 상자가 있는 사람이 위
+const groupBoxes = (boxes) => {
+  const m = new Map()
+  for (const b of boxes) {
+    const g = m.get(b.receiver) || { receiver: b.receiver, boxes: [], weightG: 0, feeCny: 0 }
+    g.boxes.push(b)
+    g.weightG += b.weightG || 0
+    g.feeCny = Math.round((g.feeCny + (b.feeCny || 0)) * 100) / 100
+    m.set(b.receiver, g)
+  }
+  return [...m.values()].sort((x, y) => y.boxes.some((b) => b.ready) - x.boxes.some((b) => b.ready))
+}
+
+// 판매 › 집운 기록 — 섹션: 검색·필터 · 결제 대기 상자 · 집운 목록
 // 집운(배대지)에 배송 요청하고 배송비를 낸 기록 전체 — 출고 · H B/L · 국내 송장까지. 추가는 주문 접수의 고객 주문 추적 기록에서 한다
 export default function JiyunListPage() {
   const navigate = useNavigate()
@@ -176,37 +189,73 @@ export default function JiyunListPage() {
       <Section name="결제 대기 상자" id="boxes" sub={boxes && `${boxes.length}상자`}>
         {boxes && boxes.length === 0 && <p className={styles.empty}>결제 대기 상자 없음</p>}
         {boxes && boxes.length > 0 && (
-          <div className={styles.boxList} role="table" aria-label="결제 대기 상자">
-            {boxes.map((b) => (
-              <div key={b.code} className={styles.boxRow} role="row">
-                <span role="cell" className={styles.main}>
-                  <b className={styles.mono}>{b.code}</b>
-                  <small>
-                    {b.weightG ? `${(b.weightG / 1000).toFixed(1)}kg` : '무게 미확인'}
-                    {b.feeCny != null && ` · 예상 ¥${b.feeCny}`} · 입고 {b.arrived}/{b.total}
+          <div className={styles.boxList}>
+            {groupBoxes(boxes).map((g) => (
+              <div key={g.receiver} className={styles.rcv}>
+                <div className={styles.rcvHead}>
+                  <b>{g.receiver}</b>
+                  <small className={styles.num}>
+                    {g.boxes.length}상자 · {(g.weightG / 1000).toFixed(1)}kg · 예상 ¥{g.feeCny}
                   </small>
-                </span>
-                <span role="cell" className={styles.boxItems}>
-                  {b.contents.length ? (
-                    b.contents.map((c, i) => (
-                      <small key={i}>
-                        <span className={styles.mono}>{c.orderCode}</span> {c.label} ×{c.units}
-                      </small>
-                    ))
-                  ) : (
-                    <small>구성 미확인</small>
-                  )}
-                </span>
-                <span role="cell" className={styles.st} data-tone={b.ready ? 'success' : 'warning'}>
-                  <i />
-                  {b.ready ? '입고 완료 · 결제 가능' : b.statusLabel}
-                </span>
+                </div>
+                <div className={styles.lanes}>
+                  {g.boxes.map((b) => {
+                    const kg = (b.weightG || 0) / 1000
+                    const ready = b.ready
+                    return (
+                      <div key={b.code} className={styles.lane}>
+                        <div className={styles.laneTop}>
+                          <b className={styles.mono}>{b.code}</b>
+                          <small className={styles.num}>
+                            {b.feeCny != null ? `¥${b.feeCny}` : '-'}
+                          </small>
+                        </div>
+                        <div className={styles.kgBar}>
+                          <i style={{ width: `${Math.min(100, (kg / 30) * 100)}%` }} />
+                        </div>
+                        <div className={styles.laneTop}>
+                          <small className={styles.num}>
+                            {b.weightG ? `${kg.toFixed(1)} / 30kg` : '무게 미확인'} · 입고{' '}
+                            {b.arrived}/{b.total}
+                          </small>
+                          <span
+                            className={styles.st}
+                            data-tone={
+                              ready ? 'success' : b.status === 'confirmed' ? 'warning' : 'primary'
+                            }
+                          >
+                            <i />
+                            {ready ? '입고 완료 · 결제 가능' : b.statusLabel}
+                          </span>
+                        </div>
+                        <ul className={styles.laneItems}>
+                          {b.contents.length ? (
+                            b.contents.map((c, k) => (
+                              <li key={k} title={`${c.orderCode} ${c.label}`}>
+                                <span>
+                                  <span className={styles.mono}>
+                                    {c.orderCode.replace(/^OR-/, '')}
+                                  </span>{' '}
+                                  {c.label}
+                                </span>
+                                <b className={styles.num}>×{c.units}</b>
+                              </li>
+                            ))
+                          ) : (
+                            <li>
+                              <span>구성 미확인</span>
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             ))}
           </div>
         )}
       </Section>
-
       <Section name="집운 목록" id="list" sub={items && `${rows.length}건`} flush fill>
         {items && rows.length === 0 && (
           <p className={styles.empty}>
