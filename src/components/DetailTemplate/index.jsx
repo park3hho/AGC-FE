@@ -249,11 +249,6 @@ const DetailTemplate = forwardRef(function DetailTemplate(
             ))}
           </div>
         )}
-        {/* 배송비 띠 — 전 제품 무료배송(판매가에 국제배송비·국내 택배비 포함) */}
-        <div className="dp-free">
-          <b>무료배송</b>
-          <span>국제배송비 · 국내 택배비 모두 포함된 가격이에요</span>
-        </div>
         </div>
       </div>
 
