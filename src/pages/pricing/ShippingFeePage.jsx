@@ -21,31 +21,21 @@ const MOBILE_TABS = [
   { id: 'guide', name: '공식 기준' },
 ]
 
-// 집운 운임 예측 수식 — BE services/pricing/jiyun_estimate.py 와 같은 내용 (2026-11-26)
-// 주문 예상 운임: GET /jiyun-estimate/order/{id} · 물건 추가: POST /jiyun-estimate {items, add}
+// 집운 운임 수식 (2026-11-27 사용자: 타오바오 공식 기준 · 글 대신 수식 · 명사형)
+// 공식: 韩国集运海运-经济型运费报价 (world.taobao.com rule-guide, 11-27 확인) · AGC 예측: BE services/pricing/jiyun_estimate.py
 const ESTIMATE_STEPS = [
-  {
-    k: '① 옵션 1개 무게',
-    f: '같은 옵션 실측 중앙값 → 없으면 같은 제품 다른 옵션 실측 × (용량 ÷ 그 옵션 용량) → 없으면 예측',
-  },
-  {
-    k: '   예측 · 음료',
-    f: '실제 = 용량(ml) × k + 상자 500g   (k = 실측으로 맞춘 1ml당 무게, 약 1.03g)',
-  },
-  {
-    k: '   예측 · 과자·차',
-    f: '실제 = 용량(g) × 1~1.5 + 상자 500g(한 번) · 부피 = 옵션에 적힌 상자 cm, 없으면 실측 상자 중앙값',
-  },
-  { k: '② 부피 무게', f: '가로 × 세로 × 높이(cm) ÷ 6000' },
-  { k: '③ 계산 무게 W', f: 'max(Σ 실제 무게, Σ 부피 무게) × 1.01   (합포장은 소포 무게를 더함)' },
-  { k: '④ 청구 kg', f: 'W ≤ 1kg → 1kg · 넘으면 1 + ⌈(W − 1) ÷ 0.5⌉ × 0.5' },
-  { k: '⑤ 운임', f: '첫 1kg 요금 + (청구 kg − 1) ÷ 0.5 × ¥2' },
-  {
-    k: '   첫 1kg 요금',
-    f: '식품 ¥33 (기본) · 일반 ¥21.5 (그 제품만 든 집운이 일반 요금으로 나온 적 있을 때, 섞이면 식품)',
-  },
-  { k: '⑥ 30kg 넘음', f: 'n = ⌈W ÷ 30⌉ 개로 나눠 보냄 → n × 운임(W ÷ n)   (한 번에 보내면 대형 요금)' },
-  { k: '⑦ 물건 추가', f: '추가 운임 = 운임(지금 묶음 + 추가) − 운임(지금 묶음)' },
+  { k: '[공식] 계산 무게', f: 'W = max(실제 무게, 부피 무게)' },
+  { k: '[공식] 부피 무게', f: '가로 × 세로 × 높이(cm) ÷ 6000' },
+  { k: '[공식] 합포장', f: 'W = Σ 소포 Wᵢ' },
+  { k: '[공식] 청구 kg (≤30kg)', f: 'W ≤ 1 → 1 · W > 1 → 1 + ⌈(W − 1) ÷ 0.5⌉ × 0.5' },
+  { k: '[공식] 운임 (≤30kg)', f: 'F = F₁ + (청구 kg − 1) ÷ 0.5 × ¥2 · F₁ = 식품 ¥33 / 일반 ¥21.5' },
+  { k: '[공식] 운임 (30~200kg)', f: '⌈W⌉ × ¥5 (≤100) · ¥19 (≤150) · ¥20 (≤200) + 대형 작업비 · 일반 화물' },
+  { k: '[AGC] 실제 무게', f: 'Wᵢ = 실측 중앙값 → 없으면 V × k + 0.5kg (음료 k ≈ 1.03)' },
+  { k: '[AGC] 과자 부피', f: 'max(실측 상자 중앙값, V × 4.1) · 옵션에 상자 cm 있으면 그 값' },
+  { k: '[AGC] 여유', f: 'W × 1.01' },
+  { k: '[AGC] F₁ 선택', f: '그 제품 단독 집운 = 일반 이력 → ¥21.5 · 그 외 ¥33' },
+  { k: '[AGC] 30kg 초과', f: 'n = ⌈W ÷ 30⌉ · F = n × F(W ÷ n) (대형보다 저렴)' },
+  { k: '[AGC] 추가 운임', f: 'ΔF = F(묶음 + 추가) − F(묶음)' },
 ]
 
 // 배송비 — 무게 구간별 요금표. 위안은 BE 요금 규칙, 원화 = 위안 × 현재 환율 (환율을 바꾸면 같이 바뀐다)
@@ -135,7 +125,7 @@ export default function ShippingFeePage() {
       <Section name="운임 예측" id="estimate" title={false} plain className={tabs.hide('estimate')}>
         <details className={`${styles.rule} ${styles.guide}`}>
           <summary className={styles.ruleTitle}>
-            운임 예측 수식 <span className={styles.hint}>· 실측 우선, 없으면 예측</span>
+            운임 수식 <span className={styles.hint}>· 타오바오 공식 + AGC 예측</span>
           </summary>
           <div className={styles.formula}>
             {ESTIMATE_STEPS.map((s) => (
@@ -146,8 +136,8 @@ export default function ShippingFeePage() {
             ))}
           </div>
           <div className={styles.hint}>
-            대조 11-26 · 실제 집운 60건(예외 3건 뺀) — 실측 있는 37건 전부 일치 · 전체 평균 오차 ¥1.27
-            (예전 ¥5.03) · 집운 결제마다 실측이 쌓여 예측이 실측으로 바뀜
+            대조 11-27 · 실제 집운 60건(예외 3건 제외) · 실측 37건 전부 일치 · 평균 오차 ¥1.27
+            (예전 ¥5.03) · 집운 결제마다 실측 누적
           </div>
         </details>
       </Section>
