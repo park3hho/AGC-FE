@@ -21,6 +21,7 @@ const PriceDetailPage = lazy(() => import('@/pages/research/price/PriceDetailPag
 const PricingListPage = lazy(() => import('@/pages/pricing/PricingListPage'))
 const PricingPage = lazy(() => import('@/pages/pricing/PricingPage'))
 const CompetitionPage = lazy(() => import('@/pages/pricing/CompetitionPage'))
+const ShopPricingPage = lazy(() => import('@/pages/pricing/ShopPricingPage'))
 const OpsPage = lazy(() => import('@/pages/ops/OpsPage'))
 const SalesPage = lazy(() => import('@/pages/sales/SalesPage'))
 const ShopAnalyticsPage = lazy(() => import('@/pages/sales/ShopAnalyticsPage'))
@@ -68,6 +69,7 @@ export default function App() {
               <Route path="/research/prices/:id" element={<PriceDetailPage />} />
               <Route path="/pricing" element={<PricingListPage />} />
               <Route path="/pricing/competition" element={<CompetitionPage />} />
+              <Route path="/pricing/shop" element={<ShopPricingPage />} />
               <Route path="/ops" element={<OpsPage />} />
               <Route path="/sales" element={<SalesPage />} />
               <Route path="/shop-analytics" element={<ShopAnalyticsPage />} />
