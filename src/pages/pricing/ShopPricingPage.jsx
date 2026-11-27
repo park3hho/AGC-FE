@@ -180,6 +180,15 @@ export default function ShopPricingPage() {
                           <span className={styles.num}>
                             {won(x.cost_krw)}
                             <small>¥{x.cost_cny}</small>
+                            {x.last_buy && (
+                              <small
+                                className={styles.lastBuy}
+                                title={`최근 실구매로 매입가 갱신 ${x.last_buy.at.slice(5, 10)} · 이전 ¥${x.last_buy.old_cny ?? '-'}`}
+                              >
+                                최근 구매 {x.last_buy.at.slice(5, 10)} · ¥
+                                {x.last_buy.old_cny ?? '-'}→
+                              </small>
+                            )}
                           </span>
                           <span className={`${styles.num} ${styles.price}`}>{won(x.price)}</span>
                           <span className={styles.num}>

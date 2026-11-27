@@ -175,3 +175,8 @@
     padding-left: 26px;
   }
 }
+
+/* 최근 실구매로 바뀐 매입가 (2026-11-27) */
+.lastBuy {
+  color: var(--color-primary);
+}
