@@ -5,6 +5,7 @@ import { request } from '@/api/client'
 const toJiyun = (j) => ({
   id: j.id,
   jiyunNo: j.jiyun_no || '',
+  bundleCode: j.bundle_code || '', // 자사 집운번호 PRE_LP… (2026-11-27)
   status: j.status, // 'requested' | 'dispatched' | 'problem' | 'cancelled'
   packages: j.packages || [], // 묶인 소포 — 중국 운송장 번호들
   weightKg: j.weight_kg || '',

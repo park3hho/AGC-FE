@@ -66,6 +66,7 @@ export default function JiyunListPage() {
         (!word ||
           [
             j.jiyunNo,
+            j.bundleCode,
             j.hbl,
             j.krTrackingNo,
             j.order.code,
@@ -140,28 +141,28 @@ export default function JiyunListPage() {
             </FilterBar>
           </div>
         ) : (
-        <div className={styles.filters}>
-          <input
-            className={`form-input ${styles.search}`}
-            placeholder="집운 번호 · H B/L · 국내 송장 · 중국 운송장 · OR 코드 · 상품명"
-            aria-label="집운 기록 검색"
-            value={q}
-            onChange={(e) => set({ q: e.target.value })}
-          />
-          <select
-            className={`form-input ${styles.statusSel}`}
-            value={status}
-            onChange={(e) => set({ status: e.target.value })}
-            aria-label="집운 상태로 거르기"
-          >
-            <option value="all">상태 전체 {counts.all}</option>
-            {Object.entries(JIYUN_STATUS).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v.label} {counts[k] || 0}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div className={styles.filters}>
+            <input
+              className={`form-input ${styles.search}`}
+              placeholder="집운 번호 · H B/L · 국내 송장 · 중국 운송장 · OR 코드 · 상품명"
+              aria-label="집운 기록 검색"
+              value={q}
+              onChange={(e) => set({ q: e.target.value })}
+            />
+            <select
+              className={`form-input ${styles.statusSel}`}
+              value={status}
+              onChange={(e) => set({ status: e.target.value })}
+              aria-label="집운 상태로 거르기"
+            >
+              <option value="all">상태 전체 {counts.all}</option>
+              {Object.entries(JIYUN_STATUS).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v.label} {counts[k] || 0}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
         {error && <p className="form-error">{error}</p>}
       </Section>
@@ -177,7 +178,7 @@ export default function JiyunListPage() {
         {rows.length > 0 && (
           <div className={styles.table} role="table" aria-label="집운 기록">
             <div className={`${styles.row} ${styles.head}`} role="row">
-              <span role="columnheader">집운 번호 · 소포</span>
+              <span role="columnheader">자사 · 집운 번호 · 소포</span>
               <span role="columnheader">고객 주문</span>
               <span role="columnheader">상태 · 송장</span>
               <span role="columnheader">요청 · 출고</span>
@@ -196,7 +197,8 @@ export default function JiyunListPage() {
                 }
               >
                 <span role="cell" className={styles.main}>
-                  <b className={styles.mono}>{j.jiyunNo}</b>
+                  <b className={styles.mono}>{j.bundleCode || '-'}</b>
+                  <small className={styles.mono}>{j.jiyunNo}</small>
                   <small>
                     {j.packages.length ? `소포 ${j.packages.length}개` : '소포 미입력'}
                     {j.weightKg && ` · ${j.weightKg}kg`}
